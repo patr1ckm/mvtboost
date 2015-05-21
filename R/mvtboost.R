@@ -1,14 +1,14 @@
 ## Author: Patrick Miller
 ## Purpose: Multiple response (or multivariate) boosting with decision trees (stumps). Also multi-task, or multi-objective. Only for continuous Y.
-## RRV: 5/19/2015
+## RRV: 5/21/2015
   
 
 #' Fitting a Multivariate Tree Boosting Model
 #'
 #' Builds on gbm (Ridgeway 2013; Friedman, 2001) to fit a univariate tree model for each outcome, selecting predictors at each iteration that explain covariance between the outcomes. The number of trees included in the model can be chosen by minimizing the multivariate mean squared error using cross validation or a test set.
 #'
-#' @param X data frame of predictors
-#' @param Y data frame for outcome variables. For best performance, outcome variables should be scaled.
+#' @param X matrix or data.frame of predictors. For best performance, continuous predictors should be scaled. Categorical variables should be factors.
+#' @param Y vector, matrix, or data.frame for outcome variables. For best performance, outcome variables should be scaled.
 #' @param n.trees maximum number of iterations (trees) to be included in the model
 #' @param shrinkage amount of shrinkage to be applied in each univariate model. This is the gbm shrinkage. Default is .01. Smaller shrinkage values require more iterations to ensure good fit.
 #' @param interaction.depth fixed depth of trees to be included in the model. A tree depth of 1 are stumps (main effects only), higher tree depths capture higher order interactions.
@@ -57,14 +57,15 @@
 mvtb <- function(X=X,Y=Y,n.trees=100,shrinkage=.01,interaction.depth=1,
                  trainfrac=1,samp.iter=FALSE,bag.frac=1,cv.folds=1,
                  s=NULL,seednum=NULL,compress=FALSE,save.cv=FALSE,mc.cores=1,alpha=.5,cov.discrep=1,weight.type=1,...) {
-  
+
+  Y <- as.matrix(Y)
   params <- c(as.list(environment()))
-  
   ## seeds
   if(!is.null(seednum)){
     #print(c("mvtboost: seednum ",seednum));
     set.seed(seednum)
   }
+ 
   
   ## Data
   n <- nrow(X); k <- ncol(Y); p <- ncol(X);

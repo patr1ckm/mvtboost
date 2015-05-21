@@ -11,9 +11,9 @@ mvtb(X = X, Y = Y, n.trees = 100, shrinkage = 0.01,
   weight.type = 1, ...)
 }
 \arguments{
-\item{X}{data frame of predictors}
+\item{X}{matrix or data.frame of predictors. For best performance, continuous predictors should be scaled. Categorical variables should be factors.}
 
-\item{Y}{data frame for outcome variables. For best performance, outcome variables should be scaled.}
+\item{Y}{vector, matrix, or data.frame for outcome variables. For best performance, outcome variables should be scaled.}
 
 \item{n.trees}{maximum number of iterations (trees) to be included in the model}
 
