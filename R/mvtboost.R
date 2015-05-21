@@ -22,9 +22,11 @@
 #' @param seednum integer < 1000 to ensure that results are reproducible
 #' @param compress T/F. Compress output results list using bzip2 (approx 10\% of original size). Default FALSE.
 #' @param save.cv  T/F. Save all k cv models.
+#' @param mc.cores Number of cores for cross validation.
 #' @param alpha optional argument to select predictors that explain more variance or covariance in outcomes. Variance reductions are weighted by alpha, and covariance reductions are weighted by 1-alpha.
 #' @param weight.type see Details.
 #' @param cov.discrep see Details.
+#' @param ... additional arguments passed to gbm.
 #' @return Fitted model. This is a list containing the following elements:
 #' 
 #' \itemize{
@@ -54,7 +56,7 @@
 #' @export
 mvtb <- function(X=X,Y=Y,n.trees=100,shrinkage=.01,interaction.depth=1,
                  trainfrac=1,samp.iter=FALSE,bag.frac=1,cv.folds=1,
-                 s=NULL,seednum=NULL,compress=FALSE,save.cv=FALSE,alpha=.5,cov.discrep=1,weight.type=1,...) {
+                 s=NULL,seednum=NULL,compress=FALSE,save.cv=FALSE,mc.cores=1,alpha=.5,cov.discrep=1,weight.type=1,...) {
   
   params <- c(as.list(environment()))
   
@@ -118,6 +120,7 @@ mvtb <- function(X=X,Y=Y,n.trees=100,shrinkage=.01,interaction.depth=1,
     list2env(last,envir=environment())
     #best.iters <- as.list(data.frame(best.testerr=which.min(testerr),best.iters.cv[1],last=i))
   } else {
+    plist$mc.cores <- NULL
     out.mvtb <- do.call("mvtb.fit",args=c(plist))
     list2env(out.mvtb,envir=environment()) # adds models, trainerr, testerr, s, ss, and yhat to the current environment.
     best.iters.cv <- NULL
@@ -365,8 +368,14 @@ mvtbCV <- function(params) {
       return(out)
     }
     # Last fold contains the full sample
-    # out.k <- mclapply(1:(cv.folds+1),runone,params=params,cv.groups=cv.groups,mc.cores=cv.folds)
-     out.k <- lapply(1:(cv.folds+1),runone,params=params,cv.groups=cv.groups)
+    if(params$mc.cores > 1) {
+        cores <- params$mc.cores
+        params$mc.cores <- NULL
+        out.k <- parallel::mclapply(1:(cv.folds+1),runone,params=params,cv.groups=cv.groups,mc.cores=cores)
+    } else {
+      params$mc.cores <- NULL
+      out.k <- lapply(1:(cv.folds+1),runone,params=params,cv.groups=cv.groups)
+    }
         
     for(k in 1:cv.folds) {
       out <- out.k[[k]]
