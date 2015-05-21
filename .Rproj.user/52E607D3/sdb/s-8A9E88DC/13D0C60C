@@ -1,0 +1,16 @@
+{
+    "contents" : "\\name{mvtboost-package}\n\\alias{mvtboost-package}\n\\alias{mvtboost}\n\\docType{package}\n\\title{\n\\packageTitle{mvtboost}\n}\n\\description{\n\\packageDescription{mvtboost}\n}\n\\details{\n\nThe DESCRIPTION file:\n\\packageDESCRIPTION{mvtboost}\n\\packageIndices{mvtboost}\n~~ An overview of how to use the package, including the most ~~\n~~ important functions ~~\n}\n\\author{\n\\packageAuthor{mvtboost}\n\nMaintainer: \\packageMaintainer{mvtboost}\n}\n\\references{\nMiller P.J., Lubke G.H, McArtor D.B., Bergeman C.S. (2015) Finding structure in data: A data mining alternative to multivariate multiple regression. Psychological Methods.\n}\n~~ Optionally other standard keywords, one per line, from file ~~\n~~ KEYWORDS in the R documentation directory ~~\n\\keyword{ package }\n\\seealso{\n\\code{\\link[gbm-package]{<pkg>}}\n}\n\\examples{\ndata(trees)\nX <- as.matrix(trees[,1:2])\nY <- as.matrix(trees[,3])\nmvtb(X=X,Y=Y,n.trees=30)\n}\n",
+    "created" : 1432216255896.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "3545256412",
+    "id" : "13D0C60C",
+    "lastKnownWriteTime" : 1432216691,
+    "path" : "~/Software/mvtb2_package/mvtboost/man/mvtboost-package.Rd",
+    "project_path" : "man/mvtboost-package.Rd",
+    "properties" : {
+    },
+    "source_on_save" : false,
+    "type" : "r_doc"
+}
