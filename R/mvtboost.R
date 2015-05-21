@@ -12,12 +12,10 @@
 #' @param n.trees maximum number of iterations (trees) to be included in the model
 #' @param shrinkage amount of shrinkage to be applied in each univariate model. This is the gbm shrinkage. Default is .01. Smaller shrinkage values require more iterations to ensure good fit.
 #' @param interaction.depth fixed depth of trees to be included in the model. A tree depth of 1 are stumps (main effects only), higher tree depths capture higher order interactions.
-#'
 #' @param bag.frac   proportion of the training sample used to fit univariate trees for each response at each iteration. Default: .5
 #' @param cv.folds   number of cross validation folds. Default: 1. For larger values, runs k + 1 models, where the k models are run in parallel.
 #' @param trainfrac  proportion of the sample used for training the multivariate additive model.
 #' @param samp.iter  T/F. If true, draws a new training sample at each iteration of the multivariate model. Default: FALSE.
-#'
 #' @param s vector of indices denoting observations to be used for the training sample
 #' @param seednum integer < 1000 to ensure that results are reproducible
 #' @param compress T/F. Compress output results list using bzip2 (approx 10\% of original size). Default FALSE.
@@ -30,24 +28,26 @@
 #' @return Fitted model. This is a list containing the following elements:
 #' 
 #' \itemize{
+#'   \item models - list of gbm models for each outcome.
 #'   \item covex - covariance explained in each pair of outcomes by each predictor, in original order.
-#'   \item weights - relative weights at each iteration
-#'   \item wm - raw values of the loss function at each iteration (optionally, truncated at zero)
 #'   \item maxiter - maximum number of iterations run
-#'   \item best.iters - list of the best best iteratino (min MSE test, min MSE cv, last)
-#'   \item finaltree - list of trees in the final model
-#'   \item trainerr - vector of the MSE in the training set at each iteration
-#'   \item testerr - vector of MSE in test set at each iteration
-#'   \item params - arguments
-#'   \item iter.models - list of q gbm models from the first 5 iterations and last.
-#'   \item bestxs - vector of predictors selected at each iteration
-#'   \item bestys - vector of dependent variables selected at each iteration
-#'   \item resid - n x q matrix of residuals after all iterations
-#'   \item init - colMeans(Y)
-#'   \item s - indices of training sample
-#'   \item n - number of observations
+#'   \item best.trees - list of the best best iteratino (min MSE test, min MSE cv, last)
+#'   \item rel.infl - n x q x n.trees matrix of relative influences
+#'   \item w.rel.infl - n x q x n.trees matrix of weighted relative influences
+#'   \item params - arguments to mvtb
+#'   \item trainerr - multivariate training error at each tree
+#'   \item testerr  - multivariate test error at each tree (if trainfrac < 1)
+#'   \item cverr    - multivariate cv error at each tree (if cv.folds > 1)
+#'   \item bestxs - vector of predictors selected at each tree
+#'   \item bestys - vector of dependent variables selected at each tree
+#'   \item resid - n x q matrix of residuals after fitting all trees
 #'   \item ocv - if save.cv=TRUE, returns the CV models.
-#'   \item uncomp - function to uncompress the results if necessary.
+#'   \item wm.raw - raw decreases in covariance attributable to a given tree
+#'   \item wm.rel - relative decreases in covariance attributable to a given tree
+#'   \item s - n x q indices of training sample at each iteration
+#'   \item n - number of observations
+#'   \item xnames
+#'   \item ynames
 #' }
 #' 
 #' @details Note that this is a beta version with details subject to change. Any contributions are welcome.

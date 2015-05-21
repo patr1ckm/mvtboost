@@ -7,7 +7,8 @@
 mvtb(X = X, Y = Y, n.trees = 100, shrinkage = 0.01,
   interaction.depth = 1, trainfrac = 1, samp.iter = FALSE, bag.frac = 1,
   cv.folds = 1, s = NULL, seednum = NULL, compress = FALSE,
-  save.cv = FALSE, alpha = 0.5, cov.discrep = 1, weight.type = 1, ...)
+  save.cv = FALSE, mc.cores = 1, alpha = 0.5, cov.discrep = 1,
+  weight.type = 1, ...)
 }
 \arguments{
 \item{X}{data frame of predictors}
@@ -36,34 +37,40 @@ mvtb(X = X, Y = Y, n.trees = 100, shrinkage = 0.01,
 
 \item{save.cv}{T/F. Save all k cv models.}
 
+\item{mc.cores}{Number of cores for cross validation.}
+
 \item{alpha}{optional argument to select predictors that explain more variance or covariance in outcomes. Variance reductions are weighted by alpha, and covariance reductions are weighted by 1-alpha.}
 
 \item{cov.discrep}{see Details.}
 
 \item{weight.type}{see Details.}
+
+\item{...}{additional arguments passed to gbm.}
 }
 \value{
 Fitted model. This is a list containing the following elements:
 
 \itemize{
+  \item models - list of gbm models for each outcome.
   \item covex - covariance explained in each pair of outcomes by each predictor, in original order.
-  \item weights - relative weights at each iteration
-  \item wm - raw values of the loss function at each iteration (optionally, truncated at zero)
   \item maxiter - maximum number of iterations run
-  \item best.iters - list of the best best iteratino (min MSE test, min MSE cv, last)
-  \item finaltree - list of trees in the final model
-  \item trainerr - vector of the MSE in the training set at each iteration
-  \item testerr - vector of MSE in test set at each iteration
-  \item params - arguments
-  \item iter.models - list of q gbm models from the first 5 iterations and last.
-  \item bestxs - vector of predictors selected at each iteration
-  \item bestys - vector of dependent variables selected at each iteration
-  \item resid - n x q matrix of residuals after all iterations
-  \item init - colMeans(Y)
-  \item s - indices of training sample
-  \item n - number of observations
+  \item best.trees - list of the best best iteratino (min MSE test, min MSE cv, last)
+  \item rel.infl - n x q x n.trees matrix of relative influences
+  \item w.rel.infl - n x q x n.trees matrix of weighted relative influences
+  \item params - arguments to mvtb
+  \item trainerr - multivariate training error at each tree
+  \item testerr  - multivariate test error at each tree (if trainfrac < 1)
+  \item cverr    - multivariate cv error at each tree (if cv.folds > 1)
+  \item bestxs - vector of predictors selected at each tree
+  \item bestys - vector of dependent variables selected at each tree
+  \item resid - n x q matrix of residuals after fitting all trees
   \item ocv - if save.cv=TRUE, returns the CV models.
-  \item uncomp - function to uncompress the results if necessary.
+  \item wm.raw - raw decreases in covariance attributable to a given tree
+  \item wm.rel - relative decreases in covariance attributable to a given tree
+  \item s - n x q indices of training sample at each iteration
+  \item n - number of observations
+  \item xnames
+  \item ynames
 }
 }
 \description{
