@@ -1,0 +1,76 @@
+
+#gbm.ri <- function(out,n.trees=out$best.iter[[2]]){
+#  k <- length(out05$finaltree)
+#  ri <- matrix(0,nrow=nrow(out05$ri[[1]]),ncol=ncol(out05$ri[[1]]),dimnames=dimnames(out05$ri[[1]]))
+#  for(i in 1:k) {
+#    gbm.obj <- convert.mvtb.gbm(out,k=i)
+#    ri[,i] <- relative.influence(gbm.obj,n.trees=n.trees)
+#  }
+#  return(ri)  
+#}
+
+#' Computes the relative influence of each predictor for each outcome.
+#' 
+#' The relative influence of a predictor is the reduction in sums of squares attributable to splits on individual predictors.
+#' It is often expressed as a percent (sums to 100).
+#' @param out mvtb output object
+#' @param n.trees number of trees to use
+#' @param weighted T/F. Reductions in SSE are weighted according the covariance explained by each predictor.
+#' @param relative. If 'col', each column sums to 100. If 'tot', the whole matrix sums to 100 (a percent). If 'n', the raw reductions in SSE are returned.
+#' @return Matrix of (relative) influences.
+#' @export 
+mvtb.ri <- function(out,n.trees=out$best.iter[[2]],weighted=F,relative="col"){
+  if(weighted) {
+    ri <- apply(out$w.rel.infl[,,1:n.trees,drop=FALSE],1:2,sum)
+  } else {
+    ri <- apply(out$rel.infl[,,1:n.trees,drop=FALSE],1:2,sum)
+  }
+  if(relative == "col"){
+    ri <- apply(ri,2,function(col){col/sum(col)})*100
+  } else if (relative=="tot") {
+    ri <- ri/sum(ri)*100
+  }
+  colnames(ri) <- out$ynames
+  rownames(ri) <- out$xnames
+  return(ri)
+}
+
+r2 <- function(out,Y,X,n.trees=NULL){
+  if(is.null(n.trees)) { n.trees <- out$best.iter[[2]] }
+  p <- predict.mvtb(out,n.trees,newdata=X)
+  1-apply(Y - p,2,var)/apply(Y,2,var)
+}
+
+#' Computes a summary of the multivariate tree boosting model
+#' 
+#' @param out mvtb output object
+#' @return Returns the best number of trees, the univariate relative influence of each predictor for each outcome, and covariance explained in pairs of outcomes by each predictor
+#' @seealso mvtb.ri, gbm.ri, cluster.covex
+#' @export
+mvtb.summary <- function(out) {
+  best.trees <- min(unlist(out$best.trees))
+  ri <- mvtb.ri(out,n.trees=best.trees)
+  cc <- cluster.covex(out)
+  return(list(best.trees=best.trees,relative.influence=ri,cluster.covex=cc))
+}
+
+#' Computing a clustered covariance explained matrix
+#' 
+#' For each pair of predictors, computes the distance between the correlation matrices of the outcomes explained by those predictors.
+#'  
+#' @param out mvtb output
+#' @param clust.method clustering method for rows and columns. See ?hclust
+#' @param dist.method  method for computing the distance between two lower triangluar covariance matrices. See ?dist for alternatives.
+#' @return clustered covariance matrix, with rows and columns.
+#' @export
+cluster.covex <- function(out,clust.method="ward.D",dist.method="manhattan") {
+    x <- out$covex
+    hcr <- hclust(dist(x,method=dist.method),method=clust.method)
+    ddr <- as.dendrogram(hcr)
+    rowInd <- order.dendrogram(ddr)
+    hcc <- hclust(dist(t(x),method=dist.method),method=clust.method)
+    ddc <- as.dendrogram(hcc)
+    colInd <- order.dendrogram(ddc)
+    x <- x[rowInd,colInd]
+    return(x)
+}
