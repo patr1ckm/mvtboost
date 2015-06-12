@@ -24,11 +24,9 @@ Maintainer: \packageMaintainer{mvtboost}
 \references{
 Miller P.J., Lubke G.H, McArtor D.B., Bergeman C.S. (2015) Finding structure in data: A data mining alternative to multivariate multiple regression. Psychological Methods.
 }
-~~ Optionally other standard keywords, one per line, from file ~~
-~~ KEYWORDS in the R documentation directory ~~
-\keyword{ package }
+\keyword{ Boosting, multivariate responses }
 \seealso{
-\code{\link[gbm-package]{<pkg>}}
+\code{\link[gbm]{<pkg>}}
 }
 \examples{
 data(trees)

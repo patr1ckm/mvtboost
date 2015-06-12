@@ -105,7 +105,7 @@ expect_equal(r,r2)
 
 context("parallel")
 
-r <- mvtb(X=X,Y=Y,n.trees=5,alpha=.5, cv.folds=3,samp.iter=FALSE,cov.discrep=1,weight.type=2,bag.frac=.5,s=1:500,seednum=8,compress=FALSE,mc.cores=3)
+#r <- mvtb(X=X,Y=Y,n.trees=5,alpha=.5, cv.folds=3,samp.iter=FALSE,cov.discrep=1,weight.type=2,bag.frac=.5,s=1:500,seednum=8,compress=FALSE,mc.cores=3)
 
 
 

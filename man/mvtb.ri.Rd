@@ -13,7 +13,7 @@ mvtb.ri(out, n.trees = out$best.iter[[2]], weighted = F, relative = "col")
 
 \item{weighted}{T/F. Reductions in SSE are weighted according the covariance explained by each predictor.}
 
-\item{relative.}{If 'col', each column sums to 100. If 'tot', the whole matrix sums to 100 (a percent). If 'n', the raw reductions in SSE are returned.}
+\item{relative}{If 'col', each column sums to 100. If 'tot', the whole matrix sums to 100 (a percent). If 'n', the raw reductions in SSE are returned.}
 }
 \value{
 Matrix of (relative) influences.

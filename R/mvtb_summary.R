@@ -16,7 +16,7 @@
 #' @param out mvtb output object
 #' @param n.trees number of trees to use
 #' @param weighted T/F. Reductions in SSE are weighted according the covariance explained by each predictor.
-#' @param relative. If 'col', each column sums to 100. If 'tot', the whole matrix sums to 100 (a percent). If 'n', the raw reductions in SSE are returned.
+#' @param relative If 'col', each column sums to 100. If 'tot', the whole matrix sums to 100 (a percent). If 'n', the raw reductions in SSE are returned.
 #' @return Matrix of (relative) influences.
 #' @export 
 mvtb.ri <- function(out,n.trees=out$best.iter[[2]],weighted=F,relative="col"){
