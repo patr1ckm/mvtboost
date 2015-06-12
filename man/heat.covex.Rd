@@ -25,4 +25,7 @@ heatmap of the clustered covariance matrix.
 \description{
 Simple heatmap of the covariance explained matrix.
 }
+\seealso{
+mvtb.plot1, mvtb.perspec
+}
 

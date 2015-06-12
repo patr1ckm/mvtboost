@@ -28,4 +28,7 @@ Function is called for it's side effect, a plot.
 \description{
 Plots the model implied effect of 1 predictor for one outcome.
 }
+\seealso{
+plot.gbm, mvtb.perspec, heat.covex
+}
 

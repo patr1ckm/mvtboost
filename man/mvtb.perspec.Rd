@@ -39,6 +39,6 @@ As an alternative to the perspective (3D) plot, a 2D heat plot can be obtained d
 using ?plot.gbm.
 }
 \seealso{
-plot.gbm
+plot.gbm, mvtb.plot1, heat.covex
 }
 

@@ -13,6 +13,7 @@
 #' @param xlab label of the x variable
 #' @param ... extra arguments are passed to plot. See ?par
 #' @return Function is called for it's side effect, a plot.
+#' @seealso plot.gbm, mvtb.perspec, heat.covex
 #' @export
 mvtb.plot1 <- function(out,response.no,predictor.no,n.trees=min(unlist(out$best.trees)),X=NULL,xlab=NULL,...){
   ri <- relative.influence(gbm.obj,n.trees=n.trees)/sum(relative.influence(gbm.obj,n.trees=n.trees))*100
@@ -45,7 +46,7 @@ mvtb.plot1 <- function(out,response.no,predictor.no,n.trees=min(unlist(out$best.
 #' @param ticktype 'detailed' gives axis points. See ?persp for other options.
 #' @param ... extra arguments are passed to persp. See ?persp
 #' @return Function is called for it's side effect, a plot.
-#' @seealso plot.gbm 
+#' @seealso plot.gbm, mvtb.plot1, heat.covex
 #' @export
 mvtb.perspec <- function(out,response.no,predictor.no,n.trees=min(unlist(out$best.trees)),
                          phi=15,theta=-55,r=sqrt(10),d=3,ticktype="detailed",...) {
@@ -87,6 +88,7 @@ plot.pw.perspec <- function(out,response.no,predictor.no,npairs=3,nonlin.rank=NU
 #' @param ... extra arguments are passed to image, then to plot. See ?image, ?par
 #' @return heatmap of the clustered covariance matrix.
 #' @export 
+#' @seealso mvtb.plot1, mvtb.perspec
 heat.covex <- function(out,clust.method="ward.D",dist.method="manhattan",numformat=function(val){sub("^(-?)0.", "\\1.", sprintf("%.2f", val))},...) {
   x <- out$covex
   hcr <- hclust(dist(x,method=dist.method),method=clust.method)
