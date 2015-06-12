@@ -1,7 +1,7 @@
 Package: mvtboost
 Type: Package
 Title: Tree boosting for multivariate outcomes
-Version: 0.1
+Version: 0.2
 Date: 2015-05-21
 Author: Patrick Miller [aut, cre]
 Maintainer: Patrick Miller <pmille13@nd.edu>
