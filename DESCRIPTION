@@ -10,7 +10,6 @@ Description: This package fits a multivariate model of decision trees for multip
     predictors that explain that explain covariance in multiple outcomes. 
     Package is built on top of gbm.
 License: GPL (>= 2) | file LICENSE.md
-Imports: gbm
 Depends: 
   gbm,
 Suggests: testthat, plyr, MASS, parallel

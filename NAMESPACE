@@ -2,6 +2,9 @@
 
 S3method(predict,mvtb)
 export(cluster.covex)
+export(heat.covex)
 export(mvtb)
+export(mvtb.perspec)
+export(mvtb.plot1)
 export(mvtb.ri)
 export(mvtb.summary)
