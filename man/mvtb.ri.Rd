@@ -4,7 +4,8 @@
 \alias{mvtb.ri}
 \title{Computes the relative influence of each predictor for each outcome.}
 \usage{
-mvtb.ri(out, n.trees = out$best.iter[[2]], weighted = F, relative = "col")
+mvtb.ri(out, n.trees = min(unlist(out$best.trees)), weighted = F,
+  relative = "col")
 }
 \arguments{
 \item{out}{mvtb output object}
