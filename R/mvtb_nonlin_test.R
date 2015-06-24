@@ -28,9 +28,10 @@
 #' @param n.trees number of trees. Defaults to the minimum number of trees given that minimize CV, test, training error.
 #' @param detect method for testing possible non-linear effects or interactions. Possible values are "grid", "influence", and "lm". See details.
 #' @param scale For method "influence", whether the resulting influences are scaled to sum to 100.
-#' @return An array containing a p x p matrix of residuals or influences for each pair of predictors and each outcome.
+#' @return For each outcome, a list is produced showing the interactions in two forms. The first is $rank.list, which shows the nonlinear effect for each pair of predictors ranked according to the size of the departure from non-linearity. 
+#' The second, $interactions, shows the departure from non-linearity for all pairs of predictors.
 #' @details This function provides statistics means to detect departures from linearity in the multivariate boosting model for any outcome as a function of pairs of predictors. 
-#' These could be interactions between pairs of variables, or more general non-linear effects. Please note that these methods should be used cautiously, as a way to explore the model itself.
+#' These could be interactions between pairs of variables, or more general non-linear effects. Please note that these methods should be interpreted as exploratory only.
 #' 
 #' Several methods are provided for detecting departures from non-linearity in pairs from pairs of predictors. 
 #' The "grid" method computes a grid of the model implied predictions as a function of two predictors, averaging over the others. A linear model predicting the observed outcomes from the predicted values is fit, and the mean squared residuals (times 1000) are reported. Large residuals indicate deviations from linearity.
@@ -42,9 +43,14 @@
 #' These methods are not necessarily overlapping, and can produce different results. We suggest using several approaches, and follow up by plotting the model implied effects of the two predictors.
 #' The gbm package contains the function interact.gbm to detect interactions. See ?interact.gbm for details of this function, which can be used directly on individual mvtb output models.
 #' @seealso interact.gbm, mvtb.perspec, plot.gbm
-#' @references TBD
+#' @references 
+#' Miller P.J., Lubke G.H, McArtor D.B., Bergeman C.S. (Submitted) Finding structure in data: A data mining alternative to multivariate multiple regression. Psychological Methods.
+#' 
+#' Elith, J., Leathwick, J. R., & Hastie, T. (2008). A working guide to boosted regression trees. Journal of Animal Ecology, 77(4), 802-813.
+#' 
+#' Friedman, J. H., & Meulman, J. J. (2003). Multiple additive regression trees with application in epidemiology. Statistics in medicine, 22(9), 1365-1381.
 #' @export
-mvtb.interactions <-function(out, X, Y, n.trees=min(unlist(out$best.trees)),detect="grid",scale=TRUE) {
+mvtb.nonlin <-function(out, X, Y, n.trees=min(unlist(out$best.trees)),detect="grid",scale=TRUE) {
   #
   # p. miller, February 2015. Updated for multiple outcome variables!
   # j. leathwick, j. elith - May 2007
@@ -66,7 +72,16 @@ mvtb.interactions <-function(out, X, Y, n.trees=min(unlist(out$best.trees)),dete
   n.trees <- n.trees
   data <- X
   n.preds <- ncol(data)
-  pred.names <- names(data)
+  if(!is.null(names(data))) { 
+    pred.names <- names(data)
+  } else {
+    pred.names <- out$models[[1]]$var.names
+  }
+  if(!is.null(names(Y))){
+    col.names <- colnames(Y)
+  } else {
+    col.names <- out$ynames
+  }
   Y <- as.matrix(Y)
   
   if(detect=="grid") {
@@ -111,9 +126,9 @@ mvtb.interactions <-function(out, X, Y, n.trees=min(unlist(out$best.trees)),dete
       }
     }
     
-    rank.list <- data.frame(var1.index,var1.names,var2.index,var2.names,int.size)
+    rank.list <- data.frame(var1.index,var1.names,var2.index,var2.names,nonlin.size=int.size)
     
-    return(list(rank.list = rank.list, interactions = cross.tab))
+    return(list(rank.list = rank.list, nonlin.full = cross.tab))
   }
   
   res <- lapply(1:ncol(Y),doone,mvtb.out=out,detect.function=detect.function,n.trees=n.trees,pred.names=pred.names,n.preds=n.preds,data=data,scale=scale)
@@ -122,7 +137,8 @@ mvtb.interactions <-function(out, X, Y, n.trees=min(unlist(out$best.trees)),dete
 }
 
 intx.grid <- function(mvtb.out,num.pred,k=1,n.trees) {
-  gbm.obj <- convert.mvtb.gbm(r=mvtb.out,k=k)
+  #gbm.obj <- convert.mvtb.gbm(r=mvtb.out,k=k)
+  gbm.obj <- mvtb.out$models[[k]]
   cross.tab <- matrix(0,num.pred,num.pred)
   #dimnames(cross.tab) <- list(pred.names,pred.names)
   for(i in 1:(num.pred-1)) {
@@ -185,7 +201,7 @@ intx.lm <- function (out,n.trees,which.y,data,n.preds,pred.names) {
         }
       }        
       ## form the prediction
-      prediction <- predict.mvtb(out,newdata=data.frame(pred.frame),n.trees = n.trees)[,which.y]
+      prediction <- predict.mvtb(out,newdata=data.frame(pred.frame),n.trees = n.trees)[,which.y,]
       interaction.test.model <- lm(prediction ~ as.factor(pred.frame[,1]) + as.factor(pred.frame[,2]))             
       interaction.flag <- round(mean(resid(interaction.test.model)^2)*1000,2)
       cross.tab[i,j] <- interaction.flag
@@ -211,7 +227,8 @@ intx.lm <- function (out,n.trees,which.y,data,n.preds,pred.names) {
 
 intx.influence <- function(mvtb.obj,k=1,n.trees,scale=TRUE) {
   #do.one <- function(k,mvtb.obj,scale) {
-  gbm.object <- convert.mvtb.gbm(mvtb.obj,k)
+  #gbm.object <- convert.mvtb.gbm(mvtb.obj,k)
+  gbm.object <- mvtb.obj$models[[k]]
   trees <- gbm.object$trees
   pred.names <- gbm.object$var.names
   get.intx.sse <- function(t) {

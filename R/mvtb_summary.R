@@ -45,7 +45,7 @@ r2 <- function(out,Y,X,n.trees=NULL){
 #' 
 #' @param out mvtb output object
 #' @return Returns the best number of trees, the univariate relative influence of each predictor for each outcome, and covariance explained in pairs of outcomes by each predictor
-#' @seealso mvtb.ri, gbm.ri, cluster.covex
+#' @seealso \code{mvtb.ri}, \code{gbm.ri}, \code{cluster.covex}
 #' @export
 mvtb.summary <- function(out) {
   best.trees <- min(unlist(out$best.trees))

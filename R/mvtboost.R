@@ -5,7 +5,7 @@
 
 #' Fitting a Multivariate Tree Boosting Model
 #'
-#' Builds on gbm (Ridgeway 2013; Friedman, 2001) to fit a univariate tree model for each outcome, selecting predictors at each iteration that explain covariance between the outcomes. The number of trees included in the model can be chosen by minimizing the multivariate mean squared error using cross validation or a test set.
+#' Builds on \code{gbm} (Ridgeway 2013; Friedman, 2001) to fit a univariate tree model for each outcome, selecting predictors at each iteration that explain covariance between the outcomes. The number of trees included in the model can be chosen by minimizing the multivariate mean squared error using cross validation or a test set.
 #'
 #' @param X matrix or data.frame of predictors. For best performance, continuous predictors should be scaled. Categorical variables should be factors.
 #' @param Y vector, matrix, or data.frame for outcome variables. For best performance, outcome variables should be scaled.
@@ -24,7 +24,7 @@
 #' @param alpha optional argument to select predictors that explain more variance or covariance in outcomes. Variance reductions are weighted by alpha, and covariance reductions are weighted by 1-alpha.
 #' @param weight.type see Details.
 #' @param cov.discrep see Details.
-#' @param ... additional arguments passed to gbm.
+#' @param ... additional arguments passed to \code{gbm}.
 #' @return Fitted model. This is a list containing the following elements:
 #' 
 #' \itemize{
@@ -51,8 +51,15 @@
 #' }
 #' 
 #' @details Note that this is a beta version with details subject to change. Any contributions are welcome.
+#' @seealso \code{mvtb.summary}, \code{predict.mvtb}, \code{mvtb.nonlin} to help detect nonlinear effects, \code{mvtb.plot1}, \code{mvtb.perspec} for plots, \code{cluster.covex} to compute the covariance in the outcomes explained by predictors.
+#' @references Miller P.J., Lubke G.H, McArtor D.B., Bergeman C.S. (Submitted) Finding structure in data: A data mining alternative to multivariate multiple regression. Psychological Methods.
 #' 
-#' @references Miller P.J., Lubke G.H, McArtor D.B., Bergeman C.S. (2015) Finding structure in data: A data mining alternative to multivariate multiple regression. Psychological Methods.
+#' Ridgeway, G., Southworth, M. H., & RUnit, S. (2013). Package ‘gbm’. Viitattu, 10, 2013.
+#'
+#' Elith, J., Leathwick, J. R., & Hastie, T. (2008). A working guide to boosted regression trees. Journal of Animal Ecology, 77(4), 802-813.
+#'  
+#' Friedman, J. H. (2001). Greedy function approximation: a gradient boosting machine. Annals of statistics, 1189-1232.
+#' 
 #' @export
 mvtb <- function(X=X,Y=Y,n.trees=100,shrinkage=.01,interaction.depth=1,
                  trainfrac=1,samp.iter=FALSE,bag.frac=1,cv.folds=1,
