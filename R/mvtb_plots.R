@@ -6,8 +6,8 @@
 #' Plots the model implied effect of 1 predictor for one outcome.
 #' 
 #' @param out mvtb output object
-#' @param response.no index of the response variable
 #' @param predictor.no index of the predictor variable
+#' @param response.no index of the response variable
 #' @param n.trees desired number of trees (default: best trees)
 #' @param X predictor. If included, a rug is included with the plot showing the density of the variable.
 #' @param xlab label of the x variable
@@ -15,15 +15,16 @@
 #' @return Function is called for it's side effect, a plot.
 #' @seealso plot.gbm, mvtb.perspec, heat.covex
 #' @export
-mvtb.plot1 <- function(out,response.no,predictor.no,n.trees=min(unlist(out$best.trees)),X=NULL,xlab=NULL,...){
+plot.mvtb <- function(out,predictor.no=1,response.no=1,n.trees=min(unlist(out$best.trees)),X=NULL,xlab=NULL,ylab=NULL,...){
+  gbm.obj <- out$models[[response.no]]
   ri <- relative.influence(gbm.obj,n.trees=n.trees)/sum(relative.influence(gbm.obj,n.trees=n.trees))*100
   ri <- ri[predictor.no]
   #gbm.obj <- convert.mvtb.gbm(out,k=response.no)
-  gbm.obj <- out$models[[k]] 
   if(is.null(xlab)){ xlab <- names(ri)}
   xlab <- paste0(xlab," ", formatC(ri,2), "%")
-  grid <- plot.gbm(gbm.obj,i.var = predictor.no,n.trees = bi,perspective=TRUE,return.grid=TRUE)
-  plot(y=grid$y,x=grid[,1],bty="n",xlab=xlab,...)
+  grid <- plot.gbm(gbm.obj,i.var = predictor.no,n.trees = n.trees,perspective=TRUE,return.grid=TRUE)
+  if(is.null(ylab)) { ylab <- out$ynames[response.no]}
+  plot(y=grid$y,x=grid[,1],type="l",bty="n",xlab=xlab,ylab=ylab,...)
   if(!is.null(X)) { rug(jitter(X[,predictor.no])) }
 }
 

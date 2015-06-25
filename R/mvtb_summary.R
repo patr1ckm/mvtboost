@@ -41,17 +41,24 @@ r2 <- function(out,Y,X,n.trees=NULL){
   1-apply(Y - p,2,var)/apply(Y,2,var)
 }
 
+
+print.mvtb <- function(out) {
+  str(out,1)
+}
+
 #' Computes a summary of the multivariate tree boosting model
 #' 
 #' @param out mvtb output object
+#' @param print result (default is TRUE)
 #' @return Returns the best number of trees, the univariate relative influence of each predictor for each outcome, and covariance explained in pairs of outcomes by each predictor
 #' @seealso \code{mvtb.ri}, \code{gbm.ri}, \code{cluster.covex}
 #' @export
-mvtb.summary <- function(out) {
-  best.trees <- min(unlist(out$best.trees))
-  ri <- mvtb.ri(out,n.trees=best.trees)
+summary.mvtb <- function(out,print=TRUE,n.trees=min(unlist(out$best.trees))) {
+  ri <- mvtb.ri(out,n.trees=n.trees)
   cc <- cluster.covex(out)
-  return(list(best.trees=best.trees,relative.influence=ri,cluster.covex=cc))
+  sum <- list(best.trees=n.trees,relative.influence=ri,cluster.covex=cc)
+  if(print){ print(lapply(sum,function(o){round(o,2)})) }
+  invisible(sum)
 }
 
 #' Computing a clustered covariance explained matrix

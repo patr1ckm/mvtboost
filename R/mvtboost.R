@@ -228,6 +228,7 @@ mvtb <- function(X=X,Y=Y,n.trees=100,shrinkage=.01,interaction.depth=1,
     # compress each element using bzip2
     fl <- lapply(fl,comp)
   }
+  class(fl) <- "mvtb"
   return(fl)
 }
 
@@ -436,13 +437,13 @@ mvtbCV <- function(params) {
 
 #' Predicted values
 #' @param out mvtb object
-#' @param n.trees number of trees. If a list, returns predictions in a 
-#' @param newdata new matrix of predictors.
+#' @param newdata matrix of predictors. 
+#' @param n.trees number of trees. If a list, returns predictions in an array. Defaults to the minimum best tree estimate.
 #' @return Returns a matrix of predictions for each outcome. 
 #' If n.trees is a vector, returns an array, where the third dimension corresponds to the 
 #' predictions at a given number of trees.
 #' @export
-predict.mvtb <- function(out, n.trees, newdata) {
+predict.mvtb <- function(out, n.trees=min(unlist(out$best.trees)), newdata) {
   K <- length(out$models)
   treedim <- ifelse(length(n.trees) > 1,max(n.trees),1)
   Pred <- array(0,dim=c(nrow(newdata),K,treedim))  
