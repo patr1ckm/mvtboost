@@ -4,7 +4,7 @@
 \alias{predict.mvtb}
 \title{Predicted values}
 \usage{
-\method{predict}{mvtb}(out, n.trees = min(unlist(out$best.trees)), newdata)
+\method{predict}{mvtb}(out, n.trees = NULL, newdata)
 }
 \arguments{
 \item{out}{mvtb object}

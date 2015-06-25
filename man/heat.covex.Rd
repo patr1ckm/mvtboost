@@ -6,16 +6,18 @@
 \usage{
 heat.covex(out, clust.method = "ward.D", dist.method = "manhattan",
   numformat = function(val) {     sub("^(-?)0.", "\\\\1.", sprintf("\%.2f",
-  val)) }, ...)
+  val)) }, col = NULL, ...)
 }
 \arguments{
-\item{out}{mvtb output object}
+\item{out}{object of class \code{mvtb}}
 
 \item{clust.method}{clustering method for rows and columns. See ?hclust}
 
 \item{dist.method}{method for computing the distance between two lower triangluar covariance matrices. See ?dist for alternatives.}
 
 \item{numformat}{function to format the covex values into strings. Defaults to removing leading 0 and rounding to 2 decimal places.}
+
+\item{col}{A list of colors mappling onto covex explained values. A white to black gradient is default.}
 
 \item{...}{extra arguments are passed to image, then to plot. See ?image, ?par}
 }
@@ -25,7 +27,10 @@ heatmap of the clustered covariance matrix.
 \description{
 Simple heatmap of the covariance explained matrix.
 }
+\details{
+You will probably want to modify the default colors
+}
 \seealso{
-mvtb.plot1, mvtb.perspec
+\code{plot.mvtb}, \code{mvtb.perspec}
 }
 

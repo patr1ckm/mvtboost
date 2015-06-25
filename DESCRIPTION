@@ -11,5 +11,5 @@ Description: This package fits a multivariate model of decision trees for multip
     Package is built on top of gbm.
 License: GPL (>= 2) | file LICENSE.md
 Depends: 
-  gbm,
-Suggests: testthat, plyr, MASS, parallel
+  gbm, RColorBrewer
+Suggests: testthat, plyr, MASS, parallel,

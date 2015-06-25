@@ -51,7 +51,8 @@
 #' }
 #' 
 #' @details Note that this is a beta version with details subject to change. Any contributions are welcome.
-#' @seealso \code{summary.mvtb}, \code{predict.mvtb}, \code{mvtb.nonlin} to help detect nonlinear effects, \code{plot.mvtb}, \code{mvtb.perspec} for plots, \code{cluster.covex} to compute the covariance in the outcomes explained by predictors.
+#' @seealso \code{summary.mvtb}, \code{predict.mvtb}, \code{mvtb.nonlin} to help detect nonlinear effects, \code{plot.mvtb}, \code{mvtb.perspec} for plots, \code{cluster.covex}, \code{heat.covex} to compute the covariance in the outcomes explained by predictors and plot in a heatmap
+#' \code{uncomp.mvtb} to uncompress a compressed output object
 #' @references Miller P.J., Lubke G.H, McArtor D.B., Bergeman C.S. (Submitted) Finding structure in data: A data mining alternative to multivariate multiple regression. Psychological Methods.
 #' 
 #' Ridgeway, G., Southworth, M. H., & RUnit, S. (2013). Package ‘gbm’. Viitattu, 10, 2013.
@@ -443,7 +444,11 @@ mvtbCV <- function(params) {
 #' If n.trees is a vector, returns an array, where the third dimension corresponds to the 
 #' predictions at a given number of trees.
 #' @export
-predict.mvtb <- function(out, n.trees=min(unlist(out$best.trees)), newdata) {
+predict.mvtb <- function(out, n.trees=NULL, newdata) {
+  if(any(unlist(lapply(out,function(li){is.raw(li)})))){
+    out <- uncomp.mvtb(out)
+  }
+  if(is.null(n.trees)) { n.trees <- min(unlist(out$best.trees)) }
   K <- length(out$models)
   treedim <- ifelse(length(n.trees) > 1,max(n.trees),1)
   Pred <- array(0,dim=c(nrow(newdata),K,treedim))  

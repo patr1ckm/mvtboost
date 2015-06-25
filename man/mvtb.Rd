@@ -89,6 +89,7 @@ Elith, J., Leathwick, J. R., & Hastie, T. (2008). A working guide to boosted reg
 Friedman, J. H. (2001). Greedy function approximation: a gradient boosting machine. Annals of statistics, 1189-1232.
 }
 \seealso{
-\code{summary.mvtb}, \code{predict.mvtb}, \code{mvtb.nonlin} to help detect nonlinear effects, \code{plot.mvtb}, \code{mvtb.perspec} for plots, \code{cluster.covex} to compute the covariance in the outcomes explained by predictors.
+\code{summary.mvtb}, \code{predict.mvtb}, \code{mvtb.nonlin} to help detect nonlinear effects, \code{plot.mvtb}, \code{mvtb.perspec} for plots, \code{cluster.covex}, \code{heat.covex} to compute the covariance in the outcomes explained by predictors and plot in a heatmap
+\code{uncomp.mvtb} to uncompress a compressed output object
 }
 

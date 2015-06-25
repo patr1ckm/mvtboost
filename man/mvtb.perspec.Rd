@@ -4,9 +4,8 @@
 \alias{mvtb.perspec}
 \title{Perspective plot for 2 predictors and 1 response.}
 \usage{
-mvtb.perspec(out, response.no, predictor.no,
-  n.trees = min(unlist(out$best.trees)), phi = 15, theta = -55,
-  r = sqrt(10), d = 3, ticktype = "detailed", ...)
+mvtb.perspec(out, response.no, predictor.no, n.trees = NULL, phi = 15,
+  theta = -55, r = sqrt(10), d = 3, ticktype = "detailed", ...)
 }
 \arguments{
 \item{out}{mvtb output object}
@@ -39,6 +38,6 @@ As an alternative to the perspective (3D) plot, a 2D heat plot can be obtained d
 using ?plot.gbm.
 }
 \seealso{
-plot.gbm, mvtb.plot1, heat.covex
+\code{plot.gbm}, \code{plot.mvtb}, \code{heat.covex}
 }
 

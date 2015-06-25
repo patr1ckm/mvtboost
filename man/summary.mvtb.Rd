@@ -4,13 +4,14 @@
 \alias{summary.mvtb}
 \title{Computes a summary of the multivariate tree boosting model}
 \usage{
-\method{summary}{mvtb}(out, print = TRUE,
-  n.trees = min(unlist(out$best.trees)))
+\method{summary}{mvtb}(out, print = TRUE, n.trees = NULL)
 }
 \arguments{
 \item{out}{mvtb output object}
 
 \item{print}{result (default is TRUE)}
+
+\item{n.trees}{number of trees used to compute relative influence. Defaults to the minimum number of trees by CV, test, or training error}
 }
 \value{
 Returns the best number of trees, the univariate relative influence of each predictor for each outcome, and covariance explained in pairs of outcomes by each predictor

@@ -10,12 +10,17 @@
 #' @param response.no index of the response variable
 #' @param n.trees desired number of trees (default: best trees)
 #' @param X predictor. If included, a rug is included with the plot showing the density of the variable.
-#' @param xlab label of the x variable
+#' @param xlab label of the x axis
+#' @param ylab label of the y axis
 #' @param ... extra arguments are passed to plot. See ?par
 #' @return Function is called for it's side effect, a plot.
-#' @seealso plot.gbm, mvtb.perspec, heat.covex
+#' @seealso \code{plot.gbm}, \code{mvtb.perspec}, for other plots, \code{heat.covex} to plot the covariance explained by predictors in a heatmap
 #' @export
-plot.mvtb <- function(out,predictor.no=1,response.no=1,n.trees=min(unlist(out$best.trees)),X=NULL,xlab=NULL,ylab=NULL,...){
+plot.mvtb <- function(out,predictor.no=1,response.no=1,n.trees=NULL,X=NULL,xlab=NULL,ylab=NULL,...){
+  if(any(unlist(lapply(out,function(li){is.raw(li)})))){
+    out <- uncomp.mvtb(out)
+  }
+  if(is.null(n.trees)) { n.trees <- min(unlist(out$best.trees)) }
   gbm.obj <- out$models[[response.no]]
   ri <- relative.influence(gbm.obj,n.trees=n.trees)/sum(relative.influence(gbm.obj,n.trees=n.trees))*100
   ri <- ri[predictor.no]
@@ -47,12 +52,15 @@ plot.mvtb <- function(out,predictor.no=1,response.no=1,n.trees=min(unlist(out$be
 #' @param ticktype 'detailed' gives axis points. See ?persp for other options.
 #' @param ... extra arguments are passed to persp. See ?persp
 #' @return Function is called for it's side effect, a plot.
-#' @seealso plot.gbm, mvtb.plot1, heat.covex
+#' @seealso \code{plot.gbm}, \code{plot.mvtb}, \code{heat.covex}
 #' @export
-mvtb.perspec <- function(out,response.no,predictor.no,n.trees=min(unlist(out$best.trees)),
+mvtb.perspec <- function(out,response.no,predictor.no,n.trees=NULL,
                          phi=15,theta=-55,r=sqrt(10),d=3,ticktype="detailed",...) {
-  #gbm.obj <- convert.mvtb.gbm(out,k=response.no)
-  gbm.obj <- out$models[[k]]
+  if(any(unlist(lapply(out,function(li){is.raw(li)})))){
+    out <- uncomp.mvtb(out)
+  }
+  if(is.null(n.trees)) { n.trees <- min(unlist(out$best.trees)) }
+  gbm.obj <- out$models[[response.no]]
   grid <- plot.gbm(gbm.obj,i.var = predictor.no,n.trees = n.trees,perspective=TRUE,return.grid=TRUE)
   x <- unique(grid[,1])
   y <- unique(grid[,2])
@@ -63,7 +71,9 @@ mvtb.perspec <- function(out,response.no,predictor.no,n.trees=min(unlist(out$bes
 
 # Pairwise plot for 2 predictors and 1 response. 
 plot.pw.perspec <- function(out,response.no,predictor.no,npairs=3,nonlin.rank=NULL,p1=NULL,p2=NULL,theta=rep(-55,npairs),...){
-  bi <- out$best.iter[[2]]
+  if(any(unlist(lapply(out,function(li){is.raw(li)})))){
+    out <- uncomp.mvtb(out)
+  }
   pred.names <- out$iter.models[[1]][[1]]$var.names
   if(is.null(nonlin.rank)){
     ris <- sort(out$ri[[2]][,response.no],decreasing=T)
@@ -82,15 +92,20 @@ plot.pw.perspec <- function(out,response.no,predictor.no,npairs=3,nonlin.rank=NU
 
 #' Simple heatmap of the covariance explained matrix.
 #' 
-#' @param out mvtb output object
+#' @param out object of class \code{mvtb}
 #' @param clust.method clustering method for rows and columns. See ?hclust
 #' @param dist.method  method for computing the distance between two lower triangluar covariance matrices. See ?dist for alternatives.
 #' @param numformat function to format the covex values into strings. Defaults to removing leading 0 and rounding to 2 decimal places.
+#' @param col A list of colors mappling onto covex explained values. A white to black gradient is default.
 #' @param ... extra arguments are passed to image, then to plot. See ?image, ?par
 #' @return heatmap of the clustered covariance matrix.
+#' @details You will probably want to modify the default colors
 #' @export 
-#' @seealso mvtb.plot1, mvtb.perspec
-heat.covex <- function(out,clust.method="ward.D",dist.method="manhattan",numformat=function(val){sub("^(-?)0.", "\\1.", sprintf("%.2f", val))},...) {
+#' @seealso \code{plot.mvtb}, \code{mvtb.perspec}
+heat.covex <- function(out,clust.method="ward.D",dist.method="manhattan",numformat=function(val){sub("^(-?)0.", "\\1.", sprintf("%.2f", val))},col=NULL,...) {
+  if(any(unlist(lapply(out,function(li){is.raw(li)})))){
+    out <- uncomp.mvtb(out)
+  }
   x <- out$covex
   hcr <- hclust(dist(x,method=dist.method),method=clust.method)
   ddr <- as.dendrogram(hcr)
@@ -100,15 +115,16 @@ heat.covex <- function(out,clust.method="ward.D",dist.method="manhattan",numform
   colInd <- order.dendrogram(ddc)
   x <- x[rowInd,colInd]
   cellnote <- matrix(numformat(x),dim(x))
-  cellnote <- cellnote[rowInd,colInd]
+  #cellnote <- cellnote[rowInd,colInd] DONT BE TEMPTED TO DO THIS
   x <- t(x)
+  cellnote <- t(cellnote)
   nc <- nrow(x) # final number of columns (usually predictors)
   nr <- ncol(x) # final number of rows    (usually dvs)
-  cellnote <- t(cellnote)
-  image(x=1:nc,y=1:nr,x,col=wbr(50),xlim = 0.5 + c(0, nc), ylim = 0.5 + 
-          c(0, nr),ylab="",xlab="",axes=F,...)
+  if(is.null(col)) { col <- colorRampPaletteAlpha(brewer.pal(9,"Greys"),100)}
+  image(x=1:nc,y=1:nr,x,xlim = 0.5 + c(0, nc), ylim = 0.5 + 
+          c(0, nr),ylab="",xlab="",axes=F,col=col,...)
   #axis(1,at=seq(0,1,length=nrow(x)))
-  cexRow <- .2+1/log10(nc)
+  cexRow <- .2+1/log10(max(nc,nr))
   axis(1, 1:nc, labels = rep("",nc), las = 2, line = -0.5, tick = 0, 
        cex.axis = cexRow)
   axis(2, 1:nr, labels = colnames(x), las = 2, line = -0.5, tick = 0, 
@@ -119,3 +135,29 @@ heat.covex <- function(out,clust.method="ward.D",dist.method="manhattan",numform
        labels = rownames(x), xpd = TRUE,srt=45,
        col="black")
 }
+
+addalpha <- function(colors, alpha=1.0) {
+  r <- col2rgb(colors, alpha=T)
+  # Apply alpha
+  r[4,] <- alpha*255
+  r <- r/255.0
+  return(rgb(r[1,], r[2,], r[3,], r[4,]))
+}
+
+# colorRampPaletteAlpha()
+colorRampPaletteAlpha <- function(colors, n=32, interpolate='linear') {
+  # Create the color ramp normally
+  cr <- colorRampPalette(colors, interpolate=interpolate)(n)
+  # Find the alpha channel
+  a <- col2rgb(colors, alpha=T)[4,]
+  # Interpolate
+  if (interpolate=='linear') {
+    l <- approx(a, n=n)
+  } else {
+    l <- spline(a, n=n)
+  }
+  l$y[l$y > 255] <- 255 # Clamp if spline is > 255
+  cr <- addalpha(cr, l$y/255.0)
+  return(cr)
+}
+

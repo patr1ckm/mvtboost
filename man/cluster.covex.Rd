@@ -9,14 +9,17 @@ cluster.covex(out, clust.method = "ward.D", dist.method = "manhattan")
 \arguments{
 \item{out}{mvtb output}
 
-\item{clust.method}{clustering method for rows and columns. See ?hclust}
+\item{clust.method}{clustering method for rows and columns. See \code{?hclust}}
 
-\item{dist.method}{method for computing the distance between two lower triangluar covariance matrices. See ?dist for alternatives.}
+\item{dist.method}{method for computing the distance between two lower triangluar covariance matrices. See \code{?dist} for alternatives.}
 }
 \value{
 clustered covariance matrix, with rows and columns.
 }
 \description{
 For each pair of predictors, computes the distance between the correlation matrices of the outcomes explained by those predictors.
+}
+\seealso{
+\code{heat.covex}
 }
 

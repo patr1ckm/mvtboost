@@ -5,8 +5,7 @@
 \title{Plots the model implied effect of 1 predictor for one outcome.}
 \usage{
 \method{plot}{mvtb}(out, predictor.no = 1, response.no = 1,
-  n.trees = min(unlist(out$best.trees)), X = NULL, xlab = NULL,
-  ylab = NULL, ...)
+  n.trees = NULL, X = NULL, xlab = NULL, ylab = NULL, ...)
 }
 \arguments{
 \item{out}{mvtb output object}
@@ -19,7 +18,9 @@
 
 \item{X}{predictor. If included, a rug is included with the plot showing the density of the variable.}
 
-\item{xlab}{label of the x variable}
+\item{xlab}{label of the x axis}
+
+\item{ylab}{label of the y axis}
 
 \item{...}{extra arguments are passed to plot. See ?par}
 }
@@ -30,6 +31,6 @@ Function is called for it's side effect, a plot.
 Plots the model implied effect of 1 predictor for one outcome.
 }
 \seealso{
-plot.gbm, mvtb.perspec, heat.covex
+\code{plot.gbm}, \code{mvtb.perspec}, for other plots, \code{heat.covex} to plot the covariance explained by predictors in a heatmap
 }
 

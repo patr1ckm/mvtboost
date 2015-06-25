@@ -22,7 +22,7 @@
 ## res[[1]]
 
 #' Detect departures from linearity from a multivariate tree boosting model.
-#' @param out mvtb output object
+#' @param out object of class \code{mvtb}
 #' @param X matrix of predictors
 #' @param Y matrix of responses
 #' @param n.trees number of trees. Defaults to the minimum number of trees given that minimize CV, test, training error.
@@ -50,7 +50,7 @@
 #' 
 #' Friedman, J. H., & Meulman, J. J. (2003). Multiple additive regression trees with application in epidemiology. Statistics in medicine, 22(9), 1365-1381.
 #' @export
-mvtb.nonlin <-function(out, X, Y, n.trees=min(unlist(out$best.trees)),detect="grid",scale=TRUE) {
+mvtb.nonlin <-function(out, X, Y, n.trees=NULL,detect="grid",scale=TRUE) {
   #
   # p. miller, February 2015. Updated for multiple outcome variables!
   # j. leathwick, j. elith - May 2007
@@ -68,8 +68,10 @@ mvtb.nonlin <-function(out, X, Y, n.trees=min(unlist(out$best.trees)),detect="gr
   #        where n is 25% of the number of interaction pairs;
   
   require(gbm)
-  
-  n.trees <- n.trees
+  if(any(unlist(lapply(out,function(li){is.raw(li)})))){
+    out <- uncomp.mvtb(out)
+  }
+  if(is.null(n.trees)) { n.trees <- min(unlist(out$best.trees)) }
   data <- X
   n.preds <- ncol(data)
   if(!is.null(names(data))) { 

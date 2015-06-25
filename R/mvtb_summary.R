@@ -19,7 +19,11 @@
 #' @param relative If 'col', each column sums to 100. If 'tot', the whole matrix sums to 100 (a percent). If 'n', the raw reductions in SSE are returned.
 #' @return Matrix of (relative) influences.
 #' @export 
-mvtb.ri <- function(out,n.trees=min(unlist(out$best.trees)),weighted=F,relative="col"){
+mvtb.ri <- function(out,n.trees=NULL,weighted=F,relative="col"){
+  if(any(unlist(lapply(out,function(li){is.raw(li)})))){
+    out <- uncomp.mvtb(out)
+  }
+  if(is.null(n.trees)) { n.trees <- min(unlist(out$best.trees)) }
   if(weighted) {
     ri <- apply(out$w.rel.infl[,,1:n.trees,drop=FALSE],1:2,sum)
   } else {
@@ -43,6 +47,9 @@ r2 <- function(out,Y,X,n.trees=NULL){
 
 
 print.mvtb <- function(out) {
+  if(any(unlist(lapply(out,function(li){is.raw(li)})))){
+    out <- uncomp.mvtb(out)
+  }
   str(out,1)
 }
 
@@ -50,10 +57,15 @@ print.mvtb <- function(out) {
 #' 
 #' @param out mvtb output object
 #' @param print result (default is TRUE)
+#' @param n.trees number of trees used to compute relative influence. Defaults to the minimum number of trees by CV, test, or training error
 #' @return Returns the best number of trees, the univariate relative influence of each predictor for each outcome, and covariance explained in pairs of outcomes by each predictor
 #' @seealso \code{mvtb.ri}, \code{gbm.ri}, \code{cluster.covex}
 #' @export
-summary.mvtb <- function(out,print=TRUE,n.trees=min(unlist(out$best.trees))) {
+summary.mvtb <- function(out,print=TRUE,n.trees=NULL) {
+  if(any(unlist(lapply(out,function(li){is.raw(li)})))){
+    out <- uncomp.mvtb(out)
+  }
+  if(is.null(n.trees)) { n.trees <- min(unlist(out$best.trees)) }
   ri <- mvtb.ri(out,n.trees=n.trees)
   cc <- cluster.covex(out)
   sum <- list(best.trees=n.trees,relative.influence=ri,cluster.covex=cc)
@@ -66,11 +78,15 @@ summary.mvtb <- function(out,print=TRUE,n.trees=min(unlist(out$best.trees))) {
 #' For each pair of predictors, computes the distance between the correlation matrices of the outcomes explained by those predictors.
 #'  
 #' @param out mvtb output
-#' @param clust.method clustering method for rows and columns. See ?hclust
-#' @param dist.method  method for computing the distance between two lower triangluar covariance matrices. See ?dist for alternatives.
+#' @param clust.method clustering method for rows and columns. See \code{?hclust}
+#' @param dist.method  method for computing the distance between two lower triangluar covariance matrices. See \code{?dist} for alternatives.
 #' @return clustered covariance matrix, with rows and columns.
+#' @seealso \code{heat.covex}
 #' @export
 cluster.covex <- function(out,clust.method="ward.D",dist.method="manhattan") {
+    if(any(unlist(lapply(out,function(li){is.raw(li)})))){
+      out <- uncomp.mvtb(out)
+    }
     x <- out$covex
     hcr <- hclust(dist(x,method=dist.method),method=clust.method)
     ddr <- as.dendrogram(hcr)
@@ -80,4 +96,13 @@ cluster.covex <- function(out,clust.method="ward.D",dist.method="manhattan") {
     colInd <- order.dendrogram(ddc)
     x <- x[rowInd,colInd]
     return(x)
+}
+
+#' Uncompress a compressed mvtb output object
+#' @param out an object of class \code{mvtb}
+#' @export
+uncomp.mvtb <- function(out) { 
+  o <- lapply(out,function(li){unserialize(memDecompress(li,type="bzip2"))})
+  class(o) <- "mvtb"
+  return(o)
 }
