@@ -51,7 +51,7 @@
 #' }
 #' 
 #' @details Note that this is a beta version with details subject to change. Any contributions are welcome.
-#' @seealso \code{mvtb.summary}, \code{predict.mvtb}, \code{mvtb.nonlin} to help detect nonlinear effects, \code{mvtb.plot1}, \code{mvtb.perspec} for plots, \code{cluster.covex} to compute the covariance in the outcomes explained by predictors.
+#' @seealso \code{summary.mvtb}, \code{predict.mvtb}, \code{mvtb.nonlin} to help detect nonlinear effects, \code{plot.mvtb}, \code{mvtb.perspec} for plots, \code{cluster.covex} to compute the covariance in the outcomes explained by predictors.
 #' @references Miller P.J., Lubke G.H, McArtor D.B., Bergeman C.S. (Submitted) Finding structure in data: A data mining alternative to multivariate multiple regression. Psychological Methods.
 #' 
 #' Ridgeway, G., Southworth, M. H., & RUnit, S. (2013). Package ‘gbm’. Viitattu, 10, 2013.
