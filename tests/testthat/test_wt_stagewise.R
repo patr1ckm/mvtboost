@@ -1,9 +1,5 @@
 ## purpose: testing equivalence of stagewise
 
-#library(testthat)
-#setwd( "/Users/pmille13/Documents/Projects/mvtboost/Tests/Statistical")
-#source("../13/mvtboost_v14.R")
-#source("wt_helper_functions.R")
 context("test_wt_stagewise")
 
 fp <- paste0(getwd(),"/test_wt_stagewise.R")

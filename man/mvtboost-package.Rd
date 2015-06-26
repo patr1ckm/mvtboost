@@ -13,8 +13,7 @@
 The DESCRIPTION file:
 \packageDESCRIPTION{mvtboost}
 \packageIndices{mvtboost}
-~~ An overview of how to use the package, including the most ~~
-~~ important functions ~~
+The most important function is \code{mvtb}, which fits the multivariate tree boosting model. See \code{?mvtb} for details.
 }
 \author{
 \packageAuthor{mvtboost}
@@ -26,7 +25,7 @@ Miller P.J., Lubke G.H, McArtor D.B., Bergeman C.S. (2015) Finding structure in 
 }
 \keyword{ Boosting, multivariate responses }
 \seealso{
-\code{\link[gbm]{<pkg>}}
+\code{gbm}
 }
 \examples{
 data(trees)

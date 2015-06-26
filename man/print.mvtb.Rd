@@ -4,10 +4,12 @@
 \alias{print.mvtb}
 \title{Simple default printing of the mvtb output object}
 \usage{
-\method{print}{mvtb}(out)
+\method{print}{mvtb}(x, ...)
 }
 \arguments{
-\item{out}{mvtb output object}
+\item{x}{mvtb output object}
+
+\item{...}{unused}
 }
 \description{
 Simple default printing of the mvtb output object

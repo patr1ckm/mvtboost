@@ -1,9 +1,5 @@
 ## purpose: test shrinkage. 
-#library(testthat)
-#setwd( "/Users/pmille13/Documents/Projects/mvtboost/Tests/Statistical")
-#source("../13/mvtboost_v14.R")
-#source("wt_helper_functions.R")
-#require(gbm)
+
 context("test_shrinkage")
 
 tol <- 1E-12
@@ -17,7 +13,7 @@ Y <- X %*% b + e
 X <- data.frame(X)
 shrink <- .5
 
-g <- gbm(Y~.,distribution="gaussian",data=data.frame(X=X,Y=Y),n.trees=5,shrinkage=shrink,interaction.depth=1,bag.fraction=1)
+g <- gbm::gbm(Y~.,distribution="gaussian",data=data.frame(X=X,Y=Y),n.trees=5,shrinkage=shrink,interaction.depth=1,bag.fraction=1)
 
 ## approach 1 - shrunken effects -> choose predictors ->
 ## basically, with one outcome, this should reproduce a gbm results directly, and results using LM

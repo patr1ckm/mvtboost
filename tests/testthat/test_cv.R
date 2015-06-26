@@ -1,11 +1,4 @@
 
-#library(testthat)
-#setwd( "/Users/pmille13/Documents/Projects/mvtboost/Tests/")
-#source("../13/mvtboost_v14.R")
-#source("wt_helper_functions.R")
-#library(MASS)
-library(plyr)
-
 context("test_cv")
 #fp <- paste0(getwd(),"/test_cv.R")
 
@@ -43,7 +36,7 @@ check.samp <- function(ocv,s=1:500,folds=params$cv.folds,n=1000) {
 ## get the training sample used in every fold
     fold.obs <- lapply(ocv$models.k[1:folds],function(out){unique(out$ss[,1])})
 ## check which obs in s (1:500) are in each f. The row sums of the resulting matrix should be k-1
-    expect_true(all(rowSums(t(laply(fold.obs,function(f){matrix(s %in% f)})))==(folds-1)))
+    expect_true(all(rowSums(t(plyr::laply(fold.obs,function(f){matrix(s %in% f)})))==(folds-1)))
     expect_equal(sum(sapply(fold.obs,length)),n)
     for(k in 1:params$cv.folds) {
         expect_true(!any(intersect(which(ocv$cv.groups==k),fold.obs[[k]])))

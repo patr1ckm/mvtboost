@@ -1,7 +1,4 @@
 
-#setwd("~/Documents/Projects/mvtboost/13/")
-#source("mvtboost_v14.R")
-#require(gbm)
 
 ## n <- 1000
 ## set.seed(n)
@@ -52,22 +49,9 @@
 #' @export
 mvtb.nonlin <-function(out, X, Y, n.trees=NULL,detect="grid",scale=TRUE) {
   #
-  # p. miller, February 2015. Updated for multiple outcome variables!
+  # p. miller, February 2015. Updated for multiple outcome variables
   # j. leathwick, j. elith - May 2007
-  #
-  # functions assesses the magnitude of 2nd order interaction effects 
-  # in gbm models fitted with interaction depths greater than 1
-  # this is achieved by:
-  #   1. forming predictions on the linear scale for each predictor pair;
-  #   2. fitting a linear model that relates these predictions to the predictor
-  #        pair, with the the predictors fitted as factors;
-  #   3. calculating the mean value of the residuals, the magnitude of which
-  #        increases with the strength of any interaction effect;
-  #   4. results are stored in an array;
-  #   5. finally, the n most important interactions are identified,
-  #        where n is 25% of the number of interaction pairs;
   
-  require(gbm)
   if(any(unlist(lapply(out,function(li){is.raw(li)})))){
     out <- uncomp.mvtb(out)
   }
@@ -145,7 +129,7 @@ intx.grid <- function(mvtb.out,num.pred,k=1,n.trees) {
   #dimnames(cross.tab) <- list(pred.names,pred.names)
   for(i in 1:(num.pred-1)) {
     for(j in (i+1):num.pred) {
-      grid <- plot.gbm(gbm.obj,i.var=c(i,j),n.trees=n.trees,return.grid=TRUE)
+      grid <- gbm::plot.gbm(gbm.obj,i.var=c(i,j),n.trees=n.trees,return.grid=TRUE)
       cross.tab[i,j] <- mean(residuals(lm(y~.,data=grid))^2)*1000
       #fi <- rep(tapply(grid$y,list(factor(grid[,1])),mean),times=2)
       #fj <- rep(tapply(grid$y,list(factor(grid[,2])),mean),each=2)

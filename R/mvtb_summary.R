@@ -46,24 +46,27 @@ r2 <- function(out,Y,X,n.trees=NULL){
 }
 
 #' Simple default printing of the mvtb output object
-#' @param out mvtb output object
+#' @param x mvtb output object
+#' @param ... unused
 #' @export
-print.mvtb <- function(out) {
-  if(any(unlist(lapply(out,function(li){is.raw(li)})))){
-    out <- uncomp.mvtb(out)
+print.mvtb <- function(x,...) {
+  if(any(unlist(lapply(x,function(li){is.raw(li)})))){
+    x <- uncomp.mvtb(x)
   }
-  str(out,1)
+  str(x,1)
 }
 
 #' Computes a summary of the multivariate tree boosting model
 #' 
-#' @param out mvtb output object
+#' @param object mvtb output object
 #' @param print result (default is TRUE)
 #' @param n.trees number of trees used to compute relative influence. Defaults to the minimum number of trees by CV, test, or training error
+#' @param ... unused
 #' @return Returns the best number of trees, the univariate relative influence of each predictor for each outcome, and covariance explained in pairs of outcomes by each predictor
 #' @seealso \code{mvtb.ri}, \code{gbm.ri}, \code{cluster.covex}
 #' @export
-summary.mvtb <- function(out,print=TRUE,n.trees=NULL) {
+summary.mvtb <- function(object,print=TRUE,n.trees=NULL,...) {
+  out <- object
   if(any(unlist(lapply(out,function(li){is.raw(li)})))){
     out <- uncomp.mvtb(out)
   }

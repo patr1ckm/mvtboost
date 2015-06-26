@@ -55,7 +55,7 @@
 #' \code{uncomp.mvtb} to uncompress a compressed output object
 #' @references Miller P.J., Lubke G.H, McArtor D.B., Bergeman C.S. (Submitted) Finding structure in data: A data mining alternative to multivariate multiple regression. Psychological Methods.
 #' 
-#' Ridgeway, G., Southworth, M. H., & RUnit, S. (2013). Package ‘gbm’. Viitattu, 10, 2013.
+#' Ridgeway, G., Southworth, M. H., & RUnit, S. (2013). Package 'gbm'. Viitattu, 10, 2013.
 #'
 #' Elith, J., Leathwick, J. R., & Hastie, T. (2008). A working guide to boosted regression trees. Journal of Animal Ecology, 77(4), 802-813.
 #'  
@@ -146,6 +146,9 @@ mvtb <- function(X=X,Y=Y,n.trees=100,shrinkage=.01,interaction.depth=1,
   ## Note that this is unknown here, for GLS.
   #if(loss.function==4) { Sinv <- solve(cov(as.matrix(Y[s,]))) }
 
+  # To pass CRAN checks
+  models <- NULL
+  ss <- NULL
   
   ## 0. CV?
   if(cv.folds > 1) {
@@ -290,7 +293,7 @@ mvtb.fit <- function(X,Y,n.trees=100,shrinkage=.01,interaction.depth=1,
     ## 2. Fit the models
     models <- pred <- list()
     for(m in 1:q) {
-      models[[m]] <- gbm.fit(x=as.data.frame(X[s,,drop=FALSE]),y=matrix(Y[s,m,drop=FALSE]),
+      models[[m]] <- gbm::gbm.fit(x=as.data.frame(X[s,,drop=FALSE]),y=matrix(Y[s,m,drop=FALSE]),
                               shrinkage=shrinkage,interaction.depth=interaction.depth,
                               n.trees=n.trees,verbose=F,distribution="gaussian",
                               bag.fraction=bag.frac,keep.data=FALSE,...)
@@ -309,7 +312,7 @@ mvtb.fit <- function(X,Y,n.trees=100,shrinkage=.01,interaction.depth=1,
     return(fl)
 }
 
-ri.one <- function(object,n.trees=1,var.names=xnames) {
+ri.one <- function(object,n.trees=1,var.names) {
   get.rel.inf <- function(obj) {
     lapply(split(obj[[6]], obj[[1]]), sum)
   }
@@ -467,14 +470,16 @@ mvtbCV <- function(params) {
 ## I think it works!
 
 #' Predicted values
-#' @param out mvtb object
+#' @param object mvtb object
 #' @param newdata matrix of predictors. 
 #' @param n.trees number of trees. If a list, returns predictions in an array. Defaults to the minimum best tree estimate.
+#' @param ... unused
 #' @return Returns a matrix of predictions for each outcome. 
 #' If n.trees is a vector, returns an array, where the third dimension corresponds to the 
 #' predictions at a given number of trees.
 #' @export
-predict.mvtb <- function(out, n.trees=NULL, newdata) {
+predict.mvtb <- function(object, n.trees=NULL, newdata, ...) {
+  out <- object
   if(any(unlist(lapply(out,function(li){is.raw(li)})))){
     out <- uncomp.mvtb(out)
   }

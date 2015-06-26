@@ -2,13 +2,13 @@
 % Please edit documentation in R/mvtb_plots.R
 \name{plot.mvtb}
 \alias{plot.mvtb}
-\title{Plots the model implied effect of 1 predictor for one outcome.}
+\title{Plots the model implied effect of 1 predictor for one outcome}
 \usage{
-\method{plot}{mvtb}(out, predictor.no = 1, response.no = 1,
-  n.trees = NULL, X = NULL, xlab = NULL, ylab = NULL, ...)
+\method{plot}{mvtb}(x, predictor.no = 1, response.no = 1, n.trees = NULL,
+  X = NULL, xlab = NULL, ylab = NULL, ...)
 }
 \arguments{
-\item{out}{mvtb output object}
+\item{x}{mvtb output object}
 
 \item{predictor.no}{index of the predictor variable}
 
@@ -25,10 +25,10 @@
 \item{...}{extra arguments are passed to plot. See ?par}
 }
 \value{
-Function is called for it's side effect, a plot.
+Function is called for it's side effect, a plot of the model implied effect along with its influence computed from \code{gbm}
 }
 \description{
-Plots the model implied effect of 1 predictor for one outcome.
+Plots the model implied effect of 1 predictor for one outcome
 }
 \seealso{
 \code{plot.gbm}, \code{mvtb.perspec}, for other plots, \code{heat.covex} to plot the covariance explained by predictors in a heatmap

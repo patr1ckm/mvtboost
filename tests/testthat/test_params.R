@@ -1,8 +1,3 @@
-#library(testthat)
-#setwd( "/Users/pmille13/Documents/Projects/mvtboost/Tests/")
-#source("../13/mvtboost_v14.R")
-#source("wt_helper_functions.R")
-library(MASS)
 
 context("test_params")
 fp <- paste0(getwd(),"/test_params.R")
@@ -15,7 +10,7 @@ B[3,1:2] <- 2
 B[2,2:3] <- 1
 B[1,1] <- .5
 X <- matrix(rbinom(n*nrow(B),size=1,prob=.5),n,nrow(B))
-E <- mvrnorm(n,rep(0,4),Sigma=diag(4))
+E <- MASS::mvrnorm(n,rep(0,4),Sigma=diag(4))
 Y <- X %*% B + E
 
 ## test n.trees
@@ -52,7 +47,7 @@ ord.s <- apply(r$s,2,function(col){col[order(col)]})
 expect_true(!any(apply(combn(5,2),2,function(idx){all(ord.s[,idx[1]]==ord.s[,idx[2]])})),info="one or more iterations have identical observations") 
 
 r <- mvtb(X=X,Y=Y,n.trees=10,alpha=.5, trainfrac=1,samp.iter=FALSE,cov.discrep=1,weight.type=2,save.cv=TRUE)
-a_ply(r$s,1,function(row){expect_equal(row,rep(row[sample(1:length(row),1)],length(row)))}) # grab a random element, check to see if the whole row is equal to it
+plyr::a_ply(r$s,1,function(row){expect_equal(row,rep(row[sample(1:length(row),1)],length(row)))}) # grab a random element, check to see if the whole row is equal to it
 
 
 ## test bag.frac
@@ -73,7 +68,7 @@ for(i in 1:4) {
 ## s
 context("s")
 r <- mvtb(X=X,Y=Y,n.trees=5,alpha=.5, trainfrac=.5,samp.iter=FALSE,cov.discrep=1,weight.type=2,bag.frac=.5,s=1:500,save.cv=TRUE)
-a_ply(r$s,1,function(row){expect_equal(row,rep(row[sample(1:length(row),1)],length(row)))}) # grab a random element, check to see if the whole row is equal to it
+plyr::a_ply(r$s,1,function(row){expect_equal(row,rep(row[sample(1:length(row),1)],length(row)))}) # grab a random element, check to see if the whole row is equal to it
 #expect_error(r <- mvtb(X=X,Y=Y,n.trees=5,alpha=.5, trainfrac=.5,samp.iter=FALSE,cov.discrep=1,weight.type=2,bag.frac=.5,s=1:10))
 expect_true(all(r$s %in% 1:500))
 

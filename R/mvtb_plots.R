@@ -3,9 +3,9 @@
 # RRV: June 12, 2015
 # Purpose: plots
 
-#' Plots the model implied effect of 1 predictor for one outcome.
+#' Plots the model implied effect of 1 predictor for one outcome
 #' 
-#' @param out mvtb output object
+#' @param x mvtb output object
 #' @param predictor.no index of the predictor variable
 #' @param response.no index of the response variable
 #' @param n.trees desired number of trees (default: best trees)
@@ -13,21 +13,22 @@
 #' @param xlab label of the x axis
 #' @param ylab label of the y axis
 #' @param ... extra arguments are passed to plot. See ?par
-#' @return Function is called for it's side effect, a plot.
+#' @return Function is called for it's side effect, a plot of the model implied effect along with its influence computed from \code{gbm}
 #' @seealso \code{plot.gbm}, \code{mvtb.perspec}, for other plots, \code{heat.covex} to plot the covariance explained by predictors in a heatmap
 #' @export
-plot.mvtb <- function(out,predictor.no=1,response.no=1,n.trees=NULL,X=NULL,xlab=NULL,ylab=NULL,...){
+plot.mvtb <- function(x,predictor.no=1,response.no=1,n.trees=NULL,X=NULL,xlab=NULL,ylab=NULL,...){
+  out <- x
   if(any(unlist(lapply(out,function(li){is.raw(li)})))){
     out <- uncomp.mvtb(out)
   }
   if(is.null(n.trees)) { n.trees <- min(unlist(out$best.trees)) }
   gbm.obj <- out$models[[response.no]]
-  ri <- relative.influence(gbm.obj,n.trees=n.trees)/sum(relative.influence(gbm.obj,n.trees=n.trees))*100
+  ri <- gbm::relative.influence(gbm.obj,n.trees=n.trees)/sum(gbm::relative.influence(gbm.obj,n.trees=n.trees))*100
   ri <- ri[predictor.no]
   #gbm.obj <- convert.mvtb.gbm(out,k=response.no)
   if(is.null(xlab)){ xlab <- names(ri)}
   xlab <- paste0(xlab," ", formatC(ri,2), "%")
-  grid <- plot.gbm(gbm.obj,i.var = predictor.no,n.trees = n.trees,perspective=TRUE,return.grid=TRUE)
+  grid <- gbm::plot.gbm(gbm.obj,i.var = predictor.no,n.trees = n.trees,perspective=TRUE,return.grid=TRUE)
   if(is.null(ylab)) { ylab <- out$ynames[response.no]}
   plot(y=grid$y,x=grid[,1],type="l",bty="n",xlab=xlab,ylab=ylab,...)
   if(!is.null(X)) { rug(jitter(X[,predictor.no])) }
@@ -61,7 +62,7 @@ mvtb.perspec <- function(out,response.no=1,predictor.no=1:2,n.trees=NULL,
   }
   if(is.null(n.trees)) { n.trees <- min(unlist(out$best.trees)) }
   gbm.obj <- out$models[[response.no]]
-  grid <- plot.gbm(gbm.obj,i.var = predictor.no,n.trees = n.trees,perspective=TRUE,return.grid=TRUE)
+  grid <- gbm::plot.gbm(gbm.obj,i.var = predictor.no,n.trees = n.trees,perspective=TRUE,return.grid=TRUE)
   x <- unique(grid[,1])
   y <- unique(grid[,2])
   z <- matrix(grid[,3],length(unique(x)),length(unique(y)))
@@ -120,7 +121,7 @@ heat.covex <- function(out,clust.method="ward.D",dist.method="manhattan",numform
   cellnote <- t(cellnote)
   nc <- nrow(x) # final number of columns (usually predictors)
   nr <- ncol(x) # final number of rows    (usually dvs)
-  if(is.null(col)) { col <- colorRampPaletteAlpha(brewer.pal(9,"Greys"),100)}
+  if(is.null(col)) { col <- colorRampPaletteAlpha(RColorBrewer::brewer.pal(9,"Greys"),100)}
   image(x=1:nc,y=1:nr,x,xlim = 0.5 + c(0, nc), ylim = 0.5 + 
           c(0, nr),ylab="",xlab="",axes=F,col=col,...)
   #axis(1,at=seq(0,1,length=nrow(x)))
@@ -135,7 +136,7 @@ heat.covex <- function(out,clust.method="ward.D",dist.method="manhattan",numform
        labels = rownames(x), xpd = TRUE,srt=45,
        col="black")
 }
-
+  
 addalpha <- function(colors, alpha=1.0) {
   r <- col2rgb(colors, alpha=T)
   # Apply alpha

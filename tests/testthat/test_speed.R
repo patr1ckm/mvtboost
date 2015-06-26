@@ -1,15 +1,4 @@
 
-
-#setwd( "/Users/pmille13/Documents/Projects/mvtboost/Tests/Statistical")
-#source("../13/mvtboost_v14.R")
-#source("wt_helper_functions.R")
-##library(MASS)
-
-## library(testthat)
-## library(lineprof)
-## source("~/Documents/Projects/mvtboost/13/mvtboost_v13.R")
-## source("~/Documents/Projects/mvtboost/Simulations/2_Sim_improve/crc/sparse_dgen.R")
-
 ## ps <- c(10,50)
 ## niters <- c(10,100)
 ## lps <- list()

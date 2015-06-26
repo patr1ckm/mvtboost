@@ -2,10 +2,6 @@
 ## RRV: 6-18
 ## Purpose: verify that weighted tree boosting with one dichotomized predictor and no shrinkage is equivalent to simple linear regression
 
-#require(testthat)
-#setwd( "/Users/pmille13/Documents/Projects/mvtboost/Tests/Statistical")
-#source("../13/mvtboost_v14.R")
-#source("wt_helper_functions.R")
 context("test_wt_lr")
 
 
@@ -27,7 +23,7 @@ r <- resid(lm.out)
 
 #out <- weighted.trees(X=matrix(x),Y=matrix(y),n.trees=1,mv.shrink=1,shrinkage=1,trainfrac=1, weight.type=1,cov.discrep=i,s=1:1000,bag.frac=1)
 out <- mvtb(X=as.data.frame(x=xf),Y=y,n.trees=1,interaction.depth=1,shrinkage=1,trainfrac=1, weight.type=1,cov.discrep=i,s=1:1000,bag.frac=1)
-out.gbm <- gbm(y~x,distribution="gaussian",data=data.frame(y=y,x=xf),n.trees=1,shrinkage=1,bag.frac=1,interaction.depth=1)
+out.gbm <- gbm::gbm(y~x,distribution="gaussian",data=data.frame(y=y,x=xf),n.trees=1,shrinkage=1,bag.frac=1,interaction.depth=1)
 
 tol <- 1E-9
 

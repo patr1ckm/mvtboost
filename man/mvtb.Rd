@@ -113,7 +113,7 @@ heat.covex(out)
 \references{
 Miller P.J., Lubke G.H, McArtor D.B., Bergeman C.S. (Submitted) Finding structure in data: A data mining alternative to multivariate multiple regression. Psychological Methods.
 
-Ridgeway, G., Southworth, M. H., & RUnit, S. (2013). Package ‘gbm’. Viitattu, 10, 2013.
+Ridgeway, G., Southworth, M. H., & RUnit, S. (2013). Package 'gbm'. Viitattu, 10, 2013.
 
 Elith, J., Leathwick, J. R., & Hastie, T. (2008). A working guide to boosted regression trees. Journal of Animal Ecology, 77(4), 802-813.
 

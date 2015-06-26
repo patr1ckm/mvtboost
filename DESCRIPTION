@@ -9,7 +9,6 @@ Description: This package fits a multivariate model of decision trees for multip
     continuous outcome variables. A model for each outcome variable is fit separately, selecting
     predictors that explain that explain covariance in multiple outcomes. 
     Package is built on top of gbm.
-License: GPL (>= 2) | file LICENSE.md
-Depends: 
-  gbm, RColorBrewer
-Suggests: testthat, plyr, MASS, parallel,
+License: GPL (>= 2) | file LICENSE
+Suggests: testthat, plyr, MASS, parallel
+Imports: gbm, RColorBrewer

@@ -1,8 +1,3 @@
-#library(testthat)
-#setwd( "/Users/pmille13/Documents/Projects/mvtboost/Tests/Statistical")
-#source("../13/mvtboost_v14.R")
-#source("wt_helper_functions.R")
-library(MASS)
 
 ## goal here is to test that the selected Xs and Ys are reasonable given the loss functions. Mostly as a sanity check...
 context("test_mvloss_shrink")
@@ -14,7 +9,7 @@ n <- 1000
 B <- matrix(0,nrow=2,ncol=4)
 B[1,1:2] <- 1
 B[2,3] <- .3
-E <- mvrnorm(n,rep(0,4),diag(4))
+E <- MASS::mvrnorm(n,rep(0,4),diag(4))
 X <- matrix(rbinom(n*2,size=1,prob=.5),n,2) # use binomial variables so that the decision tree can capture the full effect.
 #X <- mvrnorm(n,rep(0,nrow(B)),diag(nrow(B)))
 Y <- X %*% B + E

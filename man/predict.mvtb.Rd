@@ -4,14 +4,16 @@
 \alias{predict.mvtb}
 \title{Predicted values}
 \usage{
-\method{predict}{mvtb}(out, n.trees = NULL, newdata)
+\method{predict}{mvtb}(object, n.trees = NULL, newdata, ...)
 }
 \arguments{
-\item{out}{mvtb object}
+\item{object}{mvtb object}
 
 \item{n.trees}{number of trees. If a list, returns predictions in an array. Defaults to the minimum best tree estimate.}
 
 \item{newdata}{matrix of predictors.}
+
+\item{...}{unused}
 }
 \value{
 Returns a matrix of predictions for each outcome.
