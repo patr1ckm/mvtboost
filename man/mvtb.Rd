@@ -79,6 +79,37 @@ Builds on \code{gbm} (Ridgeway 2013; Friedman, 2001) to fit a univariate tree mo
 \details{
 Note that this is a beta version with details subject to change. Any contributions are welcome.
 }
+\examples{
+set.seed(123)
+n <- 1000
+B <- matrix(0,nrow=5,ncol=4)
+B[3,1:2] <- 0
+B[2,2:3] <- 0
+B[4,1] <- 1
+B[5,3:4] <- 1
+X <- matrix(rbinom(n*(nrow(B)-2),size=1,prob=.5),n,nrow(B)-2)
+X2 <- cbind(x1x2=X[,1]*X[,2],x2x3=X[,2]*X[,3])
+Xf <- cbind(X,X2)
+E <- matrix(rnorm(n*4),nrow=n,ncol=4)
+Y <- Xf \%*\% B + E
+
+
+out <- mvtb(
+ X=X,                   # matrix of predictors
+ Y=Y,                   # matrix of responses
+ n.trees=100,           # number of trees
+ shrinkage=.1,          # shrinkage or learning rate
+ interaction.depth = 5, # number of splits in each tree
+ bag.frac = .5          # bagging fraction
+ )
+
+summary(out)
+plot(out)
+mvtb.nonlin(out,X=X,Y=Y)
+mvtb.perspec(out)
+cluster.covex(out)
+heat.covex(out)
+}
 \references{
 Miller P.J., Lubke G.H, McArtor D.B., Bergeman C.S. (Submitted) Finding structure in data: A data mining alternative to multivariate multiple regression. Psychological Methods.
 

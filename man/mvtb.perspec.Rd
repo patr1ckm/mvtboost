@@ -4,8 +4,9 @@
 \alias{mvtb.perspec}
 \title{Perspective plot for 2 predictors and 1 response.}
 \usage{
-mvtb.perspec(out, response.no, predictor.no, n.trees = NULL, phi = 15,
-  theta = -55, r = sqrt(10), d = 3, ticktype = "detailed", ...)
+mvtb.perspec(out, response.no = 1, predictor.no = 1:2, n.trees = NULL,
+  phi = 15, theta = -55, r = sqrt(10), d = 3, ticktype = "detailed",
+  ...)
 }
 \arguments{
 \item{out}{mvtb output object}

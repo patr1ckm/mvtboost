@@ -54,7 +54,7 @@ plot.mvtb <- function(out,predictor.no=1,response.no=1,n.trees=NULL,X=NULL,xlab=
 #' @return Function is called for it's side effect, a plot.
 #' @seealso \code{plot.gbm}, \code{plot.mvtb}, \code{heat.covex}
 #' @export
-mvtb.perspec <- function(out,response.no,predictor.no,n.trees=NULL,
+mvtb.perspec <- function(out,response.no=1,predictor.no=1:2,n.trees=NULL,
                          phi=15,theta=-55,r=sqrt(10),d=3,ticktype="detailed",...) {
   if(any(unlist(lapply(out,function(li){is.raw(li)})))){
     out <- uncomp.mvtb(out)

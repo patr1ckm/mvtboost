@@ -45,7 +45,9 @@ r2 <- function(out,Y,X,n.trees=NULL){
   1-apply(Y - p,2,var)/apply(Y,2,var)
 }
 
-
+#' Simple default printing of the mvtb output object
+#' @param out mvtb output object
+#' @export
 print.mvtb <- function(out) {
   if(any(unlist(lapply(out,function(li){is.raw(li)})))){
     out <- uncomp.mvtb(out)

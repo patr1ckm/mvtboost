@@ -60,7 +60,37 @@
 #' Elith, J., Leathwick, J. R., & Hastie, T. (2008). A working guide to boosted regression trees. Journal of Animal Ecology, 77(4), 802-813.
 #'  
 #' Friedman, J. H. (2001). Greedy function approximation: a gradient boosting machine. Annals of statistics, 1189-1232.
+#' @examples
+#' set.seed(123)
+#' n <- 1000
+#' B <- matrix(0,nrow=5,ncol=4)
+#' B[3,1:2] <- 0
+#' B[2,2:3] <- 0
+#' B[4,1] <- 1
+#' B[5,3:4] <- 1
+#' X <- matrix(rbinom(n*(nrow(B)-2),size=1,prob=.5),n,nrow(B)-2)
+#' X2 <- cbind(x1x2=X[,1]*X[,2],x2x3=X[,2]*X[,3])
+#' Xf <- cbind(X,X2)
+#' E <- matrix(rnorm(n*4),nrow=n,ncol=4)
+#' Y <- Xf %*% B + E
 #' 
+#' 
+#' out <- mvtb(
+#'  X=X,                   # matrix of predictors
+#'  Y=Y,                   # matrix of responses
+#'  n.trees=100,           # number of trees
+#'  shrinkage=.1,          # shrinkage or learning rate
+#'  interaction.depth = 5, # number of splits in each tree
+#'  bag.frac = .5          # bagging fraction
+#'  )
+#' 
+#' summary(out)
+#' plot(out)
+#' mvtb.nonlin(out,X=X,Y=Y)
+#' mvtb.perspec(out)
+#' cluster.covex(out)
+#' heat.covex(out)
+
 #' @export
 mvtb <- function(X=X,Y=Y,n.trees=100,shrinkage=.01,interaction.depth=1,
                  trainfrac=1,samp.iter=FALSE,bag.frac=1,cv.folds=1,

@@ -42,7 +42,7 @@
 #'
 #' These methods are not necessarily overlapping, and can produce different results. We suggest using several approaches, and follow up by plotting the model implied effects of the two predictors.
 #' The gbm package contains the function interact.gbm to detect interactions. See ?interact.gbm for details of this function, which can be used directly on individual mvtb output models.
-#' @seealso interact.gbm, mvtb.perspec, plot.gbm
+#' @seealso \code{interact.gbm}, \code{mvtb.perspec}, \code{plot.gbm}
 #' @references 
 #' Miller P.J., Lubke G.H, McArtor D.B., Bergeman C.S. (Submitted) Finding structure in data: A data mining alternative to multivariate multiple regression. Psychological Methods.
 #' 
