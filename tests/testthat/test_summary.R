@@ -20,3 +20,12 @@ mvtb.ri(out)
 print.mvtb(out)
 
 # test single predictor case
+set.seed(123)
+n <- 1000
+B <- matrix(0,nrow=1,ncol=4)
+B[1,1:2] <- 1
+X <- matrix(rbinom(n,size=1,prob=.5),n,nrow(B))
+E <- matrix(rnorm(n*4),nrow=n,ncol=4)
+Y <- X %*% B + E
+out <- mvtb(Y=Y,X=X)
+

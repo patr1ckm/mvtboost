@@ -104,25 +104,7 @@ plot.pw.perspec <- function(out,response.no,predictor.no,npairs=3,nonlin.rank=NU
 #' @export 
 #' @seealso \code{plot.mvtb}, \code{mvtb.perspec}
 heat.covex <- function(out,clust.method="ward.D",dist.method="manhattan",numformat=function(val){sub("^(-?)0.", "\\1.", sprintf("%.2f", val))},col=NULL,...) {
-  if(any(unlist(lapply(out,function(li){is.raw(li)})))){
-    out <- uncomp.mvtb(out)
-  }
-  x <- out$covex
-  if(nrows(x) > 1) { 
-    hcr <- hclust(dist(x,method=dist.method),method=clust.method)
-    ddr <- as.dendrogram(hcr)
-    rowInd <- order.dendrogram(ddr)
-  } else {
-    rowInd <- 1
-  }
-  if(nrows(t(x)) > 1) {
-    hcc <- hclust(dist(t(x),method=dist.method),method=clust.method)
-    ddc <- as.dendrogram(hcc)
-    colInd <- order.dendrogram(ddc)
-  } else {
-    colInd <- 1
-  }
-  x <- x[rowInd,colInd]
+  x <- cluster.covex(out,clust.method=clust.method,dist.method=dist.method)
   cellnote <- matrix(numformat(x),dim(x))
   #cellnote <- cellnote[rowInd,colInd] DONT BE TEMPTED TO DO THIS
   x <- t(x)
