@@ -1,13 +1,32 @@
-
-#gbm.ri <- function(out,n.trees=out$best.iter[[2]]){
-#  k <- length(out05$finaltree)
-#  ri <- matrix(0,nrow=nrow(out05$ri[[1]]),ncol=ncol(out05$ri[[1]]),dimnames=dimnames(out05$ri[[1]]))
-#  for(i in 1:k) {
-#    gbm.obj <- convert.mvtb.gbm(out,k=i)
-#    ri[,i] <- relative.influence(gbm.obj,n.trees=n.trees)
-#  }
-#  return(ri)  
-#}
+#' Computes the relative influence of each predictor for each outcome from gbm.
+#' 
+#' The relative influence of a predictor is the reduction in sums of squares attributable to splits on individual predictors.
+#' It is often expressed as a percent (sums to 100).
+#' @param out mvtb output object
+#' @param n.trees number of trees to use
+#' @param relative If 'col', each column sums to 100. If 'tot', the whole matrix sums to 100 (a percent). If 'n', the raw reductions in SSE are returned.
+#' @param ... Additional arguments passed to \code{gbm::relative.influence}
+#' @return Matrix of (relative) influences.
+#' @export 
+gbm.ri <- function(out,n.trees=NULL,relative="col",...){
+  if(any(unlist(lapply(out,function(li){is.raw(li)})))){
+    out <- uncomp.mvtb(out)
+  }
+  k <- length(out$models)
+  ri <- matrix(0,nrow=length(out$xnames),ncol=k)
+  for(i in 1:k) {
+    gbm.obj <- out$models[[i]]
+    ri[,i] <- gbm::relative.influence(gbm.obj,n.trees=n.trees,...)
+  }
+  if(relative == "col"){
+    ri <- matrix(apply(ri,2,function(col){col/sum(col)})*100,nrow=nrow(ri),ncol=ncol(ri))
+  } else if (relative=="tot") {
+    ri <- ri/sum(ri)*100
+  }
+  colnames(ri) <- out$ynames
+  rownames(ri) <- out$xnames
+  return(ri)  
+}
 
 #' Computes the relative influence of each predictor for each outcome.
 #' 
@@ -30,7 +49,7 @@ mvtb.ri <- function(out,n.trees=NULL,weighted=F,relative="col"){
     ri <- apply(out$rel.infl[,,1:n.trees,drop=FALSE],1:2,sum)
   }
   if(relative == "col"){
-    ri <- apply(ri,2,function(col){col/sum(col)})*100
+    ri <- matrix(apply(ri,2,function(col){col/sum(col)})*100,nrow=nrow(ri),ncol=ncol(ri))
   } else if (relative=="tot") {
     ri <- ri/sum(ri)*100
   }
