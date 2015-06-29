@@ -18,3 +18,5 @@ summary(out)
 cluster.covex(out)
 mvtb.ri(out)
 print.mvtb(out)
+
+# test single predictor case

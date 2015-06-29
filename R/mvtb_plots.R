@@ -108,12 +108,20 @@ heat.covex <- function(out,clust.method="ward.D",dist.method="manhattan",numform
     out <- uncomp.mvtb(out)
   }
   x <- out$covex
-  hcr <- hclust(dist(x,method=dist.method),method=clust.method)
-  ddr <- as.dendrogram(hcr)
-  rowInd <- order.dendrogram(ddr)
-  hcc <- hclust(dist(t(x),method=dist.method),method=clust.method)
-  ddc <- as.dendrogram(hcc)
-  colInd <- order.dendrogram(ddc)
+  if(nrows(x) > 1) { 
+    hcr <- hclust(dist(x,method=dist.method),method=clust.method)
+    ddr <- as.dendrogram(hcr)
+    rowInd <- order.dendrogram(ddr)
+  } else {
+    rowInd <- 1
+  }
+  if(nrows(t(x)) > 1) {
+    hcc <- hclust(dist(t(x),method=dist.method),method=clust.method)
+    ddc <- as.dendrogram(hcc)
+    colInd <- order.dendrogram(ddc)
+  } else {
+    colInd <- 1
+  }
   x <- x[rowInd,colInd]
   cellnote <- matrix(numformat(x),dim(x))
   #cellnote <- cellnote[rowInd,colInd] DONT BE TEMPTED TO DO THIS
