@@ -2,13 +2,13 @@ Package: mvtboost
 Type: Package
 Title: Tree boosting for multivariate outcomes
 Version: 0.2
-Date: 2015-05-21
+Date: 2015-07-10
 Author: Patrick Miller [aut, cre]
 Maintainer: Patrick Miller <pmille13@nd.edu>
-Description: This package fits a multivariate model of decision trees for multiple, 
+Description: Fits a multivariate model of decision trees for multiple, 
     continuous outcome variables. A model for each outcome variable is fit separately, selecting
     predictors that explain that explain covariance in multiple outcomes. 
     Package is built on top of gbm.
 License: GPL (>= 2) | file LICENSE
-Suggests: testthat, plyr, MASS, parallel
+Suggests: testthat, plyr, MASS, parallel, lars
 Imports: gbm, RColorBrewer

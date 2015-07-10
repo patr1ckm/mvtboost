@@ -3,7 +3,7 @@
 context("test_wt_stagewise")
 
 fp <- paste0(getwd(),"/test_wt_stagewise.R")
-library(lars)
+#library(lars)
 tol <- 1E-7
 n <- 1000
 mse <- function(x){mean((x-mean(x))^2)}
@@ -21,7 +21,7 @@ for(i in 1:4) {
             y <- X %*% b + e
             X <- matrix(c(x1),ncol=np)
 
-            lfs <- lars(x=X,y=y,type="forward.stagewise")
+            lfs <- lars::lars(x=X,y=y,type="forward.stagewise")
             ##lsw <- lars(x=X,y=y,type="stepwise")
             out <- mvtb(X=data.frame(X),Y=matrix(y),n.trees=4,shrinkage=1,trainfrac=1, weight.type=wt,cov.discrep=i,s=1:nrow(X))
 
@@ -63,7 +63,7 @@ for(i in 1:4) {
             X <- matrix(c(x1,x2,x3),ncol=np)
             y <- matrix(y)
 
-            lfs <- lars(x=X,y=y,type="forward.stagewise")
+            lfs <- lars::lars(x=X,y=y,type="forward.stagewise")
             out <- mvtb(X=X,Y=y,n.trees=4,shrinkage=1,trainfrac=1, weight.type=wt,cov.discrep=i,s=1:nrow(X))
             
             p1 <- c(predict.mvtb(out,newdata=data.frame(X),n.trees=out$maxiter))
