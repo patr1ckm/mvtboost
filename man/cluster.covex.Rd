@@ -18,6 +18,7 @@ clustered covariance matrix, with rows and columns.
 }
 \description{
 For each pair of predictors, computes the distance between the correlation matrices of the outcomes explained by those predictors.
+Values smaller than \code{getOption("digits")} are truncated to 0.
 }
 \seealso{
 \code{heat.covex}

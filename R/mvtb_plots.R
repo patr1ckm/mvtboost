@@ -26,10 +26,11 @@ plot.mvtb <- function(x,predictor.no=1,response.no=1,n.trees=NULL,X=NULL,xlab=NU
   ri <- gbm::relative.influence(gbm.obj,n.trees=n.trees)/sum(gbm::relative.influence(gbm.obj,n.trees=n.trees))*100
   ri <- ri[predictor.no]
   #gbm.obj <- convert.mvtb.gbm(out,k=response.no)
-  if(is.null(xlab)){ xlab <- names(ri)}
-  xlab <- paste0(xlab," ", formatC(ri,2), "%")
-  grid <- gbm::plot.gbm(gbm.obj,i.var = predictor.no,n.trees = n.trees,perspective=TRUE,return.grid=TRUE)
+  if(is.null(xlab)){ 
+    xlab <- paste0(names(ri)," ", formatC(ri,2), "%")
+  }
   if(is.null(ylab)) { ylab <- out$ynames[response.no]}
+  grid <- gbm::plot.gbm(gbm.obj,i.var = predictor.no,n.trees = n.trees,perspective=TRUE,return.grid=TRUE)  
   plot(y=grid$y,x=grid[,1],type="l",bty="n",xlab=xlab,ylab=ylab,...)
   if(!is.null(X)) { rug(jitter(X[,predictor.no])) }
 }
@@ -126,6 +127,7 @@ heat.covex <- function(out,clust.method="ward.D",dist.method="manhattan",numform
        labels = rownames(x), xpd = TRUE,srt=45,
        col="black")
 }
+# note that this works for a single predictor, but isn't pretty
   
 addalpha <- function(colors, alpha=1.0) {
   r <- col2rgb(colors, alpha=T)

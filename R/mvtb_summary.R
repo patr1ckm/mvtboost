@@ -100,6 +100,7 @@ summary.mvtb <- function(object,print=TRUE,n.trees=NULL,...) {
 #' Computing a clustered covariance explained matrix
 #' 
 #' For each pair of predictors, computes the distance between the correlation matrices of the outcomes explained by those predictors.
+#' Values smaller than \code{getOption("digits")} are truncated to 0.
 #'  
 #' @param out mvtb output
 #' @param clust.method clustering method for rows and columns. See \code{?hclust}
@@ -127,6 +128,7 @@ cluster.covex <- function(out,clust.method="ward.D",dist.method="manhattan") {
       colInd <- 1
     }
     x <- x[rowInd,colInd,drop=FALSE]
+    x <- zapsmall(x)
     return(x)
 }
 
