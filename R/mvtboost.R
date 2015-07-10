@@ -15,7 +15,7 @@
 #' @param bag.frac   proportion of the training sample used to fit univariate trees for each response at each iteration. Default: .5
 #' @param cv.folds   number of cross validation folds. Default: 1. For larger values, runs k + 1 models, where the k models are run in parallel.
 #' @param trainfrac  proportion of the sample used for training the multivariate additive model.
-#' @param samp.iter  T/F. If true, draws a new training sample at each iteration of the multivariate model. Default: FALSE.
+#' @param samp.iter  Experimental, does nothing for now.
 #' @param s vector of indices denoting observations to be used for the training sample
 #' @param seednum integer < 1000 to ensure that results are reproducible
 #' @param compress T/F. Compress output results list using bzip2 (approx 10\% of original size). Default FALSE.
@@ -115,9 +115,18 @@ mvtb <- function(X=X,Y=Y,n.trees=100,shrinkage=.01,interaction.depth=1,
   
   ## sampling
   if(is.null(s)){
-    ## training sample
     params$s <- s <- sample(1:n,floor(n*trainfrac),replace=F) #force round down if odd
   } 
+  ## ss <- matrix(0,nrow=length(s),ncol=n.trees)
+
+  ## 1. bootstrap covex if desired.
+  ## for(i in 1:n.trees) {
+  ##  if(samp.iter) {
+  ##    ss[,i] <-  sample(s,length(s),replace=TRUE) # if replace = FALSE, this just permutes the rows.
+  ##  } else {
+  ##    ss[,i] <- s
+  ##  }
+  #}  
   
   ## parameters
   plist <- params
@@ -129,12 +138,11 @@ mvtb <- function(X=X,Y=Y,n.trees=100,shrinkage=.01,interaction.depth=1,
   if(any(is.na(Y))){ stop("NAs not allowed in response variables.")}
     
   ## Influence
-  wm.raw <- wm.rel <- matrix(0,nrow=n.trees,ncol=k)    #raw, relative
+  wm.raw <- wm.rel <- matrix(0,nrow=n.trees,ncol=k)     #raw, relative
   rel.infl <- w.rel.infl <- array(0,dim=c(p,k,n.trees)) # influences at every iteration
   
   ## Iterations
   trainerr <- testerr <- bestys <- bestxs <- vector(length=n.trees)
-  #bestxs <- vector(mode="list",length=n.trees)
   final.iter <- FALSE
   
   ## Covex
@@ -143,32 +151,25 @@ mvtb <- function(X=X,Y=Y,n.trees=100,shrinkage=.01,interaction.depth=1,
   rownames(covex) <- colnames(X)
   names <- outer(1:k,1:k,function(x,y){paste0(colnames(Y)[x],"-",colnames(Y)[y])})
   colnames(covex) <- names[lower.tri(names,diag=TRUE)]
-  ## Note that this is unknown here, for GLS.
-  #if(loss.function==4) { Sinv <- solve(cov(as.matrix(Y[s,]))) }
-
-  # To pass CRAN checks
-  models <- NULL
-  ss <- NULL
   
   ## 0. CV?
   if(cv.folds > 1) {
     ocv <- mvtbCV(params=plist)
     best.iters.cv <- ocv$best.iters.cv
     cv.err <- ocv$cv.err
-    last <- ocv$models.k[[cv.folds+1]]
-    last$ocv <- NULL
-    last$X <- X
-    last$Y <- Y
-    list2env(last,envir=environment())
-    #best.iters <- as.list(data.frame(best.testerr=which.min(testerr),best.iters.cv[1],last=i))
-  } else {
+    out.fit <- ocv$models.k[[cv.folds+1]]
+   } else {
     plist$mc.cores <- NULL
-    out.mvtb <- do.call("mvtb.fit",args=c(plist))
-    list2env(out.mvtb,envir=environment()) # adds models, trainerr, testerr, s, ss, and yhat to the current environment.
+    out.fit <- do.call("mvtb.fit",args=c(plist))
     best.iters.cv <- NULL
     cv.err <- NULL
     ocv <- NULL
   }
+  models <-  out.fit$models
+  trainerr <- out.fit$trainerr
+  testerr <- out.fit$testerr
+  yhat <- out.fit$yhat
+  
   init <- unlist(lapply(models,function(m){m$initF}))
   for(m in 1:k) { D[,m] <- Y[,m]-init[m] } # current residuals at iteration 1
   yhat <- array(c(rep(init,each=n),yhat),dim=c(n,k,n.trees+1))
@@ -181,7 +182,6 @@ mvtb <- function(X=X,Y=Y,n.trees=100,shrinkage=.01,interaction.depth=1,
   }
   # 2. Compute covariance discrepancy
   for(i in 1:(n.trees)) {        
-    s <- ss[,i]
     
     ## 2.1 From each model get the stuff we need at the current iteration
     for(m in 1:k) {            
@@ -257,7 +257,7 @@ mvtb <- function(X=X,Y=Y,n.trees=100,shrinkage=.01,interaction.depth=1,
              bestxs=bestxs,bestys=bestys,
              resid=Rm,ocv=ocv,
              wm.raw=matrix(wm.raw[1:i,,drop=FALSE],nrow=i,ncol=k),wm.rel=wm.rel[1:i,,drop=FALSE],
-             s=ss,n=nrow(X),xnames=colnames(X),ynames=colnames(Y))
+             s=s,n=nrow(X),xnames=colnames(X),ynames=colnames(Y))
   if(compress) {
     # compress each element using bzip2
     fl <- lapply(fl,comp)
@@ -279,17 +279,6 @@ mvtb.fit <- function(X,Y,n.trees=100,shrinkage=.01,interaction.depth=1,
     n <- nrow(X) 
     q <- ncol(Y)
 
-    ss <- matrix(0,nrow=length(s),ncol=n.trees)
-    
-    ## 1. Sampling with each iteration, if desired.
-    for(i in 1:n.trees) {
-        if(samp.iter) {
-            ss[,i] <-  sample(s,length(s),replace=TRUE) # if replace = FALSE, this just permutes the rows.
-        } else {
-            ss[,i] <- s
-        }
-    }  
-    
     ## 2. Fit the models
     models <- pred <- list()
     for(m in 1:q) {
@@ -308,7 +297,7 @@ mvtb.fit <- function(X,Y,n.trees=100,shrinkage=.01,interaction.depth=1,
     }
     
     ## 3. Compute multivariate MSE
-    fl <- list(models=models,trainerr=trainerr,testerr=testerr,yhat=yhat,s=s,ss=ss)
+    fl <- list(models=models,trainerr=trainerr,testerr=testerr,yhat=yhat,s=s)
     return(fl)
 }
 
@@ -386,38 +375,38 @@ mvtbCV <- function(params) {
     #if(is.null(params$s)) {
     #    s <- sample(1:n,floor(n*params$trainfrac))
     #}
-    s <- params$s
-    cv.groups <- sample(rep(1:cv.folds,length=length(s)))
+    sorig <- params$s  # this is the original shuffling/subsetting from mvtb
+    cv.groups <- sample(rep(1:cv.folds,length=length(sorig)))
 
     # construct the new call
     params$trainfrac <- 1
     params$cv.folds <- 1
     params$save.cv <- save.cv
-    params$X <- params$X[s,, drop=FALSE]
-    params$Y <- params$Y[s,, drop=FALSE]
+    #params$X <- params$X[sorig,, drop=FALSE] # training fraction
+    #params$Y <- params$Y[sorig,, drop=FALSE]
 
     testerr.k <- matrix(NA,nrow=params$n.trees,ncol=cv.folds)
     out.k <- list()
 
-    runone <- function(k,params,cv.groups){
+    runone <- function(k,params,cv.groups,sorig){
       if(any(k %in% cv.groups)) {
-        params$s <- which(cv.groups != k)
+        params$s <- sorig[which(cv.groups != k)]
       } else { 
-        # since we already subsetted on s
-        params$s <- 1:nrow(params$X) 
-        params$compress <- FALSE
+        # since we already subsetted on s, fit to entire training sample
+        params$s <- sorig
+        params$compress <- FALSE        
       }
-      out <- do.call("mvtb.fit",params)  
+      out <- do.call("mvtb.fit",params) 
       return(out)
     }
     # Last fold contains the full sample
     if(params$mc.cores > 1) {
         cores <- params$mc.cores
         params$mc.cores <- NULL
-        out.k <- parallel::mclapply(1:(cv.folds+1),runone,params=params,cv.groups=cv.groups,mc.cores=cores)
+        out.k <- parallel::mclapply(1:(cv.folds+1),runone,params=params,cv.groups=cv.groups,sorig=sorig,mc.cores=cores)
     } else {
       params$mc.cores <- NULL
-      out.k <- lapply(1:(cv.folds+1),runone,params=params,cv.groups=cv.groups)
+      out.k <- lapply(1:(cv.folds+1),runone,params=params,cv.groups=cv.groups,sorig=sorig)
     }
         
     for(k in 1:cv.folds) {

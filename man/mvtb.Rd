@@ -23,7 +23,7 @@ mvtb(X = X, Y = Y, n.trees = 100, shrinkage = 0.01,
 
 \item{trainfrac}{proportion of the sample used for training the multivariate additive model.}
 
-\item{samp.iter}{T/F. If true, draws a new training sample at each iteration of the multivariate model. Default: FALSE.}
+\item{samp.iter}{Experimental, does nothing for now.}
 
 \item{bag.frac}{proportion of the training sample used to fit univariate trees for each response at each iteration. Default: .5}
 
