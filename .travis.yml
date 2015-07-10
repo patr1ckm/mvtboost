@@ -7,7 +7,7 @@ env:
    - CRAN: http://cran.rstudio.com
 
 r_packages:
-  - Rcpp
+  - gbm
 
 r_github_packages:
   - jimhester/covr
