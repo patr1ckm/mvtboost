@@ -21,7 +21,7 @@ mvtb(X = X, Y = Y, n.trees = 100, shrinkage = 0.01,
 
 \item{interaction.depth}{fixed depth of trees to be included in the model. A tree depth of 1 are stumps (main effects only), higher tree depths capture higher order interactions.}
 
-\item{trainfrac}{proportion of the sample used for training the multivariate additive model.}
+\item{trainfrac}{proportion of the sample used for training the multivariate additive model. If both cv.folds and trainfrac are specified, the CV is done within the training set only.}
 
 \item{samp.iter}{Experimental, does nothing for now.}
 
@@ -29,7 +29,7 @@ mvtb(X = X, Y = Y, n.trees = 100, shrinkage = 0.01,
 
 \item{cv.folds}{number of cross validation folds. Default: 1. For larger values, runs k + 1 models, where the k models are run in parallel.}
 
-\item{s}{vector of indices denoting observations to be used for the training sample}
+\item{s}{vector of indices denoting observations to be used for the training sample. If s is specified, trainfrac is ignored.}
 
 \item{seednum}{integer < 1000 to ensure that results are reproducible}
 
@@ -67,7 +67,7 @@ Fitted model. This is a list containing the following elements:
   \item ocv - if save.cv=TRUE, returns the CV models.
   \item wm.raw - raw decreases in covariance attributable to a given tree
   \item wm.rel - relative decreases in covariance attributable to a given tree
-  \item s - n x q indices of training sample at each iteration
+  \item s - indices of training sample
   \item n - number of observations
   \item xnames
   \item ynames

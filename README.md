@@ -41,6 +41,6 @@ This package can be installed directly from github using the devtools package:
             interaction.depth=3,
             
             bag.frac=.5,          # fit each tree to a sub sample of this fraction
-            trainfrac=.5,         # only fit the model to this fraction of the training set
+            trainfrac=.5,         # only fit the model to this fraction of the data set
             cv.folds=3,           # number of cross-validation folds
             mc.cores=3)           # run the cross-validation in parallel (not tested on windows)

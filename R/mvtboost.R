@@ -14,9 +14,9 @@
 #' @param interaction.depth fixed depth of trees to be included in the model. A tree depth of 1 are stumps (main effects only), higher tree depths capture higher order interactions.
 #' @param bag.frac   proportion of the training sample used to fit univariate trees for each response at each iteration. Default: .5
 #' @param cv.folds   number of cross validation folds. Default: 1. For larger values, runs k + 1 models, where the k models are run in parallel.
-#' @param trainfrac  proportion of the sample used for training the multivariate additive model.
+#' @param trainfrac  proportion of the sample used for training the multivariate additive model. If both cv.folds and trainfrac are specified, the CV is done within the training set only.
 #' @param samp.iter  Experimental, does nothing for now.
-#' @param s vector of indices denoting observations to be used for the training sample
+#' @param s vector of indices denoting observations to be used for the training sample. If s is specified, trainfrac is ignored.
 #' @param seednum integer < 1000 to ensure that results are reproducible
 #' @param compress T/F. Compress output results list using bzip2 (approx 10\% of original size). Default FALSE.
 #' @param save.cv  T/F. Save all k cv models.
@@ -44,7 +44,7 @@
 #'   \item ocv - if save.cv=TRUE, returns the CV models.
 #'   \item wm.raw - raw decreases in covariance attributable to a given tree
 #'   \item wm.rel - relative decreases in covariance attributable to a given tree
-#'   \item s - n x q indices of training sample at each iteration
+#'   \item s - indices of training sample
 #'   \item n - number of observations
 #'   \item xnames
 #'   \item ynames
