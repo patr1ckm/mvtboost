@@ -1,13 +1,13 @@
-nguage: r
+language: r
 warnings_are_errors: true
 sudo: false
 
 env:
  global:
-   - CRAN: http://cran.rstudio.com
+  - CRAN: http://cran.rstudio.com
 
 r_packages:
-  - gbm
+ - gbm
 
 r_github_packages:
   - jimhester/covr
