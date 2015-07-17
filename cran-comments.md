@@ -1,4 +1,6 @@
 ## Resubmission
+This version is also the resubmission, but addresses a small error in setting the package repo.
+
 This is a resubmission. It addresses errors on CRAN arising from namespace issues, and adds a vignette.
 
 * Revised NAMESPACE to correctly import functions from stats, utils, graphics, and grDevices
