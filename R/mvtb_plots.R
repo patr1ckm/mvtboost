@@ -16,6 +16,7 @@
 #' @return Function is called for it's side effect, a plot of the model implied effect along with its influence computed from \code{gbm}
 #' @seealso \code{plot.gbm}, \code{mvtb.perspec}, for other plots, \code{heat.covex} to plot the covariance explained by predictors in a heatmap
 #' @export
+#' @importFrom graphics plot rug
 plot.mvtb <- function(x,predictor.no=1,response.no=1,n.trees=NULL,X=NULL,xlab=NULL,ylab=NULL,...){
   out <- x
   if(any(unlist(lapply(out,function(li){is.raw(li)})))){
@@ -56,6 +57,7 @@ plot.mvtb <- function(x,predictor.no=1,response.no=1,n.trees=NULL,X=NULL,xlab=NU
 #' @return Function is called for it's side effect, a plot.
 #' @seealso \code{plot.gbm}, \code{plot.mvtb}, \code{heat.covex}
 #' @export
+#' @importFrom graphics persp
 mvtb.perspec <- function(out,response.no=1,predictor.no=1:2,n.trees=NULL,
                          phi=15,theta=-55,r=sqrt(10),d=3,ticktype="detailed",...) {
   if(any(unlist(lapply(out,function(li){is.raw(li)})))){
@@ -104,6 +106,7 @@ plot.pw.perspec <- function(out,response.no,predictor.no,npairs=3,nonlin.rank=NU
 #' @details You will probably want to modify the default colors
 #' @export 
 #' @seealso \code{plot.mvtb}, \code{mvtb.perspec}
+#' @importFrom graphics image axis text
 heat.covex <- function(out,clust.method="ward.D",dist.method="manhattan",numformat=function(val){sub("^(-?)0.", "\\1.", sprintf("%.2f", val))},col=NULL,...) {
   x <- cluster.covex(out,clust.method=clust.method,dist.method=dist.method)
   cellnote <- matrix(numformat(x),dim(x))
@@ -128,7 +131,8 @@ heat.covex <- function(out,clust.method="ward.D",dist.method="manhattan",numform
        col="black")
 }
 # note that this works for a single predictor, but isn't pretty
-  
+
+#' @importFrom grDevices col2rgb rgb 
 addalpha <- function(colors, alpha=1.0) {
   r <- col2rgb(colors, alpha=T)
   # Apply alpha
@@ -138,6 +142,8 @@ addalpha <- function(colors, alpha=1.0) {
 }
 
 # colorRampPaletteAlpha()
+#' @importFrom grDevices colorRampPalette col2rgb
+#' @importFrom stats approx spline
 colorRampPaletteAlpha <- function(colors, n=32, interpolate='linear') {
   # Create the color ramp normally
   cr <- colorRampPalette(colors, interpolate=interpolate)(n)

@@ -92,6 +92,7 @@
 #' heat.covex(out)
 
 #' @export
+#' @importFrom stats cov
 mvtb <- function(X=X,Y=Y,n.trees=100,shrinkage=.01,interaction.depth=1,
                  trainfrac=1,samp.iter=FALSE,bag.frac=1,cv.folds=1,
                  s=NULL,seednum=NULL,compress=FALSE,save.cv=FALSE,mc.cores=1,alpha=.5,cov.discrep=1,weight.type=1,...) {
@@ -316,6 +317,7 @@ ri.one <- function(object,n.trees=1,var.names) {
   return(rel.inf = rel.inf)
 }
 
+#' @importFrom stats cov
 eval.loss <- function(Rm,D,alpha,type) {
     ## Rm = n x k matrix of residuals
     ## D = n x k matrix of Ytilde at iteration i
@@ -344,6 +346,7 @@ cov.red <- function(S,Res.cov,alpha) {
     alpha*sum(diag(Sd),na.rm=TRUE) + (1-alpha)*sum(Sd[lower.tri(Sd)],na.rm=TRUE)
 }
 
+#' @importFrom stats cor
 cor.red <- function(Rm,D) {    
     if(ncol(Rm) == 1) {
         wm <- 1-cor(Rm,D,use="pairwise.complete")
@@ -478,7 +481,7 @@ predict.mvtb <- function(object, n.trees=NULL, newdata, ...) {
   Pred <- array(0,dim=c(nrow(newdata),K,treedim))  
   for(k in 1:K) {                                     
     p <- rep(0,nrow(newdata))        
-    p <- predict(out$models[[k]],n.trees=n.trees,newdata=newdata)    
+    p <- gbm::predict.gbm(out$models[[k]],n.trees=n.trees,newdata=newdata)    
     Pred[,k,] <- p
   }
   #if(length(n.trees) == 1) {

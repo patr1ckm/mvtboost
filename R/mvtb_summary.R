@@ -58,6 +58,7 @@ mvtb.ri <- function(out,n.trees=NULL,weighted=F,relative="col"){
   return(ri)
 }
 
+#' @importFrom stats var
 r2 <- function(out,Y,X,n.trees=NULL){
   if(is.null(n.trees)) { n.trees <- out$best.iter[[2]] }
   p <- predict.mvtb(out,n.trees,newdata=X)
@@ -68,6 +69,7 @@ r2 <- function(out,Y,X,n.trees=NULL){
 #' @param x mvtb output object
 #' @param ... unused
 #' @export
+#' @importFrom utils str
 print.mvtb <- function(x,...) {
   if(any(unlist(lapply(x,function(li){is.raw(li)})))){
     x <- uncomp.mvtb(x)
@@ -108,6 +110,7 @@ summary.mvtb <- function(object,print=TRUE,n.trees=NULL,...) {
 #' @return clustered covariance matrix, with rows and columns.
 #' @seealso \code{heat.covex}
 #' @export
+#' @importFrom stats hclust dist as.dendrogram order.dendrogram
 cluster.covex <- function(out,clust.method="ward.D",dist.method="manhattan") {
     if(any(unlist(lapply(out,function(li){is.raw(li)})))){
       out <- uncomp.mvtb(out)

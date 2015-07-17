@@ -1,3 +1,9 @@
+## Resubmission
+This is a resubmission. It addresses errors on CRAN arising from namespace issues.
+
+* Revised NAMESPACE to correctly import functions from stats, utils, graphics, and grDevices
+* Revised DESCRIPTION so that stats, utils, graphics and grDevices are in 'Imports' rather than 'Depends'
+
 ## Test environments
 
 * local OS X install, R 3.2.1
@@ -6,7 +12,7 @@
 
 ## R CMD check results
 
-There was 1 NOTE:
+* There was 1 NOTE:
 
 Maintainer: ‘Patrick Miller <patrick.mil10@gmail.com>’
 New submission

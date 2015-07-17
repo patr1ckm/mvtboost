@@ -122,6 +122,7 @@ mvtb.nonlin <-function(out, X, Y, n.trees=NULL,detect="grid",scale=TRUE) {
   return(res)
 }
 
+#' @importFrom stats residuals lm
 intx.grid <- function(mvtb.out,num.pred,k=1,n.trees) {
   #gbm.obj <- convert.mvtb.gbm(r=mvtb.out,k=k)
   gbm.obj <- mvtb.out$models[[k]]
@@ -150,7 +151,7 @@ intx.grid <- function(mvtb.out,num.pred,k=1,n.trees) {
   return(cross.tab)
 }
 
-
+#' @importFrom stats residuals lm
 intx.lm <- function (out,n.trees,which.y,data,n.preds,pred.names) {
   cross.tab <- matrix(0,n.preds,n.preds)
   for (i in 1:(n.preds - 1)) {  # step through the predictor set
