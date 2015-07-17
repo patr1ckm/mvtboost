@@ -15,5 +15,5 @@ BugReports: https://github.com/patr1ckm/mvtboost/issues
 Depends: R (>= 3.0.0)
 Suggests: testthat, plyr, MASS, parallel, lars,
     knitr
-Imports: gbm, RColorBrewer, stats, graphics, grDevices, utils
+Imports: gbm, RColorBrewer, stats, graphics, grDevices, utils, ggplot2, knitr, rmarkdown
 VignetteBuilder: knitr

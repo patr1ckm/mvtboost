@@ -16,8 +16,7 @@
 \item{...}{unused}
 }
 \value{
-Returns a matrix of predictions for each outcome.
-If n.trees is a vector, returns an array, where the third dimension corresponds to the
+Returns an array of predictions for all outcomes, where the third dimension corresponds to the
 predictions at a given number of trees.
 }
 \description{
