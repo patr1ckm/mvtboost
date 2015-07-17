@@ -53,7 +53,7 @@ out2 <- mvtb(Y=Ys,X=X,
             bag.frac=.5,          # fit each tree to a sub sample of this fraction
             trainfrac=.5,         # only fit the model to this fraction of the data set
             cv.folds=3,           # number of cross-validation folds
-            mc.cores=3,           # run the cross-validation in parallel
+            mc.cores=1,           # run the cross-validation in parallel
             seednum=103)          # set the seed number for reproducibility
 out2$best.trees
 ```
