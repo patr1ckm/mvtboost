@@ -466,8 +466,7 @@ mvtbCV <- function(params) {
 #' @param newdata matrix of predictors. 
 #' @param n.trees number of trees. If a list, returns predictions in an array. Defaults to the minimum best tree estimate.
 #' @param ... unused
-#' @return Returns a matrix of predictions for each outcome. 
-#' If n.trees is a vector, returns an array, where the third dimension corresponds to the 
+#' @return Returns an array of predictions for all outcomes, where the third dimension corresponds to the 
 #' predictions at a given number of trees.
 #' @export
 predict.mvtb <- function(object, n.trees=NULL, newdata, ...) {

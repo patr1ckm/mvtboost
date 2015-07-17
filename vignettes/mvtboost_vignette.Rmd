@@ -1,0 +1,143 @@
+---
+title: "Tree Boosting with Multivariate Outcomes "
+author: "Patrick Miller"
+date: "`r Sys.Date()`"
+output: 
+  rmarkdown::html_vignette:
+    fig_caption: yes
+vignette: >
+  %\VignetteIndexEntry{Tree Boosting with Multivariate Outcomes}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+One important goal in data analysis is to effectively explore large data sets using methods that make few assumptions. With multiple outcome variables and many predictors, multivariate multiple regression may be an interesting possiblity, but is not very suitable for data exploration because it makes many assumptions. Specifically, important structure must be specified before hand - e.g. interaction terms, non-linear effects, etc. However, in an exploratory context, these features are not known. A more flexible approach to exploratory analyses is an additive model of decision trees fit by stochastic gradient descent, also known as tree boosting (Friedman, 2001). This model allows dependent variables to be arbitrary functions of predictors, handles missing data, and is relatively quick to estimate.
+
+This package is designed to facilitate exploration of large data sets with multiple continuous dependent variables by fitting an additive model of decision trees. A gradient boosted tree model (based on the package `gbm`) is simply fit to each outcome variable separately. We refer to that package and the extensive literature on tree boosting for theoretical and technical details about how such a model is fit and interpreted (see References). The same principles will be applied here. 
+
+While it is in principle not too complex to fit separate tree models to each outcome variable, considering the outcome variables jointly has several benefits which the package makes possible:
+
+  1. The number of trees and shrinkage can be chosen to jointly minimize prediction error in a test set (or cross validation error) over all outcomes.
+  2. It very easy to compare tree models across outcomes.
+  3. We can estimate the 'covariance explained' by predictors in pairs of outcomes.
+
+In general, the joint analysis of several outcome variables can be informative. We illustrate the use of multivariate tree boosting by exploring the 'mpg' data from 'ggplot2', investigating features of cars that explain both city and highway fuel efficiency (mpg).
+
+## 1. Fitting the model
+
+Fitting the model is very similar to `gbm.fit`. Currently there is no formula interface, so matrices (data frames) of `X` and `Y` are given. Standardizing the outcomes is recommended.
+
+```{r}
+library(mvtboost)
+data("mpg",package="ggplot2")
+Y <- mpg[,c("cty","hwy")]      # use both city and highway mileage as dvs
+Ys <- scale(Y)                 # recommended that outcomes are on same scale
+X <- mpg[,-c(2,8:9)]           # manufacturer, displacement, year, cylinder, transmission, drive, class
+
+out <- mvtb(Y=Ys,X=X,          # data
+        n.trees=1000,          # number of trees
+        shrinkage=.01,         # shrinkage or learning rate
+        interaction.depth=3)   # tree or interaction depth
+```
+
+### 1.1 Tuning the model
+
+The model can be tuned using either (or both) a test set or cross-validation. Cross-validation can be easily parallelized by specifying `mc.cores`. Here `bag.fraction` is also set, making the estimation stochastic.
+
+```{r}
+out2 <- mvtb(Y=Ys,X=X,
+            n.trees=1000, 
+            shrinkage=.01,
+            interaction.depth=3,
+            
+            bag.frac=.5,          # fit each tree to a sub sample of this fraction
+            trainfrac=.5,         # only fit the model to this fraction of the data set
+            cv.folds=3,           # number of cross-validation folds
+            mc.cores=3,           # run the cross-validation in parallel
+            seednum=103)          # set the seed number for reproducibility
+out2$best.trees
+```
+
+## 2. Interpreting the model
+
+The `summary` of the fitted model shows the best number of trees (the minimum of training, test or CV error if available), the relative influences of each predictor for each outcome, and the correlation explained in pairs of outcomes by predictors. We can see that displacement explains correlation in city and hwy mpg. 
+
+```{r}
+summary(out)
+summary(out2)
+```
+
+### 2.1 Predictions
+
+The predicted values of the model can be easily computed using the standard `predict` function. A possible $R^2$ is shown below. 
+
+For the most unambiguous results, `predict` requires specification of `newdata`. By default, the number of trees is the minimum of the best trees given by CV, test, or training error. You can also specify the number of trees as a vector. The function will always return an array of predictions where the third dimension corresponds to the length of the vector of the number of trees requested.
+
+```{r}
+yhat <- drop(predict(out2,newdata=X))
+(r2 <- var(yhat)/var(Ys))
+```
+
+### 2.2 Univariate and Perspective Plots
+
+Simple univariate and multivariate plots can highlight non-linear effects of predictors (Friedman, 2001). Below, we show the effect of displacement on city and highway miles per gallon. Because mpg has been standardized, increases in $x$ correspond to standard deviation changes in either city or hw mpg. We see that displacement has a larger effect on city mpg than highway mpg.
+
+```{r,fig.width=8,fig.height=3.5}
+par(mfcol=c(1,2))              # model implied effects for predictor 2 for cty and hwy
+plot(out2,response.no=1,predictor.no=2,ylim=c(-1,1))
+plot(out2,response.no=2,predictor.no=2,ylim=c(-1,1))
+```
+
+We can also obtain the model implied effects as a function of two predictors:
+
+```{r,fig.height=6,fig.width=6}
+mvtb.perspec(out2,response.no = 1,predictor.no = c(2,8),xlab="displacement",ylab="class",theta=45,zlab="cty")
+```
+
+### 2.3 Detecting departures from additivity
+
+Tree models can capture multi-way interactions, but they are difficult to detect. `mvtb.nonlin` detects when the model implied predictions depart from additivity as a function of all pairs of predictors. This will detect non-linear effects, and may indicate interactiosn if present. There are 3 implemented ways to compute this (see `Details` of `?mvtb.nonlin`) and more research is necessary to assess which approach is the most beneficial. 
+
+Below, we show an example of computing departures from additivity. Pairs of predictors with significant non-linear effects might be plotted (as above) to investigate whether 2-way interactions exist. Below, we show that the most important non-linear effects all involve displacement, which has a very large non-linear effect.
+
+```{r}
+nonlin.out <- mvtb.nonlin(out2,X=X,Y=Y)
+nonlin.out$hwy$rank.list
+nonlin.out$cty$rank.list
+
+```
+
+### 2.4 Covariance explained
+
+  One of the important feaatures of considering multivariate outcomes jointly is the possibility of modeling the covariance between pairs of outcome variables as functions of individual predictors. I describe this as the 'covariance explained' in pairs of outcomes by predictors. 
+  
+### Estimation of covariance explained
+  
+The 'covariance explained' can be computed by by iteratively fitting trees to multiple outcomes. In univariate boosting (of continuous outcomes and squared error loss) the outcome variable is replaced with the residual at each iteration, multplied by shrinkage. In multivariate boosting, each outcome is replaced with its residual, one outcome variable at a time (multiplied by shrinkage). This essentially removes the effect of a split on a predictor from one outcome, and will cause the covariance between outcomes to decrease if the predictor jointly affects those outcomes. Thus, if a predictor causes multiple outcomes to covary, there will be a discrepancy between the sample covariance matrix before and after replacing an outcome with its residual. The amount of discrepancy between the two covariance matrices can be summarized by simply taking the sums of squared differences between all elements of the two covariance matrices.
+  
+  We can then simply record the covariance discrepancy for the predictor with the largest influence in the selected tree, summed over all trees. A covariance explained matrix can then be organized in a $p \times Q(Q+1)/2$ table where $Q$ is the number of outcomes, and $p$ the number of predictors. Each element is the covariance explained by predictor $j = 1, …, p$ for any pair of the $Q$ outcomes or the variance explained by the predictor for each outcome. When the outcomes are standardized to unit variance, each element can be interpreted as the correlation explained in any pair of outcomes by predictor $j$. Like the $R^2$ of the linear model, this decomposition is unambiguous only if the predictors are independent. Below we show the original covariance explained matrix.
+   
+```{r}
+round(out2$covex,2)
+```
+   
+### Clustering the covariance explained matrix
+
+   To aid interpretability, the predictors and pairs of outcomes can be grouped or clustered by reordering the rows and columns. This is useful when the number of predictors or outcomes is large. The covariance explained matrix can be clustered by first computing the distance between rows or columns - essentially we see how similar the covariance explained matrices are for each predictor. The resulting distance matrix is then clustered using hierarchical clustering. This corresponds to grouping the predictors (columns) that explain covariance in similar pairs of outcomes (rows). 
+   
+Below, we cluster the covariance explained matrix, and display it as a heatmap. Note that the method of computing the distance between covariance matrices `dist.method` and method of clustering the rows and columns `clust.method` can be played with, leading to different clustering solutions.
+   
+```{r,fig.width=8}
+cc <- cluster.covex(out2, clust.method = "ward.D", dist.method = "manhattan")
+round(cc,2)
+heat.covex(out2)
+```
+
+## References
+Miller P.J., Lubke G.H, McArtor D.B., Bergeman C.S. (Submitted) Finding structure in data: A data mining alternative to multivariate multiple regression. Psychological Methods.
+
+Ridgeway, G., Southworth, M. H., & RUnit, S. (2013). Package 'gbm'. Viitattu, 10, 2013.
+
+Elith, J., Leathwick, J. R., & Hastie, T. (2008). A working guide to boosted regression trees. Journal of Animal Ecology, 77(4), 802-813.
+
+Friedman, J. H. (2001). Greedy function approximation: a gradient boosting machine. Annals of statistics, 1189-1232.
