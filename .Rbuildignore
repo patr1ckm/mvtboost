@@ -5,7 +5,6 @@ cran-comments.md
 NEWS.md
 .DS_Store
 .Rhistory
-.Rprofie
 .gitignore
 tests/testthat/.DS_Store
 .git
