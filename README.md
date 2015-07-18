@@ -1,6 +1,6 @@
 [![Build Status](https://travis-ci.org/patr1ckm/mvtboost.svg?branch=master)](https://travis-ci.org/patr1ckm/mvtboost)
 [![codecov.io](https://codecov.io/github/patr1ckm/mvtboost/coverage.svg?branch=master)](https://codecov.io/github/patr1ckm/mvtboost?branch=master)
-<!-- [![CRAN_Status_Badge](http://www.r-pkg.org/badges/version/mvtboost)](http://cran.r-project.org/package=mvtboost) -->
+[![CRAN_Status_Badge](http://www.r-pkg.org/badges/version/mvtboost)](http://cran.r-project.org/package=mvtboost)
 
 # mvtboost
 Tree boosting for multivariate outcomes in R, built on gbm. Estimates a multivariate additive model of decision trees by iteratively selecting predictors that explain covariance in the outcomes. 
