@@ -224,11 +224,13 @@ mvtb <- function(X=X,Y=Y,n.trees=100,shrinkage=.01,interaction.depth=1,
     bestxs[i,] <- bestx <- apply(rel.infl[,,i,drop=F],2,function(col){which.max(col)})    
     
     # compute the covariance reduced (explained) by the best predictor for each outcome
-    #correc <- ifelse(shrinkage==1,1,(-(shrinkage - 1)/(1-shrinkage)^i))
+    correc <- 1+(1-shrinkage)
     #correc <- 1
+    # experimental correction for dichotomous:
+    # 1/(1-shrinkage)^(i-1)
     for(k in 1:m) {
       Sd <- cov(D)-Res.cov[,,k,i]
-      #Sd[lower.tri(Sd)] <- Sd[lower.tri(Sd)]*correc
+      Sd[lower.tri(Sd)] <- Sd[lower.tri(Sd)]*correc
       if(k > 1) {
         if(bestx[k] == bestx[k-1]) {
         # the covariance elements will be counted twice. Don't want this to happen.
@@ -239,6 +241,7 @@ mvtb <- function(X=X,Y=Y,n.trees=100,shrinkage=.01,interaction.depth=1,
         }
       }
       covex[bestx[k],] <- covex[bestx[k],] + Sd[lower.tri(Sd,diag=TRUE)]     
+      
     }
     
     #Rm <- D - Dpred[,,i]

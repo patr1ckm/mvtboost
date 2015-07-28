@@ -9,26 +9,26 @@ B <- matrix(0,p,q)
 B[1,c(1,3)] <- 1
 X <- matrix(rnorm(n),n,1)
 
-X <- ifelse(X < .5,0,1) 
-Y <- X %*% B
+# X <- ifelse(X < .5,0,1) 
+Y <- X %*% B 
 
 a <- cov(Y)[1,3]
 shrink <- c(.2,.5,.9,1)
 for(i in seq_along(shrink)){
-  out <- mvtb(Y=Y,X=X,shrinkage=shrink[i],n.trees=100)
-  expect_true(all((out$covex[out$covex > 0] - a) < 1E-12))
+  out <- mvtb(Y=Y,X=X,shrinkage=shrink[i],n.trees=1000)
+  expect_equal(out$covex[c(2,4,5)],rep(0,3))
+  expect_true(all(abs(out$covex[out$covex > 0] - a) < .01))
 }
 
-X <- matrix(rnorm(n),n,1)
-Y <- X %*% B
-
+E <- matrix(rnorm(n*q,0,.0001),n,q)
+Y <- X %*% B + E
 a <- cov(Y)[1,3]
 shrink <- c(.2,.5,.9,1)
 for(i in seq_along(shrink)){
-  out <- mvtb(Y=Y,X=X,shrinkage=shrink[i],n.trees=100)
-  expect_true(all((out$covex[out$covex > 0] - a) < 1E-12))
+  out <- mvtb(Y=Y,X=X,shrinkage=shrink[i],n.trees=5000)
+ # expect_equal(out$covex[c(2,4,5)],rep(0,3))
+  expect_true(all(abs(out$covex[out$covex > .01] - a) < .01))
 }
-out <- mvtb(Y=Y,X=X,shrinkage=1,n.trees=100)
 
 
 #colnames(Y) <- paste0("Y",1:k)
@@ -111,14 +111,15 @@ out <- mvtb(Y=Y,X=X,shrinkage=1,n.trees=100)
 # 
 # set.seed(101)
 # X <- matrix(rnorm(n,0,2),n,1)
-# Xb <- ifelse(X < .5,0,1)
+# #Xb <- ifelse(X < .5,0,1)
 # shrink <- .25
-# Y <- Xb %*% B
+# Y <- X %*% B
 # Ys <- scale(Y,center = T,scale = F)
+# a <- cov(Y)[1,3]
 # 
-# o1 <- mvtb(Y=Ys,X=Xb,n.trees=1,shrinkage=.25,s=1:1000,interaction.depth = 1)
-# o2 <- mvtb(Y=Ys,X=Xb,n.trees=2,shrinkage=.25,s=1:1000,interaction.depth = 1)
-# o3 <- mvtb(Y=Ys,X=Xb,n.trees=100,shrinkage=.25,s=1:1000,interaction.depth = 1)
+# o1 <- mvtb(Y=Ys,X=X,n.trees=1,shrinkage=.25,s=1:1000,interaction.depth = 1)
+# o2 <- mvtb(Y=Ys,X=X,n.trees=2,shrinkage=.25,s=1:1000,interaction.depth = 1)
+# o3 <- mvtb(Y=Ys,X=X,n.trees=100,shrinkage=.25,s=1:1000,interaction.depth = 1)
 # 
 # (covex1 <- o1$covex)
 # (covex2 <- o2$covex)
