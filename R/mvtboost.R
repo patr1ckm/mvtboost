@@ -38,8 +38,7 @@
 #'   \item trainerr - multivariate training error at each tree
 #'   \item testerr  - multivariate test error at each tree (if trainfrac < 1)
 #'   \item cverr    - multivariate cv error at each tree (if cv.folds > 1)
-#'   \item bestxs - vector of predictors selected at each tree
-#'   \item bestys - vector of dependent variables selected at each tree
+#'   \item bestxs - matrix of predictors selected at each tree
 #'   \item resid - n x q matrix of residuals after fitting all trees
 #'   \item ocv - if save.cv=TRUE, returns the CV models.
 #'   \item wm.raw - raw decreases in covariance attributable to a given tree
@@ -143,7 +142,8 @@ mvtb <- function(X=X,Y=Y,n.trees=100,shrinkage=.01,interaction.depth=1,
   rel.infl <- w.rel.infl <- array(0,dim=c(p,k,n.trees)) # influences at every iteration
   
   ## Iterations
-  trainerr <- testerr <- bestys <- bestxs <- vector(length=n.trees)
+  trainerr <- testerr <- vector(length=n.trees)
+  bestxs   <- matrix(0,nrow=n.trees,ncol=k) 
   final.iter <- FALSE
   
   ## Covex
@@ -190,9 +190,10 @@ mvtb <- function(X=X,Y=Y,n.trees=100,shrinkage=.01,interaction.depth=1,
       tree.i <- finaltree[[m]][i]
       rel.infl[,m,i] <- ri.one(tree.i,n.trees=1,xnames)
       ## 1.3 Replace mth outcome with its residual, compute covariance           
-      Rm <- D 
+      Rm <- D
       Rm[,m] <- D[,m]-Dpred[,m,i]
-      Res.cov[,,m,i] <- cov(as.matrix(Rm),use="pairwise.complete")            
+      Res.cov[,,m,i] <- cov(as.matrix(Rm),use="pairwise.complete") 
+      #Res.cov[,,m,i] <- cov(D) - cov(D[,m]-Dpred[,m,i])
       ## 2. Evaluate loss criteria on training sample. Covariance reduced, correlation reduced, uls, or gls
       wm.raw[i,m] <- eval.loss(Rm=as.matrix(Rm[s,]),D=as.matrix(D[s,]),alpha=alpha,type=cov.discrep)
     }              
@@ -218,15 +219,30 @@ mvtb <- function(X=X,Y=Y,n.trees=100,shrinkage=.01,interaction.depth=1,
       }
     }
     # compute the best mod, and which xs were selected
-    besty <- bestys[i] <- which.max(wm.raw[i,])           
-    bestxs[i] <- bestx <- which.max(rel.infl[,besty,i])    
+    #besty <- bestys[i] <- which.max(wm.raw[i,])           
+    ## as an approximation, choose the best x by relative influence in each col at iteration i
+    bestxs[i,] <- bestx <- apply(rel.infl[,,i,drop=F],2,function(col){which.max(col)})    
     
-    # compute the covariance reduced by the best predictor
-    Sd <- cov(D)-Res.cov[,,besty,i]
-    covex[bestx,] <- covex[bestx,] + Sd[lower.tri(Sd,diag=TRUE)]         
+    # compute the covariance reduced (explained) by the best predictor for each outcome
+    #correc <- ifelse(shrinkage==1,1,(-(shrinkage - 1)/(1-shrinkage)^i))
+    #correc <- 1
+    for(k in 1:m) {
+      Sd <- cov(D)-Res.cov[,,k,i]
+      #Sd[lower.tri(Sd)] <- Sd[lower.tri(Sd)]*correc
+      if(k > 1) {
+        if(bestx[k] == bestx[k-1]) {
+        # the covariance elements will be counted twice. Don't want this to happen.
+        # since the covariance elements at column (row) k are already counted, set them to zero for k+1
+        # at k = m, this will only update the variance
+          Sd[1:(k-1),] <- 0
+          Sd[,1:(k-1)] <- 0
+        }
+      }
+      covex[bestx[k],] <- covex[bestx[k],] + Sd[lower.tri(Sd,diag=TRUE)]     
+    }
     
     #Rm <- D - Dpred[,,i]
-    D <- Rm
+    D <- Y - yhat[,,i+1] # i=1 is init (colMeans Y)
     
     ## 7. Compute best iteration criteria: training and test error, sum of residual covariace matrix, weighted sum of residual covariance matrix
     #trainerr[i] <- mean((as.matrix(Rm[s,]))^2,na.rm=TRUE)
@@ -255,8 +271,8 @@ mvtb <- function(X=X,Y=Y,n.trees=100,shrinkage=.01,interaction.depth=1,
   fl <- list(models=models, covex=covex,maxiter=i,best.trees=best.trees,
              rel.infl=rel.infl, w.rel.infl=w.rel.infl,params=params,
              trainerr=trainerr[1:i],testerr=testerr[1:i],cv.err=cv.err[1:i],
-             bestxs=bestxs,bestys=bestys,
-             resid=Rm,ocv=ocv,
+             bestxs=bestxs,
+             resid=D,ocv=ocv,
              wm.raw=matrix(wm.raw[1:i,,drop=FALSE],nrow=i,ncol=k),wm.rel=wm.rel[1:i,,drop=FALSE],
              s=s,n=nrow(X),xnames=colnames(X),ynames=colnames(Y))
   if(compress) {

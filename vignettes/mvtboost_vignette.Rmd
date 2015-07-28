@@ -60,7 +60,9 @@ out2$best.trees
 
 ## 2. Interpreting the model
 
-The `summary` of the fitted model shows the best number of trees (the minimum of training, test or CV error if available), the relative influences of each predictor for each outcome, and the correlation explained in pairs of outcomes by predictors. We can see that displacement explains correlation in city and hwy mpg. 
+The `summary` of the fitted model shows the best number of trees (the minimum of training, test or CV error if available), the relative influences of each predictor for each outcome, and the correlation explained in pairs of outcomes by predictors. We can see that displacement explains correlation in city and highway mpg, while class and manufacturer primarily explain variance in city mpg.
+
+After tuning with cross-validation, results change slightly.
 
 ```{r}
 summary(out)
@@ -96,7 +98,7 @@ mvtb.perspec(out2,response.no = 1,predictor.no = c(2,8),xlab="displacement",ylab
 
 ### 2.3 Detecting departures from additivity
 
-Tree models can capture multi-way interactions, but they are difficult to detect. `mvtb.nonlin` detects when the model implied predictions depart from additivity as a function of all pairs of predictors. This will detect non-linear effects, and may indicate interactiosn if present. There are 3 implemented ways to compute this (see `Details` of `?mvtb.nonlin`) and more research is necessary to assess which approach is the most beneficial. 
+Tree models can capture multi-way interactions, but they are difficult to detect. `mvtb.nonlin` detects when the model implied predictions depart from additivity as a function of all pairs of predictors. This will detect non-linear effects, and may indicate interactions if present. There are 3 implemented ways to compute this (see `Details` of `?mvtb.nonlin`) and more research is necessary to assess which approach is the most beneficial. 
 
 Below, we show an example of computing departures from additivity. Pairs of predictors with significant non-linear effects might be plotted (as above) to investigate whether 2-way interactions exist. Below, we show that the most important non-linear effects all involve displacement, which has a very large non-linear effect.
 

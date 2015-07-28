@@ -61,8 +61,7 @@ Fitted model. This is a list containing the following elements:
   \item trainerr - multivariate training error at each tree
   \item testerr  - multivariate test error at each tree (if trainfrac < 1)
   \item cverr    - multivariate cv error at each tree (if cv.folds > 1)
-  \item bestxs - vector of predictors selected at each tree
-  \item bestys - vector of dependent variables selected at each tree
+  \item bestxs - matrix of predictors selected at each tree
   \item resid - n x q matrix of residuals after fitting all trees
   \item ocv - if save.cv=TRUE, returns the CV models.
   \item wm.raw - raw decreases in covariance attributable to a given tree
