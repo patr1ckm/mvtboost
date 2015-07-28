@@ -1,3 +1,4 @@
+context("test_covex")
 k <- 3
 #set.seed(100)
 
@@ -12,7 +13,7 @@ X <- matrix(rnorm(n),n,1)
 # X <- ifelse(X < .5,0,1) 
 Y <- X %*% B 
 
-a <- cov(Y)[1,3]
+a <- stats::cov(Y)[1,3]
 shrink <- c(.2,.5,.9,1)
 for(i in seq_along(shrink)){
   out <- mvtb(Y=Y,X=X,shrinkage=shrink[i],n.trees=1000)
@@ -22,7 +23,7 @@ for(i in seq_along(shrink)){
 
 E <- matrix(rnorm(n*q,0,.0001),n,q)
 Y <- X %*% B + E
-a <- cov(Y)[1,3]
+a <- stats::cov(Y)[1,3]
 shrink <- c(.2,.5,.9,1)
 for(i in seq_along(shrink)){
   out <- mvtb(Y=Y,X=X,shrinkage=shrink[i],n.trees=5000)
