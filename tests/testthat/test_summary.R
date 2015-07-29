@@ -17,7 +17,14 @@ out <- mvtb(Y=Y,X=X)
 summary(out)
 cluster.covex(out)
 mvtb.ri(out)
+gbm.ri(out)
 print.mvtb(out)
+
+out <- mvtb(Y=Y,X=X,compress = T)
+summary(out)
+print(out)
+cluster.covex(out)
+gbm.ri(out)
 
 # test single predictor case
 set.seed(123)

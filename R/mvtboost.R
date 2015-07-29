@@ -225,9 +225,6 @@ mvtb <- function(X=X,Y=Y,n.trees=100,shrinkage=.01,interaction.depth=1,
     
     # compute the covariance reduced (explained) by the best predictor for each outcome
     correc <- 1+(1-shrinkage)
-    #correc <- 1
-    # experimental correction for dichotomous:
-    # 1/(1-shrinkage)^(i-1)
     for(k in 1:m) {
       Sd <- cov(D)-Res.cov[,,k,i]
       Sd[lower.tri(Sd)] <- Sd[lower.tri(Sd)]*correc

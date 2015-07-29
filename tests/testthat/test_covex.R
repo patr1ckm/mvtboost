@@ -31,6 +31,18 @@ for(i in seq_along(shrink)){
   expect_true(all(abs(out$covex[out$covex > .01] - a) < .01))
 }
 
+## No approximation error
+Xb <- ifelse(X < .5,0,1)
+Y <- Xb %*% B
+a <- stats::cov(Y)[1,3]
+shrink <- c(.2,.5,.9,1)
+for(i in seq_along(shrink)){
+  out <- mvtb(Y=Y,X=Xb,shrinkage=shrink[i],n.trees=100)
+  # expect_equal(out$covex[c(2,4,5)],rep(0,3))
+  expect_true(all(abs(out$covex[out$covex > .01] - a) < 1E-10))
+}
+
+
 
 #colnames(Y) <- paste0("Y",1:k)
 #colnames(d$X) <- paste0("X",1:ncol(d$X))
@@ -158,7 +170,7 @@ for(i in seq_along(shrink)){
 # H <- Xm %*% solve(t(Xm) %*% Xm) %*% t(Xm)
 # t(y1) %*% (I - H*v) %*% y1 / (n-1)
 # var(e11)
-# 
+# t(y1) %*% (1-(I - H*v)%*%(1-H*v)) %*% y2 / (n-1)
 # 
 # library(expm)
 # (I - H*v) %^% 2

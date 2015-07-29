@@ -12,6 +12,7 @@ gbm.ri <- function(out,n.trees=NULL,relative="col",...){
   if(any(unlist(lapply(out,function(li){is.raw(li)})))){
     out <- uncomp.mvtb(out)
   }
+  if(is.null(n.trees)) { n.trees <- min(unlist(out$best.trees)) }
   k <- length(out$models)
   ri <- matrix(0,nrow=length(out$xnames),ncol=k)
   for(i in 1:k) {
