@@ -4,7 +4,8 @@
 \alias{summary.mvtb}
 \title{Computes a summary of the multivariate tree boosting model}
 \usage{
-\method{summary}{mvtb}(object, print = TRUE, n.trees = NULL, ...)
+\method{summary}{mvtb}(object, print = TRUE, n.trees = NULL,
+  relative = "tot", ...)
 }
 \arguments{
 \item{object}{mvtb output object}
@@ -12,6 +13,8 @@
 \item{print}{result (default is TRUE)}
 
 \item{n.trees}{number of trees used to compute relative influence. Defaults to the minimum number of trees by CV, test, or training error}
+
+\item{relative}{relative If 'col', each column sums to 100. If 'tot', the whole matrix sums to 100 (a percent). If 'n', the raw reductions in SSE are returned.}
 
 \item{...}{unused}
 }
