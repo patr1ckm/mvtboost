@@ -4,10 +4,10 @@
 \alias{gbm.ri}
 \title{Computes the relative influence of each predictor for each outcome from gbm.}
 \usage{
-gbm.ri(out, n.trees = NULL, relative = "col", ...)
+gbm.ri(object, n.trees = NULL, relative = "col", ...)
 }
 \arguments{
-\item{out}{mvtb output object}
+\item{object}{mvtb output object}
 
 \item{n.trees}{number of trees to use}
 

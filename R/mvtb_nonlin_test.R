@@ -19,7 +19,7 @@
 ## res[[1]]
 
 #' Detect departures from linearity from a multivariate tree boosting model.
-#' @param out object of class \code{mvtb}
+#' @param object object of class \code{mvtb}
 #' @param X matrix of predictors
 #' @param Y matrix of responses
 #' @param n.trees number of trees. Defaults to the minimum number of trees given that minimize CV, test, training error.
@@ -47,11 +47,11 @@
 #' 
 #' Friedman, J. H., & Meulman, J. J. (2003). Multiple additive regression trees with application in epidemiology. Statistics in medicine, 22(9), 1365-1381.
 #' @export
-mvtb.nonlin <-function(out, X, Y, n.trees=NULL,detect="grid",scale=TRUE) {
+mvtb.nonlin <-function(object, X, Y, n.trees=NULL,detect="grid",scale=TRUE) {
   #
   # p. miller, February 2015. Updated for multiple outcome variables
   # j. leathwick, j. elith - May 2007
-  
+  out <- object
   if(any(unlist(lapply(out,function(li){is.raw(li)})))){
     out <- uncomp.mvtb(out)
   }
@@ -212,9 +212,10 @@ intx.lm <- function (out,n.trees,which.y,data,n.preds,pred.names) {
 ##   reduction in sums of squared errors attributable to splitting on variables in the row
 ##   AFTER the first split on the variable in the column. 
 
-intx.influence <- function(mvtb.obj,k=1,n.trees,scale=TRUE) {
+intx.influence <- function(object,k=1,n.trees,scale=TRUE) {
   #do.one <- function(k,mvtb.obj,scale) {
   #gbm.object <- convert.mvtb.gbm(mvtb.obj,k)
+  mvtb.obj <- object
   gbm.object <- mvtb.obj$models[[k]]
   trees <- gbm.object$trees
   pred.names <- gbm.object$var.names

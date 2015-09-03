@@ -16,6 +16,6 @@ Y <- X %*% B + E
 summary(lm(Y~X[,1]*X[,2]+X[,2]*X[,3]))
 
 out <- mvtb(Y=Y,X=X[,1:3],n.trees=500,interaction.depth = 5,shrinkage = .5)
-o1 <- mvtb.nonlin(out=out,X=X[,1:3],Y=Y,n.trees = 500,detect = "grid")
-o2 <- mvtb.nonlin(out=out,X=X[,1:3],Y=Y,n.trees = 500,detect = "influence")
-o3 <- mvtb.nonlin(out=out,X=X[,1:3],Y=Y,n.trees = 500,detect = "lm")
+o1 <- mvtb.nonlin(out,X=X[,1:3],Y=Y,n.trees = 500,detect = "grid")
+o2 <- mvtb.nonlin(out,X=X[,1:3],Y=Y,n.trees = 500,detect = "influence")
+o3 <- mvtb.nonlin(out,X=X[,1:3],Y=Y,n.trees = 500,detect = "lm")

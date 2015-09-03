@@ -4,10 +4,10 @@
 \alias{uncomp.mvtb}
 \title{Uncompress a compressed mvtb output object}
 \usage{
-uncomp.mvtb(out)
+uncomp.mvtb(object)
 }
 \arguments{
-\item{out}{an object of class \code{mvtb}}
+\item{object}{an object of class \code{mvtb}}
 }
 \description{
 Uncompress a compressed mvtb output object

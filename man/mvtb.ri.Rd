@@ -4,10 +4,10 @@
 \alias{mvtb.ri}
 \title{Computes the relative influence of each predictor for each outcome.}
 \usage{
-mvtb.ri(out, n.trees = NULL, weighted = F, relative = "col")
+mvtb.ri(object, n.trees = NULL, weighted = F, relative = "col")
 }
 \arguments{
-\item{out}{mvtb output object}
+\item{object}{mvtb output object}
 
 \item{n.trees}{number of trees to use}
 

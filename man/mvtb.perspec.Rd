@@ -4,12 +4,12 @@
 \alias{mvtb.perspec}
 \title{Perspective plot for 2 predictors and 1 response.}
 \usage{
-mvtb.perspec(out, response.no = 1, predictor.no = 1:2, n.trees = NULL,
-  phi = 15, theta = -55, r = sqrt(10), d = 3, ticktype = "detailed",
-  ...)
+mvtb.perspec(object, response.no = 1, predictor.no = 1:2, n.trees = NULL,
+  phi = 15, theta = -55, r = sqrt(10), d = 3, xlab = NULL,
+  ylab = NULL, zlab = NULL, ticktype = "detailed", ...)
 }
 \arguments{
-\item{out}{mvtb output object}
+\item{object}{mvtb output object}
 
 \item{response.no}{index of the response variable}
 
@@ -24,6 +24,12 @@ mvtb.perspec(out, response.no = 1, predictor.no = 1:2, n.trees = NULL,
 \item{r}{distance from eye to center. See ?persp}
 
 \item{d}{strength of perspective. See ?persp.}
+
+\item{xlab,}{title for x axis, must be character strings.}
+
+\item{ylab,}{title for y axis, must be character strings.}
+
+\item{zlab,}{title for z axis, must be character strings.}
 
 \item{ticktype}{'detailed' gives axis points. See ?persp for other options.}
 

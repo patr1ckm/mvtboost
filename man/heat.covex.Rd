@@ -4,12 +4,12 @@
 \alias{heat.covex}
 \title{Simple heatmap of the covariance explained matrix.}
 \usage{
-heat.covex(out, clust.method = "ward.D", dist.method = "manhattan",
-  numformat = function(val) {     sub("^(-?)0.", "\\\\1.", sprintf("\%.2f",
-  val)) }, col = NULL, ...)
+heat.covex(object, clust.method = "ward.D", dist.method = "manhattan",
+  numformat = NULL, col = NULL, mar = c(5.1, 7.1, 4.1, 2.1),
+  cexRow = NULL, cexCol = NULL, ...)
 }
 \arguments{
-\item{out}{object of class \code{mvtb}}
+\item{object}{object of class \code{mvtb}}
 
 \item{clust.method}{clustering method for rows and columns. See ?hclust}
 
@@ -18,6 +18,12 @@ heat.covex(out, clust.method = "ward.D", dist.method = "manhattan",
 \item{numformat}{function to format the covex values into strings. Defaults to removing leading 0 and rounding to 2 decimal places.}
 
 \item{col}{A list of colors mappling onto covex explained values. A white to black gradient is default.}
+
+\item{mar}{See \code{?par}. Often it is useful to widen the left margin, a useful default is given here.}
+
+\item{cexRow,}{See \code{cex.axis} from par. The magnification used for the row axis labels. A useful default is provided.}
+
+\item{cexCol,}{See \code{cex.axis} from par. The magnification used for the col axis labels. The default is set equal to the row axis labels.}
 
 \item{...}{extra arguments are passed to image, then to plot. See ?image, ?par}
 }

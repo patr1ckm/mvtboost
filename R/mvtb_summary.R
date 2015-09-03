@@ -2,13 +2,14 @@
 #' 
 #' The relative influence of a predictor is the reduction in sums of squares attributable to splits on individual predictors.
 #' It is often expressed as a percent (sums to 100).
-#' @param out mvtb output object
+#' @param object mvtb output object
 #' @param n.trees number of trees to use
 #' @param relative How to scale the multivariate influences. If 'col', each column sums to 100. If 'tot', the whole matrix sums to 100 (a percent). If 'n', the raw reductions in SSE are returned.
 #' @param ... Additional arguments passed to \code{gbm::relative.influence}
 #' @return Matrix of (relative) influences.
 #' @export 
-gbm.ri <- function(out,n.trees=NULL,relative="col",...){
+gbm.ri <- function(object,n.trees=NULL,relative="col",...){
+  out <- object
   if(any(unlist(lapply(out,function(li){is.raw(li)})))){
     out <- uncomp.mvtb(out)
   }
@@ -33,13 +34,14 @@ gbm.ri <- function(out,n.trees=NULL,relative="col",...){
 #' 
 #' The relative influence of a predictor is the reduction in sums of squares attributable to splits on individual predictors.
 #' It is often expressed as a percent (sums to 100).
-#' @param out mvtb output object
+#' @param object mvtb output object
 #' @param n.trees number of trees to use
 #' @param weighted T/F. Reductions in SSE are weighted according the covariance explained by each predictor.
 #' @param relative If 'col', each column sums to 100. If 'tot', the whole matrix sums to 100 (a percent). If 'n', the raw reductions in SSE are returned.
 #' @return Matrix of (relative) influences.
 #' @export 
-mvtb.ri <- function(out,n.trees=NULL,weighted=F,relative="col"){
+mvtb.ri <- function(object,n.trees=NULL,weighted=F,relative="col"){
+  out <- object
   if(any(unlist(lapply(out,function(li){is.raw(li)})))){
     out <- uncomp.mvtb(out)
   }
@@ -60,7 +62,8 @@ mvtb.ri <- function(out,n.trees=NULL,weighted=F,relative="col"){
 }
 
 #' @importFrom stats var
-r2 <- function(out,Y,X,n.trees=NULL){
+r2 <- function(object,Y,X,n.trees=NULL){
+  out <- object
   if(is.null(n.trees)) { n.trees <- out$best.iter[[2]] }
   p <- predict.mvtb(out,n.trees,newdata=X)
   1-apply(Y - p,2,var)/apply(Y,2,var)
@@ -106,14 +109,17 @@ summary.mvtb <- function(object,print=TRUE,n.trees=NULL,relative="tot",...) {
 #' For each pair of predictors, computes the distance between the correlation matrices of the outcomes explained by those predictors.
 #' Values smaller than \code{getOption("digits")} are truncated to 0.
 #'  
-#' @param out mvtb output
+#' @param object mvtb output
 #' @param clust.method clustering method for rows and columns. See \code{?hclust}
 #' @param dist.method  method for computing the distance between two lower triangluar covariance matrices. See \code{?dist} for alternatives.
+#' @param plot Produces a heatmap of the covariance explained matrix. see \code{?heat.covex}
+#' @param ... Arguments passed to \code{heat.covex} 
 #' @return clustered covariance matrix, with rows and columns.
 #' @seealso \code{heat.covex}
 #' @export
 #' @importFrom stats hclust dist as.dendrogram order.dendrogram
-cluster.covex <- function(out,clust.method="ward.D",dist.method="manhattan") {
+cluster.covex <- function(object,clust.method="ward.D",dist.method="manhattan",plot=FALSE,...) {
+  out <- object
     if(any(unlist(lapply(out,function(li){is.raw(li)})))){
       out <- uncomp.mvtb(out)
     }
@@ -134,14 +140,17 @@ cluster.covex <- function(out,clust.method="ward.D",dist.method="manhattan") {
     }
     x <- x[rowInd,colInd,drop=FALSE]
     x <- zapsmall(x)
+    if(plot){
+      heat.covex(out,clust.method=clust.method,dist.method=dist.method,...)
+    }
     return(x)
 }
 
 #' Uncompress a compressed mvtb output object
-#' @param out an object of class \code{mvtb}
+#' @param object an object of class \code{mvtb}
 #' @export
-uncomp.mvtb <- function(out) { 
-  o <- lapply(out,function(li){unserialize(memDecompress(li,type="bzip2"))})
+uncomp.mvtb <- function(object) { 
+  o <- lapply(object,function(li){unserialize(memDecompress(li,type="bzip2"))})
   class(o) <- "mvtb"
   return(o)
 }

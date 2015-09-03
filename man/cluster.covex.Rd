@@ -4,14 +4,19 @@
 \alias{cluster.covex}
 \title{Computing a clustered covariance explained matrix}
 \usage{
-cluster.covex(out, clust.method = "ward.D", dist.method = "manhattan")
+cluster.covex(object, clust.method = "ward.D", dist.method = "manhattan",
+  plot = FALSE, ...)
 }
 \arguments{
-\item{out}{mvtb output}
+\item{object}{mvtb output}
 
 \item{clust.method}{clustering method for rows and columns. See \code{?hclust}}
 
 \item{dist.method}{method for computing the distance between two lower triangluar covariance matrices. See \code{?dist} for alternatives.}
+
+\item{plot}{Produces a heatmap of the covariance explained matrix. see \code{?heat.covex}}
+
+\item{...}{Arguments passed to \code{heat.covex}}
 }
 \value{
 clustered covariance matrix, with rows and columns.

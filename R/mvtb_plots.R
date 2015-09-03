@@ -44,7 +44,7 @@ plot.mvtb <- function(x,predictor.no=1,response.no=1,n.trees=NULL,X=NULL,xlab=NU
 #' As an alternative to the perspective (3D) plot, a 2D heat plot can be obtained directly
 #' using ?plot.gbm.
 #' 
-#' @param out mvtb output object
+#' @param object mvtb output object
 #' @param response.no index of the response variable
 #' @param predictor.no vector containing indeces of the predictor variables to plot
 #' @param n.trees desired number of trees (default: best trees)
@@ -53,23 +53,36 @@ plot.mvtb <- function(x,predictor.no=1,response.no=1,n.trees=NULL,X=NULL,xlab=NU
 #' @param r distance from eye to center. See ?persp
 #' @param d strength of perspective. See ?persp. 
 #' @param ticktype 'detailed' gives axis points. See ?persp for other options.
+#' @param xlab, title for x axis, must be character strings. 
+#' @param ylab, title for y axis, must be character strings.  
+#' @param zlab, title for z axis, must be character strings. 
 #' @param ... extra arguments are passed to persp. See ?persp
 #' @return Function is called for it's side effect, a plot.
 #' @seealso \code{plot.gbm}, \code{plot.mvtb}, \code{heat.covex}
 #' @export
 #' @importFrom graphics persp
-mvtb.perspec <- function(out,response.no=1,predictor.no=1:2,n.trees=NULL,
-                         phi=15,theta=-55,r=sqrt(10),d=3,ticktype="detailed",...) {
+mvtb.perspec <- function(object,response.no=1,predictor.no=1:2,n.trees=NULL,
+                         phi=15,theta=-55,r=sqrt(10),d=3,xlab=NULL,ylab=NULL,zlab=NULL,ticktype="detailed",...) {
+  out <- object
   if(any(unlist(lapply(out,function(li){is.raw(li)})))){
     out <- uncomp.mvtb(out)
   }
   if(is.null(n.trees)) { n.trees <- min(unlist(out$best.trees)) }
   gbm.obj <- out$models[[response.no]]
   grid <- gbm::plot.gbm(gbm.obj,i.var = predictor.no,n.trees = n.trees,perspective=TRUE,return.grid=TRUE)
-  x <- unique(grid[,1])
-  y <- unique(grid[,2])
+  x <- as.numeric(unique(grid[,1]))
+  y <- as.numeric(unique(grid[,2]))
+  if(is.null(xlab)){
+      xlab <- colnames(grid)[1]
+  }
+  if(is.null(ylab)){
+      ylab <- colnames(grid)[2]
+  }
+  if(is.null(zlab)){
+    zlab <- colnames(grid)[3]
+  }
   z <- matrix(grid[,3],length(unique(x)),length(unique(y)))
-  persp(x=as.numeric(x),y=as.numeric(y),z=z,d=d,r=r,phi=phi,theta=theta,ticktype=ticktype,...)
+  persp(x=x,y=y,z=z,d=d,r=r,phi=phi,theta=theta,ticktype=ticktype,xlab=xlab,ylab=ylab,zlab=zlab,...)
 }
 
 
@@ -96,19 +109,23 @@ plot.pw.perspec <- function(out,response.no,predictor.no,npairs=3,nonlin.rank=NU
 
 #' Simple heatmap of the covariance explained matrix.
 #' 
-#' @param out object of class \code{mvtb}
+#' @param object object of class \code{mvtb}
 #' @param clust.method clustering method for rows and columns. See ?hclust
 #' @param dist.method  method for computing the distance between two lower triangluar covariance matrices. See ?dist for alternatives.
 #' @param numformat function to format the covex values into strings. Defaults to removing leading 0 and rounding to 2 decimal places.
 #' @param col A list of colors mappling onto covex explained values. A white to black gradient is default.
+#' @param mar See \code{?par}. Often it is useful to widen the left margin, a useful default is given here.
+#' @param cexRow, See \code{cex.axis} from par. The magnification used for the row axis labels. A useful default is provided.
+#' @param cexCol, See \code{cex.axis} from par. The magnification used for the col axis labels. The default is set equal to the row axis labels.
 #' @param ... extra arguments are passed to image, then to plot. See ?image, ?par
 #' @return heatmap of the clustered covariance matrix.
 #' @details You will probably want to modify the default colors
 #' @export 
 #' @seealso \code{plot.mvtb}, \code{mvtb.perspec}
 #' @importFrom graphics image axis text
-heat.covex <- function(out,clust.method="ward.D",dist.method="manhattan",numformat=function(val){sub("^(-?)0.", "\\1.", sprintf("%.2f", val))},col=NULL,...) {
-  x <- cluster.covex(out,clust.method=clust.method,dist.method=dist.method)
+heat.covex <- function(object,clust.method="ward.D",dist.method="manhattan",numformat=NULL,col=NULL,mar=c(5.1,7.1,4.1,2.1),cexRow=NULL,cexCol=NULL,...) {
+  x <- cluster.covex(object,clust.method=clust.method,dist.method=dist.method)
+  if(is.null(numformat)){ numformat <- function(val){sub("^(-?)0.", "\\1.", sprintf("%.2f", val))}}
   cellnote <- matrix(numformat(x),dim(x))
   #cellnote <- cellnote[rowInd,colInd] DONT BE TEMPTED TO DO THIS
   x <- t(x)
@@ -116,14 +133,16 @@ heat.covex <- function(out,clust.method="ward.D",dist.method="manhattan",numform
   nc <- nrow(x) # final number of columns (usually predictors)
   nr <- ncol(x) # final number of rows    (usually dvs)
   if(is.null(col)) { col <- colorRampPaletteAlpha(RColorBrewer::brewer.pal(9,"Greys"),100)}
-  image(x=1:nc,y=1:nr,x,xlim = 0.5 + c(0, nc), ylim = 0.5 + 
-          c(0, nr),ylab="",xlab="",axes=F,col=col,...)
+  image(x=1:nc,y=1:nr,abs(x),xlim = 0.5 + c(0, nc), ylim = 0.5 + 
+          c(0, nr),ylab="",xlab="",axes=F,col=col)
   #axis(1,at=seq(0,1,length=nrow(x)))
-  cexRow <- .2+1/log10(max(nc,nr))
+  #cexRow <- .2+1/log10(max(nc,nr))
+  if(is.null(cexRow)) { cexRow <- log10(max(nc,nr)) }
+  if(is.null(cexCol)) { cexCol <- cexRow}
   axis(1, 1:nc, labels = rep("",nc), las = 2, line = -0.5, tick = 0, 
        cex.axis = cexRow)
   axis(2, 1:nr, labels = colnames(x), las = 2, line = -0.5, tick = 0, 
-       cex.axis = cexRow)
+       cex.axis = cexCol)
   text(x =  c(row(cellnote)), y = c(col(cellnote)), labels = c(cellnote), 
        col = "white", cex = 1)
   text(1:nc,rep(0,nc), las=2,cex.axis=cexRow,adj=1,

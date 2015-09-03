@@ -4,61 +4,60 @@
 \alias{mvtb}
 \title{Fitting a Multivariate Tree Boosting Model}
 \usage{
-mvtb(X = X, Y = Y, n.trees = 100, shrinkage = 0.01,
-  interaction.depth = 1, trainfrac = 1, samp.iter = FALSE, bag.frac = 1,
-  cv.folds = 1, s = NULL, seednum = NULL, compress = FALSE,
-  save.cv = FALSE, mc.cores = 1, alpha = 0.5, cov.discrep = 1,
-  weight.type = 1, ...)
+mvtb(X, Y, n.trees = 100, shrinkage = 0.01, interaction.depth = 1,
+  trainfrac = 1, bag.frac = 1, cv.folds = 1, s = NULL, seednum = NULL,
+  compress = FALSE, save.cv = FALSE, mc.cores = 1, samp.iter = FALSE,
+  alpha = 0.5, cov.discrep = 1, weight.type = 1, ...)
 }
 \arguments{
-\item{X}{matrix or data.frame of predictors. For best performance, continuous predictors should be scaled. Categorical variables should be factors.}
+\item{X}{matrix or data.frame of predictors. For best performance, continuous predictors should be scaled to have unit variance. Categorical variables should converted to factors.}
 
-\item{Y}{vector, matrix, or data.frame for outcome variables. For best performance, outcome variables should be scaled.}
+\item{Y}{vector, matrix, or data.frame for outcome variables. For best interpretability and to easily compare influences across outcomes, outcome variables should be scaled to have unit variance.}
 
-\item{n.trees}{maximum number of iterations (trees) to be included in the model}
+\item{n.trees}{maximum number of trees to be included in the model. Trees are grown until a minimum number observations in each node is reached. This minimum can be modified using additional arguments (below).}
 
-\item{shrinkage}{amount of shrinkage to be applied in each univariate model. This is the gbm shrinkage. Default is .01. Smaller shrinkage values require more iterations to ensure good fit.}
+\item{shrinkage}{a contant multiplier for the predictions from each tree to ensure a slow learning rate. Default is .01. Small shrinkage values may require a large number of trees to provide adequate fit.}
 
-\item{interaction.depth}{fixed depth of trees to be included in the model. A tree depth of 1 are stumps (main effects only), higher tree depths capture higher order interactions.}
+\item{interaction.depth}{fixed depth of trees to be included in the model. A tree depth of 1 corresponds to fitting stumps (main effects only), higher tree depths capture higher order interactions.}
 
-\item{trainfrac}{proportion of the sample used for training the multivariate additive model. If both cv.folds and trainfrac are specified, the CV is done within the training set only.}
+\item{trainfrac}{proportion of the sample used for training the multivariate additive model. The number of trees that minimize the multivariate MSE in the test set are given in out$best.trees. If both cv.folds and trainfrac are specified, the CV is done within the training set only.}
 
-\item{samp.iter}{Experimental, does nothing for now.}
+\item{bag.frac}{proportion of the training sample used to fit univariate trees for each response at each iteration. Default: 1}
 
-\item{bag.frac}{proportion of the training sample used to fit univariate trees for each response at each iteration. Default: .5}
-
-\item{cv.folds}{number of cross validation folds. Default: 1. For larger values, runs k + 1 models, where the k models are run in parallel.}
+\item{cv.folds}{number of cross validation folds. Default: 1. Runs k + 1 models, where the k models are run in parallel and the final model is run on the entire sample. If larger than 1, the number of trees that minimize the multivariate MSE averaged over k-folds is reported in object$best.trees.}
 
 \item{s}{vector of indices denoting observations to be used for the training sample. If s is specified, trainfrac is ignored.}
 
-\item{seednum}{integer < 1000 to ensure that results are reproducible}
+\item{seednum}{integer to ensure that results are reproducible}
 
 \item{compress}{T/F. Compress output results list using bzip2 (approx 10\% of original size). Default FALSE.}
 
-\item{save.cv}{T/F. Save all k cv models.}
+\item{save.cv}{T/F. Save all k-fold cross-validation models.}
 
 \item{mc.cores}{Number of cores for cross validation.}
 
+\item{samp.iter}{Experimental.}
+
 \item{alpha}{optional argument to select predictors that explain more variance or covariance in outcomes. Variance reductions are weighted by alpha, and covariance reductions are weighted by 1-alpha.}
 
-\item{cov.discrep}{see Details.}
+\item{cov.discrep}{Experimental. Choose the type of covariance discrepancy.}
 
-\item{weight.type}{see Details.}
+\item{weight.type}{Experimental.}
 
-\item{...}{additional arguments passed to \code{gbm}.}
+\item{...}{additional arguments passed to \code{gbm}. These include \code{distribution}, \code{weights}, \code{var.monotone}, \code{n.minobsinnode}, \code{keep.data}, \code{verbose}, \code{class.stratify.cv}.  Note that other \code{distribution} have not been tested.}
 }
 \value{
 Fitted model. This is a list containing the following elements:
 
 \itemize{
-  \item models - list of gbm models for each outcome.
-  \item covex - covariance explained in each pair of outcomes by each predictor, in original order.
-  \item maxiter - maximum number of iterations run
-  \item best.trees - list of the best best iteratino (min MSE test, min MSE cv, last)
+  \item models - list of gbm models for each outcome. Functions from the gbm package (e.g. to compute relative influence, print trees, obtain predictions, etc) can be directly applied to each of these models
+  \item covex - covariance explained in each pair of outcomes by each predictor. The covariance explained is only unambiguous if predictors are independent, otherwise it is an approximation. If the interaction.depth is larger than 1, the covariance explained is attributed to the predictor with the largest effect.
+  \item maxiter - maximum number of iterations run (the number of trees fit)
+  \item best.trees - list of the best number of trees given by minimizing the multivariate MSE error in the test set, by CV, or just the last tree fit. Many of the functions in the package default to using the minimum value of the three.
   \item rel.infl - n x q x n.trees matrix of relative influences
   \item w.rel.infl - n x q x n.trees matrix of weighted relative influences
   \item params - arguments to mvtb
-  \item trainerr - multivariate training error at each tree
+  \item trainerr - multivariate training error at each tree.
   \item testerr  - multivariate test error at each tree (if trainfrac < 1)
   \item cverr    - multivariate cv error at each tree (if cv.folds > 1)
   \item bestxs - matrix of predictors selected at each tree
@@ -77,19 +76,18 @@ Builds on \code{gbm} (Ridgeway 2013; Friedman, 2001) to fit a univariate tree mo
 }
 \details{
 Note that this is a beta version with details subject to change. Any contributions are welcome.
+Note that trees are grown until a minimum number of observations in each node is reached. If the number of training samples*bag.fraction is less the minimum number of observations, (which can occur with small data sets), this will throw an error. Adjust the \code{n.minobsinnode}, \code{tranfrac}, or \code{bag.fraction}.
 }
 \examples{
 set.seed(123)
 n <- 1000
+X <- matrix(rbinom(n*3,size=1,prob=.5),n,3)    # create 3 dichotomous predictors
+X2 <- cbind(x1x2=X[,1]*X[,2],x2x3=X[,2]*X[,3]) # create 2 interaction terms
+Xf <- cbind(X,X2)                              # full design matrix, used for data generation but not analysis. The interactions should be detectable.
+E <- matrix(rnorm(n*4),nrow=n,ncol=4)          # independent errors
 B <- matrix(0,nrow=5,ncol=4)
-B[3,1:2] <- 0
-B[2,2:3] <- 0
-B[4,1] <- 1
-B[5,3:4] <- 1
-X <- matrix(rbinom(n*(nrow(B)-2),size=1,prob=.5),n,nrow(B)-2)
-X2 <- cbind(x1x2=X[,1]*X[,2],x2x3=X[,2]*X[,3])
-Xf <- cbind(X,X2)
-E <- matrix(rnorm(n*4),nrow=n,ncol=4)
+B[4,1] <- 1                                    # x1x2 interaction has a true effect on outcome 1
+B[5,3:4] <- 1                                  # x2x3 interaction has a true effect on outcomes 3 and 4
 Y <- Xf \%*\% B + E
 
 
