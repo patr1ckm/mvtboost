@@ -25,10 +25,15 @@
 \item{...}{extra arguments are passed to plot. See ?par}
 }
 \value{
-Function is called for it's side effect, a plot of the model implied effect along with its influence computed from \code{gbm}
+Function does not return a value, but produces a plot of the model implied effect along with the relative influence of the predictor.
 }
 \description{
 Plots the model implied effect of 1 predictor for one outcome
+}
+\details{
+This is the classic partial dependence plot, where the model implied effect of the chosen predictor is plotted
+controlling for the other predictors. In additoin to the model-implied effect, the relative influence
+of the predictor is included in the x-axis label. If this is not desired, a custom xlabel can be provided.
 }
 \seealso{
 \code{plot.gbm}, \code{mvtb.perspec}, for other plots, \code{heat.covex} to plot the covariance explained by predictors in a heatmap

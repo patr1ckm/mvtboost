@@ -106,17 +106,35 @@ summary.mvtb <- function(object,print=TRUE,n.trees=NULL,relative="tot",...) {
 
 #' Computing a clustered covariance explained matrix
 #' 
-#' For each pair of predictors, computes the distance between the correlation matrices of the outcomes explained by those predictors.
-#' Values smaller than \code{getOption("digits")} are truncated to 0.
+#' The 'covariance explained' by each predictor is the reduction in covariance between each pair of outcomes due to splitting on each predictor over all trees (\code{$covex}).
+#' To aid in the interpretability of the covariance explained matrix, this function clusters the rows (pairs of outcomes) and the columns (predictors) of \code{$covex}
+#' so that groups of predictors that explain similar pairs of covariances are closer together.
+#' 
 #'  
 #' @param object mvtb output
 #' @param clust.method clustering method for rows and columns. See \code{?hclust}
 #' @param dist.method  method for computing the distance between two lower triangluar covariance matrices. See \code{?dist} for alternatives.
 #' @param plot Produces a heatmap of the covariance explained matrix. see \code{?heat.covex}
 #' @param ... Arguments passed to \code{heat.covex} 
-#' @return clustered covariance matrix, with rows and columns.
+#' @return clustered covariance matrix, with re-ordered rows and columns.
 #' @seealso \code{heat.covex}
 #' @export
+#' @details The covariance explained by each predictor is only unambiguous if the predictors are uncorrelated and interaction.depth = 1. 
+#' If predictors are not independent, the decomposition of covariance explained is only approximate (like the decomposition of R^2 by each predictor in a linear model). 
+#' If interaction.depth > 1, the following heuristic is used: the covariance explained by the tree is assigned to the predictor with the largest influence in each tree.
+#'
+#' Note that different distances measures (e.g. 'manhattan', 'euclidean') provide different ways to measure distances between 
+#' the covariance explained patterns for each predictor. See \code{?dist} for further details.
+#' After the distances have been computed, \code{hclust} is used to form clusters. 
+#' Different clustering methods (e.g. "ward.D", "complete") generally group rows and columns differently.
+#' It is suggested to try different distance measures and clustering methods to obtain the most interpretable solution. 
+#' The defaults are for 'manhattan' distances and 'ward.D' clustering, which seem to provide reasonable solutions in many cases.
+#'
+#' A simple heatmap of the clustered matrix can be obtained by setting \code{plot=TRUE}. Details of the plotting procedure are available via \code{heat.covex}.
+#' 
+#' \code{covex} values smaller than \code{getOption("digits")} are truncated to 0. Note that it is not impossible to obtain negative variance explained
+#' due to sampling fluctuaion. These can be truncated or ignored. 
+#'
 #' @importFrom stats hclust dist as.dendrogram order.dendrogram
 cluster.covex <- function(object,clust.method="ward.D",dist.method="manhattan",plot=FALSE,...) {
   out <- object

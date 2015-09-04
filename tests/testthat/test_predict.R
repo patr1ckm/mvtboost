@@ -27,7 +27,7 @@ expect_equal(m$models[[1]]$c.splits,m1$c.splits)
 expect_equal(m1$initF,m$models[[1]]$initF)
 
 for(i in c(1:10,20,50)) {
-     p <- predict.mvtb(m,newdata=Xf,n.trees=i) 
+     p <- predict(m,newdata=Xf,n.trees=i) 
      p1 <- predict(m1,newdata=Xf,n.trees=i)
      expect_equal(c(p),p1,info=paste0("ntrees = ",i))
  }
@@ -54,9 +54,9 @@ m1 <- gbm::gbm(y~.,distribution="gaussian",n.trees=50,data=d1,bag.fraction=1,tra
 
 
 for(i in c(1,2,3,10,50)) {
-    p <- predict.mvtb(m,newdata=newdata,n.trees=i) 
+    p <- predict(m,newdata=newdata,n.trees=i) 
     p1 <- predict(m1,newdata=newdata,n.trees=i)
-    expect_equal(p[,1,1],p1,info=paste0("ntrees = ",i))
+    expect_equal(p,p1,info=paste0("ntrees = ",i))
 }
 
 
@@ -83,7 +83,7 @@ m <- mvtb(X=Xf,Y=Y,n.trees=50,shrinkage=.5,interaction.depth=3,alpha=.05,weight.
 m1 <- gbm::gbm(y~.,distribution="gaussian",n.trees=50,data=d2,interaction.depth=3,bag.fraction=1,train.fraction=1,shrinkage=.5)
 
 for(i in c(1:10,20,50)) {
-    p <- predict.mvtb(m,newdata=newdata,n.trees=i) 
+    p <- predict(m,newdata=newdata,n.trees=i) 
     p1 <- predict(m1,newdata=newdata,n.trees=i)
     expect_equal(c(p),p1,info=paste0("ntrees = ",i))
 }
@@ -96,7 +96,7 @@ Y2 <- X %*% B + E2
 dt <- data.frame(y=Y2[,1],Xf)
 
 pe.wt <- function(mod,dt,bi=NULL,method=1){
-    yhat <- predict.mvtb(mod,newdata=Xf,n.trees=50)
+    yhat <- predict(mod,newdata=Xf,n.trees=50)
     mse <- mean((dt$y-yhat)^2)
     return(mse)
 }
