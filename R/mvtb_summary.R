@@ -36,8 +36,8 @@ gbm.ri <- function(object,n.trees=NULL,relative="col",...){
 #' It is often expressed as a percent (sums to 100).
 #' @param object mvtb output object
 #' @param n.trees number of trees to use
-#' @param weighted T/F. Reductions in SSE are weighted according the covariance explained by each predictor.
-#' @param relative If 'col', each column sums to 100. If 'tot', the whole matrix sums to 100 (a percent). If 'n', the raw reductions in SSE are returned.
+#' @param weighted T/F. Reductions in SSE are weighted according the covariance explained by each predictor. See \code{?mvtb} for details.
+#' @param relative If 'col', each column sums to 100. If 'tot', the whole matrix sums to 100 (a percent). Otherwise, the raw reductions in SSE are returned.
 #' @return Matrix of (relative) influences.
 #' @export 
 mvtb.ri <- function(object,n.trees=NULL,weighted=F,relative="col"){
@@ -165,6 +165,8 @@ cluster.covex <- function(object,clust.method="ward.D",dist.method="manhattan",p
 }
 
 #' Uncompress a compressed mvtb output object
+#' 
+#' This function uncompresses a compressed mvtb output object. All elements are uncompressed.
 #' @param object an object of class \code{mvtb}
 #' @export
 uncomp.mvtb <- function(object) { 

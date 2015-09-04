@@ -10,6 +10,6 @@ uncomp.mvtb(object)
 \item{object}{an object of class \code{mvtb}}
 }
 \description{
-Uncompress a compressed mvtb output object
+This function uncompresses a compressed mvtb output object. All elements are uncompressed.
 }
 

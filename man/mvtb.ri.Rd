@@ -11,9 +11,9 @@ mvtb.ri(object, n.trees = NULL, weighted = F, relative = "col")
 
 \item{n.trees}{number of trees to use}
 
-\item{weighted}{T/F. Reductions in SSE are weighted according the covariance explained by each predictor.}
+\item{weighted}{T/F. Reductions in SSE are weighted according the covariance explained by each predictor. See \code{?mvtb} for details.}
 
-\item{relative}{If 'col', each column sums to 100. If 'tot', the whole matrix sums to 100 (a percent). If 'n', the raw reductions in SSE are returned.}
+\item{relative}{If 'col', each column sums to 100. If 'tot', the whole matrix sums to 100 (a percent). Otherwise, the raw reductions in SSE are returned.}
 }
 \value{
 Matrix of (relative) influences.

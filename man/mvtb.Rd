@@ -90,12 +90,22 @@ the covariance explained in all pairs of outcomes by that predictor. This allows
 Setting \code{alpha} = 0 corresponds to weighting covariance explained only,
 letting \code{alpha} = 1 corresponds to weighting variance explained only.
 
-The model is tuned jointly by selecting the number of trees that minimize multivariate mean squared error in a test set or averaged over k folds in k-fold cross-validation.
+The model is tuned jointly by selecting the number of trees that minimize multivariate mean squared error in a test set (by setting \code{trainfrac}) or averaged over k folds in k-fold cross-validation (by setting \code{cv.folds > 1}).
 The best number of trees is avaiable via \code{$best.trees}. Cross-validation can be parallelized by setting mc.cores > 1.
+If both \code{cv.folds} and \code{trainfrac} is specified, cross-validation is carried out within the training set.
 Cross-validation models are usually discarded but can be saved by setting \code{save.cv = TRUE}. CV models can be accessed from \code{$ocv} of the
-output object. Multivariate mean squared training and test error are available from \code{$trainerr, $testerr} from the output object.
+output object.
+Multivariate mean squared training, test, and cv error are available from \code{$trainerr, $testerr, $cverr} from the output object.
+Observations can be specifically set for inclusion in the training set by passing a vector of integers indexing the rows to include to \code{s}.
+If \code{s} is specified, \code{trainfrac} is ignored but cross-validation will be carried out for observations in \code{s}.
 
-Note that trees are grown until a minimum number of observations in each node is reached. If the number of training samples*bag.fraction is less the minimum number of observations, (which can occur with small data sets), this will throw an error. Adjust the \code{n.minobsinnode}, \code{tranfrac}, or \code{bag.fraction}.
+Since the output objects can be large, automatic compression is available by setting \code{compress=TRUE}.
+All methods that use the \code{mvtb} object automatically uncompress this object if necessary.
+The function \code{uncomp.mvtb} is available to manually decompress the object.
+
+Note that trees are grown until a minimum number of observations in each node is reached.
+If the number of training samples*bag.fraction is less the minimum number of observations, (which can occur with small data sets), this will throw an error.
+Adjust the \code{n.minobsinnode}, \code{tranfrac}, or \code{bag.fraction}.
 
 This is a beta version with details subject to change. Any contributions are welcome.
 }
