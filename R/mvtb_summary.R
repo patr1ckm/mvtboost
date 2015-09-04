@@ -174,3 +174,5 @@ uncomp.mvtb <- function(object) {
   class(o) <- "mvtb"
   return(o)
 }
+
+

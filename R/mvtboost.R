@@ -542,4 +542,8 @@ predict.mvtb <- function(object, n.trees=NULL, newdata, drop=TRUE,...) {
   return(Pred)
 }
 
+#residuals.mvtb <- fucntion(object,n.trees,...){
+#  
+#}
+
 
