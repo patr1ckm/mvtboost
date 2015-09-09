@@ -11,7 +11,8 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r,eval=FALSE}
+# Fitting the model
+```{r,eval=TRUE}
 #install.packages("mvtboost")
 library(mvtboost)
 data(wellbeing)
@@ -19,16 +20,65 @@ str(wellbeing)
 summary(wellbeing)
 Y <- wellbeing[,18:23]
 X <- wellbeing[,1:17]
-Ys <- scale(Y,scale = TRUE,center = FALSE)
+Ys <- scale(Y)
 cont.id <- unlist(lapply(X,is.numeric))
 Xs <- scale(X[,cont.id])
 res <- mvtb(Y=Ys,X=X)
+```
 
-
+# Tuning the model by 5-Fold CV
+```{r,eval=FALSE}
 # tuning the model
-system.time(res2 <- mvtb(Y=Ys,X=X,n.trees=1000,shrinkage=.01,cv.folds=1))
+system.time(res5 <- mvtb(Y=Ys,X=X,n.trees=10000,shrinkage=.005,cv.folds=5,compress=FALSE))
+save(res5,file="vignettes/wb_cv5.Rdata")
+```
 
-system.time(res3 <- mvtb(Y=Ys,X=X,n.trees=10000,shrinkage=.01,cv.folds=1,compress=TRUE))
-res3o <- uncomp.mvtb(res3)
+```{r}
+load("wb_cv5.Rdata")
+res5$best.trees
+summary(res5)
+```
 
+```{r,echo=FALSE}
+plot(x=1:10000,y=res5$trainerr,type="l",ylab="Error",xlab="Number of trees")
+abline(v=res5$best.trees$best.cv)
+lines(x=1:10000,y=res5$cv.err,type="l",col="red")
+legend("topright",legend=c("Training Error","Cross-Validation Error"),lty=c(1,1),col=c("black","red"),bty="n")
+```
+
+```{r,echo=FALSE}
+heat.x <- function(x,clust.method="ward.D",dist.method="manhattan",numformat=NULL,col=NULL,mar=c(5.1,7.1,4.1,2.1),cexRow=NULL,cexCol=NULL,...) {
+  if(is.null(numformat)){ numformat <- function(val){sub("^(-?)0.", "\\1.", sprintf("%.2f", val))}}
+  cellnote <- matrix(numformat(x),dim(x))
+  #cellnote <- cellnote[rowInd,colInd] DONT BE TEMPTED TO DO THIS
+  x <- t(x)
+  cellnote <- t(cellnote)
+  nc <- nrow(x) # final number of columns (usually predictors)
+  nr <- ncol(x) # final number of rows    (usually dvs)
+  if(is.null(col)) { col <- mvtboost:::colorRampPaletteAlpha(RColorBrewer::brewer.pal(9,"Greys"),100)}
+  image(x=1:nc,y=1:nr,abs(x),xlim = 0.5 + c(0, nc), ylim = 0.5 + 
+          c(0, nr),ylab="",xlab="",axes=F,col=col)
+  #axis(1,at=seq(0,1,length=nrow(x)))
+  #cexRow <- .2+1/log10(max(nc,nr))
+  if(is.null(cexRow)) { cexRow <- log10(max(nc,nr)) }
+  if(is.null(cexCol)) { cexCol <- cexRow}
+  axis(1, 1:nc, labels = rep("",nc), las = 2, line = -0.5, tick = 0, 
+       cex.axis = cexRow)
+  axis(2, 1:nr, labels = colnames(x), las = 2, line = -0.5, tick = 0, 
+       cex.axis = cexCol)
+  text(x =  c(row(cellnote)), y = c(col(cellnote)), labels = c(cellnote), 
+       col = "white", cex = 1)
+  text(1:nc,rep(0,nc), las=2,cex.axis=cexRow,adj=1,
+       labels = rownames(x), xpd = TRUE,srt=45,
+       col="black")
+}
+
+```
+
+
+# Interpret the model
+```{r}
+round(mvtb.ri(res5),2)
+heat.x(t(mvtb.ri(res5)),cexRow=.8)
+mvtb.ri(res5,weighted=TRUE)
 ```

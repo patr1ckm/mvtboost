@@ -284,16 +284,18 @@ mvtb <- function(X,Y,n.trees=100,shrinkage=.01,interaction.depth=1,
     #  testerr[i] <- mean((as.matrix(Rm[-s,]))^2,na.rm=TRUE)
     #}
     
+    ## 8. Compute weighted influences
+    for(m in 1:k) {
+      #rel.infl[,m] <- relative.influence(models[[m]],n.trees=i,scale=FALSE)
+      w.rel.infl[,m,i] <- rel.infl[,m,i]*wm.rel[i,m]
+    }
+    
     if(final.iter) {
       i <- i-1 # don't count the last iteration if all weights are  0
       break;
     }
   }
-  ## 8. Compute weighted influences
-  for(m in 1:k) {
-    #rel.infl[,m] <- relative.influence(models[[m]],n.trees=i,scale=FALSE)
-    w.rel.infl[,m,i] <- rel.infl[,m,i]*wm.rel[i,m]
-  }
+ 
   
   best.trees <- list(best.testerr=which.min(testerr),best.cv=best.iters.cv,last=i)
 
@@ -453,6 +455,7 @@ mvtbCV <- function(params) {
     # Last fold contains the full sample
     if(params$mc.cores > 1) {
         cores <- params$mc.cores
+        #cluster <- parallel::makeCluster(cores)
         params$mc.cores <- NULL
         out.k <- parallel::mclapply(1:(cv.folds+1),runone,params=params,cv.groups=cv.groups,sorig=sorig,mc.cores=cores)
     } else {

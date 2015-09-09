@@ -151,4 +151,12 @@ out$cv.err <- out2$cv.err <- NULL
 expect_equal(out,out2)
 
 
+#out <- mvtb(X=X,Y=Y,n.trees=n.trees,shrinkage=.5,cv.folds=3,compress=F,seednum=1,bag.frac=.5,trainfrac=.5,mc.cores=1)
+#out2 <- mvtb(X=X,Y=Y,n.trees=n.trees,shrinkage=.5,cv.folds=1,compress=F,seednum=1,bag.frac=.5,trainfrac=.5,mc.cores=3)
+#out$params <- out2$params
+#out$best.trees <- out2$best.trees
+#out$cv.err <- out2$cv.err <- NULL
+#expect_equal(out,out2)
+
+
 
