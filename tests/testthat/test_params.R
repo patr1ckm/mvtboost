@@ -86,13 +86,13 @@ expect_true(!identical(r1,r3))
 context("compress")
 r <- mvtb(X=X,Y=Y,n.trees=5,alpha=.5, trainfrac=.5,samp.iter=FALSE,cov.discrep=1,weight.type=2,bag.frac=.5,s=1:500,seednum=8,compress=FALSE,cv.folds=3,save.cv=TRUE)
 r1 <- mvtb(X=X,Y=Y,n.trees=5,alpha=.5, trainfrac=.5,samp.iter=FALSE,cov.discrep=1,weight.type=2,bag.frac=.5,s=1:500,seednum=8,compress=TRUE,cv.folds=3,save.cv=TRUE)
-r2 <- uncomp.mvtb(r1)
+r2 <- mvtb.uncomp(r1)
 r$params$compress <- TRUE # set to TRUE so that the comparison is legitimate
 expect_equal(r,r2)
 
 r <- mvtb(X=X,Y=Y,n.trees=5,alpha=.5, cv.folds=1,samp.iter=FALSE,cov.discrep=1,weight.type=2,bag.frac=.5,s=1:500,seednum=8,compress=FALSE)
 r1 <- mvtb(X=X,Y=Y,n.trees=5,alpha=.5, cv.folds=1,samp.iter=FALSE,cov.discrep=1,weight.type=2,bag.frac=.5,s=1:500,seednum=8,compress=TRUE)
-r2 <- uncomp.mvtb(r1)
+r2 <- mvtb.uncomp(r1)
 r$params$compress <- TRUE
 expect_equal(r,r2)
 

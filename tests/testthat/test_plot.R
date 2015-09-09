@@ -1,3 +1,5 @@
+context("test_plot")
+
 set.seed(123)
 n <- 1000
 B <- matrix(0,nrow=5,ncol=4)
@@ -17,3 +19,6 @@ out <- mvtb(Y=Y,X=X,n.trees=100,shrinkage = .5)
 plot(out)
 mvtb.perspec(out)
 mvtb.heat(out)
+mvtb.heat(out$covex)
+mvtb.heat(t(mvtb.ri(out)))
+mvtb.heat(t(mvtb.ri(out)),clust.method=NULL)

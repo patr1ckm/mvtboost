@@ -26,7 +26,7 @@ plot.mvtb <- function(x,predictor.no=1,response.no=1,n.trees=NULL,X=NULL,xlab=NU
     x <- mvtb.uncomp(x)
   }
   if(is.null(n.trees)) { n.trees <- min(unlist(x$best.trees)) }
-  gbm.obj <- out$models[[response.no]]
+  gbm.obj <- x$models[[response.no]]
   ri <- gbm::relative.influence(gbm.obj,n.trees=n.trees)/sum(gbm::relative.influence(gbm.obj,n.trees=n.trees))*100
   ri <- ri[predictor.no]
   #gbm.obj <- convert.mvtb.gbm(out,k=response.no)

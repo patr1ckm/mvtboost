@@ -15,7 +15,7 @@ Y <- Xf %*% B + E
 ## Again, tests just to make sure that they run
 out <- mvtb(Y=Y,X=X)
 summary(out)
-cluster.covex(out)
+mvtb.cluster(out)
 mvtb.ri(out)
 gbm.ri(out)
 print.mvtb(out)
@@ -23,7 +23,7 @@ print.mvtb(out)
 out <- mvtb(Y=Y,X=X,compress = T)
 summary(out)
 print(out)
-cluster.covex(out)
+mvtb.cluster(out)
 gbm.ri(out)
 
 # test single predictor case
