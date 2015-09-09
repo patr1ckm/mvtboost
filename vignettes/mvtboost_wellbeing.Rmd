@@ -1,0 +1,34 @@
+---
+title: "MVTBoost Example 2: Well-being"
+author: "Patrick Miller"
+date: "`r Sys.Date()`"
+output: 
+  rmarkdown::html_vignette:
+    fig_caption: yes
+vignette: >
+  %\VignetteIndexEntry{Tree Boosting with Multivariate Outcomes}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r,eval=FALSE}
+#install.packages("mvtboost")
+library(mvtboost)
+data(wellbeing)
+str(wellbeing)
+summary(wellbeing)
+Y <- wellbeing[,18:23]
+X <- wellbeing[,1:17]
+Ys <- scale(Y,scale = TRUE,center = FALSE)
+cont.id <- unlist(lapply(X,is.numeric))
+Xs <- scale(X[,cont.id])
+res <- mvtb(Y=Ys,X=X)
+
+
+# tuning the model
+system.time(res2 <- mvtb(Y=Ys,X=X,n.trees=1000,shrinkage=.01,cv.folds=1))
+
+system.time(res3 <- mvtb(Y=Ys,X=X,n.trees=10000,shrinkage=.01,cv.folds=1,compress=TRUE))
+res3o <- uncomp.mvtb(res3)
+
+```

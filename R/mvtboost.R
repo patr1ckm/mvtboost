@@ -135,7 +135,7 @@ mvtb <- function(X,Y,n.trees=100,shrinkage=.01,interaction.depth=1,
     #print(c("mvtboost: seednum ",seednum));
     set.seed(seednum)
   }
- 
+  stopifnot(nrow(X) == nrow(Y))
   
   ## Data
   n <- nrow(X); k <- ncol(Y); p <- ncol(X);

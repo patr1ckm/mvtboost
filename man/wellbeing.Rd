@@ -4,7 +4,7 @@
 \title{Psychological well-being}
 \description{
 
-This data set contains 985 survey responses on the psychological well being (Ryff & Keyes, 1995) of middle-aged and older adults. Psychological well-being has 6 sub-scales - autonomy, environmental mastery (envmast), personal growth (prsgrwth), positive relationships with others (posrel), purpose in life (prpsnlf), and self acceptance. These sub-scales are columns 18:23.
+This data set contains 984 survey responses on the psychological well being (Ryff & Keyes, 1995) of middle-aged and older adults. Psychological well-being has 6 sub-scales - autonomy, environmental mastery (envmast), personal growth (prsgrwth), positive relationships with others (posrel), purpose in life (prpsnlf), and self acceptance. These sub-scales are columns 18:23.
 
 Many potential predictors of psychological well-being are included:
 
@@ -13,7 +13,7 @@ gender, education (educ, with levels high-school, vocational, some-college, grad
 
 }
              \usage{wellbeing}
-             \format{A data frame of 985 observations and 23 variables.}
+             \format{A data frame of 984 observations and 23 variables.}
              \source{...}
              \references{
                ..
