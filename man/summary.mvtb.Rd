@@ -25,6 +25,6 @@ Returns the best number of trees, the univariate relative influence of each pred
 Computes a summary of the multivariate tree boosting model
 }
 \seealso{
-\code{mvtb.ri}, \code{gbm.ri}, \code{cluster.covex}
+\code{mvtb.ri}, \code{gbm.ri}, \code{mvtb.cluster}
 }
 

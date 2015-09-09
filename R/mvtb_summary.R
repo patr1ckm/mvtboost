@@ -11,7 +11,7 @@
 gbm.ri <- function(object,n.trees=NULL,relative="col",...){
   out <- object
   if(any(unlist(lapply(out,function(li){is.raw(li)})))){
-    out <- uncomp.mvtb(out)
+    out <- mvtb.uncomp(out)
   }
   if(is.null(n.trees)) { n.trees <- min(unlist(out$best.trees)) }
   k <- length(out$models)
@@ -43,7 +43,7 @@ gbm.ri <- function(object,n.trees=NULL,relative="col",...){
 mvtb.ri <- function(object,n.trees=NULL,weighted=F,relative="col"){
   out <- object
   if(any(unlist(lapply(out,function(li){is.raw(li)})))){
-    out <- uncomp.mvtb(out)
+    out <- mvtb.uncomp(out)
   }
   if(is.null(n.trees)) { n.trees <- min(unlist(out$best.trees)) }
   if(weighted) {
@@ -76,7 +76,7 @@ r2 <- function(object,Y,X,n.trees=NULL){
 #' @importFrom utils str
 print.mvtb <- function(x,...) {
   if(any(unlist(lapply(x,function(li){is.raw(li)})))){
-    x <- uncomp.mvtb(x)
+    x <- mvtb.uncomp(x)
   }
   str(x,1)
 }
@@ -89,35 +89,37 @@ print.mvtb <- function(x,...) {
 #' @param relative relative If 'col', each column sums to 100. If 'tot', the whole matrix sums to 100 (a percent). If 'n', the raw reductions in SSE are returned.
 #' @param ... unused
 #' @return Returns the best number of trees, the univariate relative influence of each predictor for each outcome, and covariance explained in pairs of outcomes by each predictor
-#' @seealso \code{mvtb.ri}, \code{gbm.ri}, \code{cluster.covex}
+#' @seealso \code{mvtb.ri}, \code{gbm.ri}, \code{mvtb.cluster}
 #' @export
 summary.mvtb <- function(object,print=TRUE,n.trees=NULL,relative="tot",...) {
   out <- object
   if(any(unlist(lapply(out,function(li){is.raw(li)})))){
-    out <- uncomp.mvtb(out)
+    out <- mvtb.uncomp(out)
   }
   if(is.null(n.trees)) { n.trees <- min(unlist(out$best.trees)) }
   ri <- mvtb.ri(out,n.trees=n.trees,relative=relative)
-  cc <- cluster.covex(out)
-  sum <- list(best.trees=n.trees,relative.influence=ri,cluster.covex=cc)
+  cc <- mvtb.cluster(out)
+  sum <- list(best.trees=n.trees,relative.influence=ri,mvtb.cluster=cc)
   if(print){ print(lapply(sum,function(o){round(o,2)})) }
   invisible(sum)
 }
 
-#' Computing a clustered covariance explained matrix
+#' Clustering the covariance explained or relative influence matrix
 #' 
 #' The 'covariance explained' by each predictor is the reduction in covariance between each pair of outcomes due to splitting on each predictor over all trees (\code{$covex}).
-#' To aid in the interpretability of the covariance explained matrix, this function clusters the rows (pairs of outcomes) and the columns (predictors) of \code{$covex}
+#' To aid in the interpretability of the covariance explained matrix, this function clusters the rows (pairs of outcomes) and the columns (predictors) of \code{object$covex}
 #' so that groups of predictors that explain similar pairs of covariances are closer together.
 #' 
+#' This function can also be used to cluster the relative influence matrix. In this case, the rows (usually outcomes) and columns (usually predictors) with similar values will
+#' be clustered together.
 #'  
-#' @param object mvtb output
+#' @param Any table (e.g. \code{object$covex}), \code{mvtb.ri(object)}. If an mvtb object, defaults to \code{object$covex}
 #' @param clust.method clustering method for rows and columns. See \code{?hclust}
 #' @param dist.method  method for computing the distance between two lower triangluar covariance matrices. See \code{?dist} for alternatives.
-#' @param plot Produces a heatmap of the covariance explained matrix. see \code{?heat.covex}
-#' @param ... Arguments passed to \code{heat.covex} 
+#' @param plot Produces a heatmap of the covariance explained matrix. see \code{?mvtb.heat}
+#' @param ... Arguments passed to \code{mvtb.heat} 
 #' @return clustered covariance matrix, with re-ordered rows and columns.
-#' @seealso \code{heat.covex}
+#' @seealso \code{mvtb.heat}
 #' @export
 #' @details The covariance explained by each predictor is only unambiguous if the predictors are uncorrelated and interaction.depth = 1. 
 #' If predictors are not independent, the decomposition of covariance explained is only approximate (like the decomposition of R^2 by each predictor in a linear model). 
@@ -129,19 +131,22 @@ summary.mvtb <- function(object,print=TRUE,n.trees=NULL,relative="tot",...) {
 #' Different clustering methods (e.g. "ward.D", "complete") generally group rows and columns differently.
 #' It is suggested to try different distance measures and clustering methods to obtain the most interpretable solution. 
 #' The defaults are for 'manhattan' distances and 'ward.D' clustering, which seem to provide reasonable solutions in many cases.
+#' Transposing the rows and columns may also lead to different results.
 #'
-#' A simple heatmap of the clustered matrix can be obtained by setting \code{plot=TRUE}. Details of the plotting procedure are available via \code{heat.covex}.
+#' A simple heatmap of the clustered matrix can be obtained by setting \code{plot=TRUE}. Details of the plotting procedure are available via \code{mvtb.heat}.
 #' 
 #' \code{covex} values smaller than \code{getOption("digits")} are truncated to 0. Note that it is not impossible to obtain negative variance explained
 #' due to sampling fluctuaion. These can be truncated or ignored. 
 #'
 #' @importFrom stats hclust dist as.dendrogram order.dendrogram
-cluster.covex <- function(object,clust.method="ward.D",dist.method="manhattan",plot=FALSE,...) {
-  out <- object
-    if(any(unlist(lapply(out,function(li){is.raw(li)})))){
-      out <- uncomp.mvtb(out)
+mvtb.cluster <- function(x,clust.method="ward.D",dist.method="manhattan",plot=FALSE,...) {
+    out <- x
+    if(class(out) %in% "mvtb"){
+      if(any(unlist(lapply(out,function(li){is.raw(li)})))){
+        out <- mvtb.uncomp(out)
+      }
+      x <- out$covex
     }
-    x <- out$covex
     if(nrow(x) > 1) { 
       hcr <- hclust(dist(x,method=dist.method),method=clust.method)
       ddr <- as.dendrogram(hcr)
@@ -159,7 +164,7 @@ cluster.covex <- function(object,clust.method="ward.D",dist.method="manhattan",p
     x <- x[rowInd,colInd,drop=FALSE]
     x <- zapsmall(x)
     if(plot){
-      heat.covex(out,clust.method=clust.method,dist.method=dist.method,...)
+      mvtb.heat(out,clust.method=clust.method,dist.method=dist.method,...)
     }
     return(x)
 }
@@ -169,7 +174,7 @@ cluster.covex <- function(object,clust.method="ward.D",dist.method="manhattan",p
 #' This function uncompresses a compressed mvtb output object. All elements are uncompressed.
 #' @param object an object of class \code{mvtb}
 #' @export
-uncomp.mvtb <- function(object) { 
+mvtb.uncomp <- function(object) { 
   o <- lapply(object,function(li){unserialize(memDecompress(li,type="bzip2"))})
   class(o) <- "mvtb"
   return(o)

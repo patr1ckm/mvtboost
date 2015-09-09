@@ -18,6 +18,9 @@ library(mvtboost)
 data(wellbeing)
 str(wellbeing)
 summary(wellbeing)
+ynames <- c("Autonomy","Environmental Mastery","Personal Growth","Positive Relationships","Purpose in Life","Self Acceptance")
+xnames <- c("Gender","Age","Income","Education","Chronic Health","Somatic Health","Self Report Health","Positive Affect","Negative Affect","Perceived Social Control","Control Internal States","Commitment","Control","Challenge","Ego Resilience","Social Support - Friends","Social Support - Family","Stress-Problems","Stress-Emotions","Loneliness")
+
 Y <- wellbeing[,18:23]
 X <- wellbeing[,1:17]
 Ys <- scale(Y)

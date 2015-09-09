@@ -53,7 +53,7 @@ mvtb.nonlin <-function(object, X, Y, n.trees=NULL,detect="grid",scale=TRUE) {
   # j. leathwick, j. elith - May 2007
   out <- object
   if(any(unlist(lapply(out,function(li){is.raw(li)})))){
-    out <- uncomp.mvtb(out)
+    out <- mvtb.uncomp(out)
   }
   if(is.null(n.trees)) { n.trees <- min(unlist(out$best.trees)) }
   data <- X

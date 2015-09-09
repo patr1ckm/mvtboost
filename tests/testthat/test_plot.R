@@ -16,4 +16,4 @@ Y <- Xf %*% B + E
 out <- mvtb(Y=Y,X=X,n.trees=100,shrinkage = .5)
 plot(out)
 mvtb.perspec(out)
-heat.covex(out)
+mvtb.heat(out)

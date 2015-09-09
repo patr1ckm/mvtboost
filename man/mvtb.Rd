@@ -79,8 +79,8 @@ This function computes separate gbm models for each outcome (contained in \code{
 each predictor is then computed based on the reduction in covariance between outcomes that results from fitting a single tree to each outcome, one outcome at a time.
 The reduction in covariance between each pair of outcomes due to splitting on each predictor over all trees is the 'covariance explained' by each predictor, and is recorded in \code{$covex}.
 
-The rows (pairs of outcomes) and the columns (predictors) of \code{$covex} can be clustered so that groups of predictors that explain similar pairs of covariances are closer together (see  \code{cluster.covex}).
-A simple heatmap of this matrix can be obtained by the function \code{heat.covex}. The \code{covex} by each predictor is only unambiguous if the predictors are uncorrelated and interaction.depth = 1.
+The rows (pairs of outcomes) and the columns (predictors) of \code{$covex} can be clustered so that groups of predictors that explain similar pairs of covariances are closer together (see  \code{mvtb.cluster}).
+A simple heatmap of this matrix can be obtained by the function \code{mvtb.heat}. The \code{covex} by each predictor is only unambiguous if the predictors are uncorrelated and interaction.depth = 1.
 If predictors are not independent, the decomposition of covariance explained is only approximate (like the decomposition of R^2 by each predictor in a linear model).
 If interaction.depth > 1, the following heuristic is used: the covariance explained by the tree is assigned to the predictor with the largest influence in each tree.
 
@@ -101,7 +101,7 @@ If \code{s} is specified, \code{trainfrac} is ignored but cross-validation will 
 
 Since the output objects can be large, automatic compression is available by setting \code{compress=TRUE}.
 All methods that use the \code{mvtb} object automatically uncompress this object if necessary.
-The function \code{uncomp.mvtb} is available to manually decompress the object.
+The function \code{mvtb.uncomp} is available to manually decompress the object.
 
 Note that trees are grown until a minimum number of observations in each node is reached.
 If the number of training samples*bag.fraction is less the minimum number of observations, (which can occur with small data sets), this will throw an error.
@@ -135,8 +135,8 @@ summary(out)
 plot(out)
 mvtb.nonlin(out,X=X,Y=Y)
 mvtb.perspec(out)
-cluster.covex(out)
-heat.covex(out)
+mvtb.cluster(out)
+mvtb.heat(out)
 }
 \references{
 Miller P.J., Lubke G.H, McArtor D.B., Bergeman C.S. (Submitted) Finding structure in data: A data mining alternative to multivariate multiple regression. Psychological Methods.
@@ -148,7 +148,7 @@ Elith, J., Leathwick, J. R., & Hastie, T. (2008). A working guide to boosted reg
 Friedman, J. H. (2001). Greedy function approximation: a gradient boosting machine. Annals of statistics, 1189-1232.
 }
 \seealso{
-\code{summary.mvtb}, \code{predict.mvtb}, \code{mvtb.nonlin} to help detect nonlinear effects, \code{plot.mvtb}, \code{mvtb.perspec} for plots, \code{cluster.covex}, \code{heat.covex}
-\code{uncomp.mvtb} to uncompress a compressed output object
+\code{summary.mvtb}, \code{predict.mvtb}, \code{mvtb.nonlin} to help detect nonlinear effects, \code{plot.mvtb}, \code{mvtb.perspec} for plots, \code{mvtb.cluster}, \code{mvtb.heat}
+\code{mvtb.uncomp} to uncompress a compressed output object
 }
 

@@ -13,7 +13,7 @@
 #' @param ylab label of the y axis
 #' @param ... extra arguments are passed to plot. See ?par
 #' @return Function does not return a value, but produces a plot of the model implied effect along with the relative influence of the predictor.
-#' @seealso \code{plot.gbm}, \code{mvtb.perspec}, for other plots, \code{heat.covex} to plot the covariance explained by predictors in a heatmap
+#' @seealso \code{plot.gbm}, \code{mvtb.perspec}, for other plots, \code{mvtb.heat} to plot the covariance explained by predictors in a heatmap
 #' @export
 #' @importFrom graphics plot rug
 #' @details 
@@ -22,11 +22,10 @@
 #' of the predictor is included in the x-axis label. If this is not desired, a custom xlabel can be provided.
 #' 
 plot.mvtb <- function(x,predictor.no=1,response.no=1,n.trees=NULL,X=NULL,xlab=NULL,ylab=NULL,...){
-  out <- x
-  if(any(unlist(lapply(out,function(li){is.raw(li)})))){
-    out <- uncomp.mvtb(out)
+  if(any(unlist(lapply(x,function(li){is.raw(li)})))){
+    x <- mvtb.uncomp(x)
   }
-  if(is.null(n.trees)) { n.trees <- min(unlist(out$best.trees)) }
+  if(is.null(n.trees)) { n.trees <- min(unlist(x$best.trees)) }
   gbm.obj <- out$models[[response.no]]
   ri <- gbm::relative.influence(gbm.obj,n.trees=n.trees)/sum(gbm::relative.influence(gbm.obj,n.trees=n.trees))*100
   ri <- ri[predictor.no]
@@ -34,7 +33,7 @@ plot.mvtb <- function(x,predictor.no=1,response.no=1,n.trees=NULL,X=NULL,xlab=NU
   if(is.null(xlab)){ 
     xlab <- paste0(names(ri)," ", formatC(ri,2), "%")
   }
-  if(is.null(ylab)) { ylab <- out$ynames[response.no]}
+  if(is.null(ylab)) { ylab <- x$ynames[response.no]}
   grid <- gbm::plot.gbm(gbm.obj,i.var = predictor.no,n.trees = n.trees,perspective=TRUE,return.grid=TRUE)  
   plot(y=grid$y,x=grid[,1],type="l",bty="n",xlab=xlab,ylab=ylab,...)
   if(!is.null(X)) { rug(jitter(X[,predictor.no])) }
@@ -62,17 +61,16 @@ plot.mvtb <- function(x,predictor.no=1,response.no=1,n.trees=NULL,X=NULL,xlab=NU
 #' @param zlab, title for z axis, must be character strings. 
 #' @param ... extra arguments are passed to persp. See ?persp
 #' @return Function is called for it's side effect, a plot.
-#' @seealso \code{plot.gbm}, \code{plot.mvtb}, \code{heat.covex}
+#' @seealso \code{plot.gbm}, \code{plot.mvtb}, \code{mvtb.heat}
 #' @export
 #' @importFrom graphics persp
 mvtb.perspec <- function(object,response.no=1,predictor.no=1:2,n.trees=NULL,
                          phi=15,theta=-55,r=sqrt(10),d=3,xlab=NULL,ylab=NULL,zlab=NULL,ticktype="detailed",...) {
-  out <- object
-  if(any(unlist(lapply(out,function(li){is.raw(li)})))){
-    out <- uncomp.mvtb(out)
+  if(any(unlist(lapply(object,function(li){is.raw(li)})))){
+    object <- mvtb.uncom(object)
   }
-  if(is.null(n.trees)) { n.trees <- min(unlist(out$best.trees)) }
-  gbm.obj <- out$models[[response.no]]
+  if(is.null(n.trees)) { n.trees <- min(unlist(object$best.trees)) }
+  gbm.obj <- object$models[[response.no]]
   grid <- gbm::plot.gbm(gbm.obj,i.var = predictor.no,n.trees = n.trees,perspective=TRUE,return.grid=TRUE)
   x <- as.numeric(unique(grid[,1]))
   y <- as.numeric(unique(grid[,2]))
@@ -93,7 +91,7 @@ mvtb.perspec <- function(object,response.no=1,predictor.no=1:2,n.trees=NULL,
 # Pairwise plot for 2 predictors and 1 response. 
 plot.pw.perspec <- function(out,response.no,predictor.no,npairs=3,nonlin.rank=NULL,p1=NULL,p2=NULL,theta=rep(-55,npairs),...){
   if(any(unlist(lapply(out,function(li){is.raw(li)})))){
-    out <- uncomp.mvtb(out)
+    out <- mvtb.uncomp(out)
   }
   pred.names <- out$iter.models[[1]][[1]]$var.names
   if(is.null(nonlin.rank)){
@@ -111,11 +109,11 @@ plot.pw.perspec <- function(out,response.no,predictor.no,npairs=3,nonlin.rank=NU
   }
 }
 
-#' Simple heatmap of the covariance explained matrix.
+#' Simple (clustered) heatmap of tables from mvtb (relative influence, covariance explained)
 #' 
-#' @param object object of class \code{mvtb}
-#' @param clust.method clustering method for rows and columns. See ?hclust
-#' @param dist.method  method for computing the distance between two lower triangluar covariance matrices. See ?dist for alternatives.
+#' @param x Any table. For example: the covariance explained (\code{res$covex}), or relative influence \code{mvtb.ri(res)}
+#' @param clust.method clustering method for rows and columns. See ?hclust. If NULL, unclustered.
+#' @param dist.method  method for computing the distance between columns See ?dist for alternatives.
 #' @param numformat function to format the covex values into strings. Defaults to removing leading 0 and rounding to 2 decimal places.
 #' @param col A list of colors mappling onto covex explained values. A white to black gradient is default.
 #' @param mar See \code{?par}. Often it is useful to widen the left margin, a useful default is given here.
@@ -123,12 +121,15 @@ plot.pw.perspec <- function(out,response.no,predictor.no,npairs=3,nonlin.rank=NU
 #' @param cexCol, See \code{cex.axis} from par. The magnification used for the col axis labels. The default is set equal to the row axis labels.
 #' @param ... extra arguments are passed to image, then to plot. See ?image, ?par
 #' @return heatmap of the clustered covariance matrix.
-#' @details You will probably want to modify the default colors
+#' @details You will probably want to modify the default colors.
 #' @export 
 #' @seealso \code{plot.mvtb}, \code{mvtb.perspec}
 #' @importFrom graphics image axis text
-heat.covex <- function(object,clust.method="ward.D",dist.method="manhattan",numformat=NULL,col=NULL,mar=c(5.1,7.1,4.1,2.1),cexRow=NULL,cexCol=NULL,...) {
-  x <- cluster.covex(object,clust.method=clust.method,dist.method=dist.method)
+mvtb.heat <- function(x,clust.method="ward.D",dist.method="manhattan",numformat=NULL,col=NULL,mar=c(5.1,7.1,4.1,2.1),cexRow=NULL,cexCol=NULL,...) {
+  
+  if(!is.null(clust.method)){
+    x <- mvtb.cluster(x,clust.method=clust.method,dist.method=dist.method)
+  }
   if(is.null(numformat)){ numformat <- function(val){sub("^(-?)0.", "\\1.", sprintf("%.2f", val))}}
   cellnote <- matrix(numformat(x),dim(x))
   #cellnote <- cellnote[rowInd,colInd] DONT BE TEMPTED TO DO THIS
@@ -155,7 +156,14 @@ heat.covex <- function(object,clust.method="ward.D",dist.method="manhattan",numf
 }
 # note that this works for a single predictor, but isn't pretty
 
+#' Add alpha
+#'
+#' Internal to colorRampPaletteALpha but exported in case a user wants to modify
+#'
+#' @param colors
+#' @param alpha 
 #' @importFrom grDevices col2rgb rgb 
+#' @export
 addalpha <- function(colors, alpha=1.0) {
   r <- col2rgb(colors, alpha=T)
   # Apply alpha
@@ -164,9 +172,16 @@ addalpha <- function(colors, alpha=1.0) {
   return(rgb(r[1,], r[2,], r[3,], r[4,]))
 }
 
-# colorRampPaletteAlpha()
+
+#' Add alpha and ramps between colors
+#' 
+#' Internal to mvtb.heat, but exported for easy modification
+#' 
+#' @param n number of colors
+#' @param interpoloate linear, otherwise spline interpolation is used
 #' @importFrom grDevices colorRampPalette col2rgb
 #' @importFrom stats approx spline
+#' @export
 colorRampPaletteAlpha <- function(colors, n=32, interpolate='linear') {
   # Create the color ramp normally
   cr <- colorRampPalette(colors, interpolate=interpolate)(n)

@@ -36,6 +36,6 @@ controlling for the other predictors. In additoin to the model-implied effect, t
 of the predictor is included in the x-axis label. If this is not desired, a custom xlabel can be provided.
 }
 \seealso{
-\code{plot.gbm}, \code{mvtb.perspec}, for other plots, \code{heat.covex} to plot the covariance explained by predictors in a heatmap
+\code{plot.gbm}, \code{mvtb.perspec}, for other plots, \code{mvtb.heat} to plot the covariance explained by predictors in a heatmap
 }
 
