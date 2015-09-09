@@ -113,7 +113,7 @@ summary.mvtb <- function(object,print=TRUE,n.trees=NULL,relative="tot",...) {
 #' This function can also be used to cluster the relative influence matrix. In this case, the rows (usually outcomes) and columns (usually predictors) with similar values will
 #' be clustered together.
 #'  
-#' @param Any table (e.g. \code{object$covex}), \code{mvtb.ri(object)}. If an mvtb object, defaults to \code{object$covex}
+#' @param x Any table (e.g. \code{object$covex}), \code{mvtb.ri(object)}. If an mvtb object, defaults to \code{object$covex}
 #' @param clust.method clustering method for rows and columns. See \code{?hclust}
 #' @param dist.method  method for computing the distance between two lower triangluar covariance matrices. See \code{?dist} for alternatives.
 #' @param plot Produces a heatmap of the covariance explained matrix. see \code{?mvtb.heat}

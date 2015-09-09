@@ -7,9 +7,11 @@
 colorRampPaletteAlpha(colors, n = 32, interpolate = "linear")
 }
 \arguments{
+\item{colors}{original colors}
+
 \item{n}{number of colors}
 
-\item{interpoloate}{linear, otherwise spline interpolation is used}
+\item{interpolate}{linear, otherwise spline interpolation is used}
 }
 \description{
 Internal to mvtb.heat, but exported for easy modification

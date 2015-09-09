@@ -76,7 +76,7 @@ The predicted values of the model can be easily computed using the standard `pre
 For the most unambiguous results, `predict` requires specification of `newdata`. By default, the number of trees is the minimum of the best trees given by CV, test, or training error. You can also specify the number of trees as a vector. The function will always return an array of predictions where the third dimension corresponds to the length of the vector of the number of trees requested.
 
 ```{r}
-yhat <- drop(predict(out2,newdata=X))
+yhat <- predict(out2,newdata=X)
 (r2 <- var(yhat)/var(Ys))
 ```
 
@@ -111,11 +111,11 @@ nonlin.out$cty$rank.list
 
 ### 2.4 Covariance explained
 
-  One of the important feaatures of considering multivariate outcomes jointly is the possibility of modeling the covariance between pairs of outcome variables as functions of individual predictors. I describe this as the 'covariance explained' in pairs of outcomes by predictors. 
+  One of the important features of considering multivariate outcomes jointly is the possibility of modeling the covariance between pairs of outcome variables as functions of individual predictors. I describe this as the 'covariance explained' in pairs of outcomes by predictors. 
   
 ### Estimation of covariance explained
   
-The 'covariance explained' can be computed by by iteratively fitting trees to multiple outcomes. In univariate boosting (of continuous outcomes and squared error loss) the outcome variable is replaced with the residual at each iteration, multplied by shrinkage. In multivariate boosting, each outcome is replaced with its residual, one outcome variable at a time (multiplied by shrinkage). This essentially removes the effect of a split on a predictor from one outcome, and will cause the covariance between outcomes to decrease if the predictor jointly affects those outcomes. Thus, if a predictor causes multiple outcomes to covary, there will be a discrepancy between the sample covariance matrix before and after replacing an outcome with its residual. The amount of discrepancy between the two covariance matrices can be summarized by simply taking the sums of squared differences between all elements of the two covariance matrices.
+The 'covariance explained' can be computed by by iteratively fitting trees to multiple outcomes. In univariate boosting (of continuous outcomes and squared error loss) the outcome variable is replaced with the residual at each iteration, multiplied by shrinkage. In multivariate boosting, each outcome is replaced with its residual, one outcome variable at a time (multiplied by shrinkage). This essentially removes the effect of a split on a predictor from one outcome, and will cause the covariance between outcomes to decrease if the predictor jointly affects those outcomes. Thus, if a predictor causes multiple outcomes to covary, there will be a discrepancy between the sample covariance matrix before and after replacing an outcome with its residual. The amount of discrepancy between the two covariance matrices can be summarized by simply taking the sums of squared differences between all elements of the two covariance matrices.
   
   We can then simply record the covariance discrepancy for the predictor with the largest influence in the selected tree, summed over all trees. A covariance explained matrix can then be organized in a $p \times Q(Q+1)/2$ table where $Q$ is the number of outcomes, and $p$ the number of predictors. Each element is the covariance explained by predictor $j = 1, …, p$ for any pair of the $Q$ outcomes or the variance explained by the predictor for each outcome. When the outcomes are standardized to unit variance, each element can be interpreted as the correlation explained in any pair of outcomes by predictor $j$. Like the $R^2$ of the linear model, this decomposition is unambiguous only if the predictors are independent. Below we show the original covariance explained matrix.
    
@@ -127,12 +127,12 @@ round(out2$covex,2)
 
    To aid interpretability, the predictors and pairs of outcomes can be grouped or clustered by reordering the rows and columns. This is useful when the number of predictors or outcomes is large. The covariance explained matrix can be clustered by first computing the distance between rows or columns - essentially we see how similar the covariance explained matrices are for each predictor. The resulting distance matrix is then clustered using hierarchical clustering. This corresponds to grouping the predictors (columns) that explain covariance in similar pairs of outcomes (rows). 
    
-Below, we cluster the covariance explained matrix, and display it as a heatmap. Note that the method of computing the distance between covariance matrices `dist.method` and method of clustering the rows and columns `clust.method` can be played with, leading to different clustering solutions.
+Below, we cluster the covariance explained matrix, and display it as a heat map. Note that the method of computing the distance between covariance matrices `dist.method` and method of clustering the rows and columns `clust.method` can be played with, leading to different clustering solutions.
    
 ```{r,fig.width=8}
-cc <- cluster.covex(out2, clust.method = "ward.D", dist.method = "manhattan")
+cc <- mvtb.cluster(out2, clust.method = "ward.D", dist.method = "manhattan")
 round(cc,2)
-heat.covex(out2)
+mvtb.heat(out2$covex)
 ```
 
 ## References

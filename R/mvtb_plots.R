@@ -67,7 +67,7 @@ plot.mvtb <- function(x,predictor.no=1,response.no=1,n.trees=NULL,X=NULL,xlab=NU
 mvtb.perspec <- function(object,response.no=1,predictor.no=1:2,n.trees=NULL,
                          phi=15,theta=-55,r=sqrt(10),d=3,xlab=NULL,ylab=NULL,zlab=NULL,ticktype="detailed",...) {
   if(any(unlist(lapply(object,function(li){is.raw(li)})))){
-    object <- mvtb.uncom(object)
+    object <- mvtb.uncomp(object)
   }
   if(is.null(n.trees)) { n.trees <- min(unlist(object$best.trees)) }
   gbm.obj <- object$models[[response.no]]
@@ -160,8 +160,8 @@ mvtb.heat <- function(x,clust.method="ward.D",dist.method="manhattan",numformat=
 #'
 #' Internal to colorRampPaletteALpha but exported in case a user wants to modify
 #'
-#' @param colors
-#' @param alpha 
+#' @param colors list of colors
+#' @param alpha value of alpha
 #' @importFrom grDevices col2rgb rgb 
 #' @export
 addalpha <- function(colors, alpha=1.0) {
@@ -177,8 +177,9 @@ addalpha <- function(colors, alpha=1.0) {
 #' 
 #' Internal to mvtb.heat, but exported for easy modification
 #' 
+#' @param colors original colors
 #' @param n number of colors
-#' @param interpoloate linear, otherwise spline interpolation is used
+#' @param interpolate linear, otherwise spline interpolation is used
 #' @importFrom grDevices colorRampPalette col2rgb
 #' @importFrom stats approx spline
 #' @export

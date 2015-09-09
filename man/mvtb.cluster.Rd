@@ -8,6 +8,8 @@ mvtb.cluster(x, clust.method = "ward.D", dist.method = "manhattan",
   plot = FALSE, ...)
 }
 \arguments{
+\item{x}{Any table (e.g. \code{object$covex}), \code{mvtb.ri(object)}. If an mvtb object, defaults to \code{object$covex}}
+
 \item{clust.method}{clustering method for rows and columns. See \code{?hclust}}
 
 \item{dist.method}{method for computing the distance between two lower triangluar covariance matrices. See \code{?dist} for alternatives.}
@@ -15,8 +17,6 @@ mvtb.cluster(x, clust.method = "ward.D", dist.method = "manhattan",
 \item{plot}{Produces a heatmap of the covariance explained matrix. see \code{?mvtb.heat}}
 
 \item{...}{Arguments passed to \code{mvtb.heat}}
-
-\item{Any}{table (e.g. \code{object$covex}), \code{mvtb.ri(object)}. If an mvtb object, defaults to \code{object$covex}}
 }
 \value{
 clustered covariance matrix, with re-ordered rows and columns.

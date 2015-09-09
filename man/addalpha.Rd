@@ -7,9 +7,9 @@
 addalpha(colors, alpha = 1)
 }
 \arguments{
-\item{colors}{}
+\item{colors}{list of colors}
 
-\item{alpha}{}
+\item{alpha}{value of alpha}
 }
 \description{
 Internal to colorRampPaletteALpha but exported in case a user wants to modify
