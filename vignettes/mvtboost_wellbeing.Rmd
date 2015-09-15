@@ -11,7 +11,15 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
+The purpose of this document is to reproduce the analysis of psychological well-being in (Miller, Lubke, McArtor, & Bergeman, 2015). The reader is referred to the text for details.
+
 # Fitting the model
+
+This scales predictors, and gives them pretty labels.
+
+
+
+
 ```{r,eval=TRUE}
 #install.packages("mvtboost")
 library(mvtboost)
@@ -31,17 +39,32 @@ res <- mvtb(Y=Ys,X=Xs)
 ```
 
 # Tuning the model by 5-Fold CV
-```{r,eval=FALSE}
+```{r,echo=FALSE, eval=FALSE}
 # tuning the model
 system.time(res5 <- mvtb(Y=Ys,X=Xs,n.trees=10000,shrinkage=.005,cv.folds=5,compress=FALSE))
-save(res5,file="vignettes/wb_cv5.Rdata")
+save(res5,file="wb_cv5.Rdata")
 ```
 
-```{r,echo=FALSE}
-load("vignettes/wb_cv5.Rdata")
+```{r,eval=FALSE}
+res5 <- mvtb(Y=Ys,X=Xs,n.trees=10000,shrinkage=.005,cv.folds=5,compress=FALSE)
+```
+
+## Computing the best number of trees 
+
+```{r,eval=FALSE}
 res5$best.trees
 summary(res5)
 ```
+
+```{r,echo=FALSE}
+load("wb_cv5.Rdata")
+res5$best.trees
+summary(res5)
+```
+
+
+
+## Showing training and cv error
 
 ```{r,echo=FALSE}
 plot(x=1:10000,y=res5$trainerr,type="l",ylab="Error",xlab="Number of trees")
@@ -60,17 +83,11 @@ diag(var(yhat)/var(Ys))
 # Interpret the model
 
 ```{r,fig.height=5,fig.width=8}
-round(mvtb.ri(res5),2)
-par.orig <- par()
-par(mar=c(8,8,1,1))
-numformat <- function(val){sub("^(-?)0.", "\\1.", sprintf("%.1f", val))}
- 
 par(mar=c(8,10,1,1))
 mvtb.heat(t(mvtb.ri(res5)),clust.method = NULL,cexRow=1,cexCol=1,numformat=numformat)
-#mvtb.heat(t(mvtb.ri(res5,weighted=TRUE)))
 ```
 
-```{r}
+```{r,fig.height=5,fig.width=16}
 par(mar=c(8,16.5,1,1),mfrow=c(1,1))
 mvtb.heat(res5$covex[,-c(1:7)],cexRow=.9,clust.method = NULL)
 
@@ -79,20 +96,19 @@ mvtb.heat(res5$covex[,-c(1:7)],cexRow=.9,clust.method = NULL)
 # Non-linear effects
 
 ```{r}
-par(mar=c(4,4,1,1),mfcol=c(2,3))
-l <- -1
-u <- 1.5
-plot(res5,predictor.no=11,response.no=1,ylim=c(l,u)) # aut on cis
-plot(res5,predictor.no=18,response.no=2,ylim=c(l,u)) # envmast on stressprob
-plot(res5,predictor.no=18,response.no=2,ylim=c(l,u)) # envmast on stressprob
-mvtb.perspec(res5,predictor.no=c(11,15),response.no=2)
-
 par(mfcol=c(1,2))
-plot(res5,predictor.no=11,response.no=3,ylim=c(l,u)) # envmast on cis
-mvtb.perspec(res5,predictor.no=c(11,18),response.no=6,zlab="Self Acceptance")
+plot(res5,predictor.no=11,response.no=3,ylim=c(l,u)) # persgrwth on cis
+mvtb.perspec(res5,predictor.no=c(11,18),response.no=6)
+```
 
 
-par(mfcol=c(1,2))
+```{r,echo=FALSE,eval=FALSE}
 res.nl <- mvtb.nonlin(res5,Y=Ys,X=Xs)
-save(res5,file="vignettes/wb_nonlin.Rdata")
+save(res.nl,file="vignettes/wb_nonlin.Rdata")
+load(file="wb_nonlin.Rdata")
+```
+
+```{r,eval=FALSE}
+res.nl <- mvtb.nonlin(res5,Y=Ys,X=Xs)
+lapply(res.nl,function(r){head(r[[1]])})
 ```

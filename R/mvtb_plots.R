@@ -81,7 +81,7 @@ mvtb.perspec <- function(object,response.no=1,predictor.no=1:2,n.trees=NULL,
       ylab <- colnames(grid)[2]
   }
   if(is.null(zlab)){
-    zlab <- colnames(grid)[3]
+    zlab <- object$ynames[response.no]
   }
   z <- matrix(grid[,3],length(unique(x)),length(unique(y)))
   persp(x=x,y=y,z=z,d=d,r=r,phi=phi,theta=theta,ticktype=ticktype,xlab=xlab,ylab=ylab,zlab=zlab,...)

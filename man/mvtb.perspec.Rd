@@ -36,7 +36,7 @@ mvtb.perspec(object, response.no = 1, predictor.no = 1:2, n.trees = NULL,
 \item{...}{extra arguments are passed to persp. See ?persp}
 }
 \value{
-Function is called for it's side effect, a plot.
+Function returns a plot.
 }
 \description{
 This is a plot of the model implied function of 2 predictors averaged over the other predictors
