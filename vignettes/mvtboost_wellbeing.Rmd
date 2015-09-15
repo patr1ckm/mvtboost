@@ -53,13 +53,13 @@ res5 <- mvtb(Y=Ys,X=Xs,n.trees=10000,shrinkage=.005,cv.folds=5,compress=FALSE)
 
 ```{r,eval=FALSE}
 res5$best.trees
-summary(res5)
+summary(res5,covex=FALSE)
 ```
 
 ```{r,echo=FALSE}
 load("wb_cv5.Rdata")
 res5$best.trees
-summary(res5)
+summary(res5,covex=FALSE)
 ```
 
 
@@ -82,12 +82,17 @@ diag(var(yhat)/var(Ys))
 
 # Interpret the model
 
-```{r,fig.height=5,fig.width=8}
+## Relative influence
+
+```{r,fig.height=5,fig.width=12}
+numformat <- function(val){sub("^(-?)0.", "\\1.", sprintf("%.1f", val))}
+  
 par(mar=c(8,10,1,1))
 mvtb.heat(t(mvtb.ri(res5)),clust.method = NULL,cexRow=1,cexCol=1,numformat=numformat)
 ```
 
-```{r,fig.height=5,fig.width=16}
+## Covariance explained 
+```{r,fig.height=5,fig.width=12}
 par(mar=c(8,16.5,1,1),mfrow=c(1,1))
 mvtb.heat(res5$covex[,-c(1:7)],cexRow=.9,clust.method = NULL)
 
@@ -95,20 +100,33 @@ mvtb.heat(res5$covex[,-c(1:7)],cexRow=.9,clust.method = NULL)
 
 # Non-linear effects
 
-```{r}
-par(mfcol=c(1,2))
-plot(res5,predictor.no=11,response.no=3,ylim=c(l,u)) # persgrwth on cis
+## Plots
+
+```{r,fig.height=5,fig.width=12}
+par(mfcol=c(1,2),mar=c(5,5,4,1))
+plot(res5,predictor.no=11,response.no=3,ylim=c(-1,1.5)) # persgrwth on cis
+text(-4,1.825,labels="A",xpd=TRUE)
 mvtb.perspec(res5,predictor.no=c(11,18),response.no=6)
+text(-.5,.5,labels="B",xpd=TRUE)
 ```
 
+## Departures from addivity
 
 ```{r,echo=FALSE,eval=FALSE}
 res.nl <- mvtb.nonlin(res5,Y=Ys,X=Xs)
-save(res.nl,file="vignettes/wb_nonlin.Rdata")
-load(file="wb_nonlin.Rdata")
+save(res.nl,file="wb_nonlin.Rdata")
 ```
 
 ```{r,eval=FALSE}
 res.nl <- mvtb.nonlin(res5,Y=Ys,X=Xs)
+```
+
+```{r,echo=FALSE}
+load(file="wb_nonlin.Rdata")
+```
+
+
+
+```{r}
 lapply(res.nl,function(r){head(r[[1]])})
 ```

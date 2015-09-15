@@ -87,19 +87,25 @@ print.mvtb <- function(x,...) {
 #' @param print result (default is TRUE)
 #' @param n.trees number of trees used to compute relative influence. Defaults to the minimum number of trees by CV, test, or training error
 #' @param relative relative If 'col', each column sums to 100. If 'tot', the whole matrix sums to 100 (a percent). If 'n', the raw reductions in SSE are returned.
+#' @param covex Whether to print covariance explained
 #' @param ... unused
 #' @return Returns the best number of trees, the univariate relative influence of each predictor for each outcome, and covariance explained in pairs of outcomes by each predictor
 #' @seealso \code{mvtb.ri}, \code{gbm.ri}, \code{mvtb.cluster}
 #' @export
-summary.mvtb <- function(object,print=TRUE,n.trees=NULL,relative="tot",...) {
+summary.mvtb <- function(object,print=TRUE,n.trees=NULL,relative="col",covex=TRUE,...) {
   out <- object
   if(any(unlist(lapply(out,function(li){is.raw(li)})))){
     out <- mvtb.uncomp(out)
   }
   if(is.null(n.trees)) { n.trees <- min(unlist(out$best.trees)) }
   ri <- mvtb.ri(out,n.trees=n.trees,relative=relative)
-  cc <- mvtb.cluster(out)
-  sum <- list(best.trees=n.trees,relative.influence=ri,mvtb.cluster=cc)
+  if(covex){
+    cc <- mvtb.cluster(out)
+    sum <- list(best.trees=n.trees,relative.influence=ri,mvtb.cluster=cc)
+  } else {
+    sum <- list(best.trees=n.trees,relative.influence=ri)
+  }
+  
   if(print){ print(lapply(sum,function(o){round(o,2)})) }
   invisible(sum)
 }
