@@ -60,7 +60,7 @@ plot.mvtb <- function(x,predictor.no=1,response.no=1,n.trees=NULL,X=NULL,xlab=NU
 #' @param ylab, title for y axis, must be character strings.  
 #' @param zlab, title for z axis, must be character strings. 
 #' @param ... extra arguments are passed to persp. See ?persp
-#' @return Function is called for it's side effect, a plot.
+#' @return Function returns a plot.
 #' @seealso \code{plot.gbm}, \code{plot.mvtb}, \code{mvtb.heat}
 #' @export
 #' @importFrom graphics persp
@@ -116,17 +116,21 @@ plot.pw.perspec <- function(out,response.no,predictor.no,npairs=3,nonlin.rank=NU
 #' @param dist.method  method for computing the distance between columns See ?dist for alternatives.
 #' @param numformat function to format the covex values into strings. Defaults to removing leading 0 and rounding to 2 decimal places.
 #' @param col A list of colors mappling onto covex explained values. A white to black gradient is default.
-#' @param mar See \code{?par}. Often it is useful to widen the left margin, a useful default is given here.
 #' @param cexRow, See \code{cex.axis} from par. The magnification used for the row axis labels. A useful default is provided.
 #' @param cexCol, See \code{cex.axis} from par. The magnification used for the col axis labels. The default is set equal to the row axis labels.
 #' @param ... extra arguments are passed to image, then to plot. See ?image, ?par
-#' @return heatmap of the clustered covariance matrix.
+#' @return heatmap of x, usually a covariance explained matrix or a matrix of (relative) influences.
 #' @details You will probably want to modify the default colors.
 #' @export 
 #' @seealso \code{plot.mvtb}, \code{mvtb.perspec}
 #' @importFrom graphics image axis text
-mvtb.heat <- function(x,clust.method="ward.D",dist.method="manhattan",numformat=NULL,col=NULL,mar=c(5.1,7.1,4.1,2.1),cexRow=NULL,cexCol=NULL,...) {
-  
+mvtb.heat <- function(x,clust.method="ward.D",dist.method="manhattan",numformat=NULL,col=NULL,cexRow=NULL,cexCol=NULL,...) {
+  if(class(x) %in% "mvtb"){
+    if(any(unlist(lapply(x,function(li){is.raw(li)})))){
+      x <- mvtb.uncomp(x)
+    }
+    x <- x$covex
+  }
   if(!is.null(clust.method)){
     x <- mvtb.cluster(x,clust.method=clust.method,dist.method=dist.method)
   }

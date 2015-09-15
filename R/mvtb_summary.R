@@ -140,12 +140,11 @@ summary.mvtb <- function(object,print=TRUE,n.trees=NULL,relative="tot",...) {
 #'
 #' @importFrom stats hclust dist as.dendrogram order.dendrogram
 mvtb.cluster <- function(x,clust.method="ward.D",dist.method="manhattan",plot=FALSE,...) {
-    out <- x
-    if(class(out) %in% "mvtb"){
-      if(any(unlist(lapply(out,function(li){is.raw(li)})))){
-        out <- mvtb.uncomp(out)
+    if(class(x) %in% "mvtb"){
+      if(any(unlist(lapply(x,function(li){is.raw(li)})))){
+        x <- mvtb.uncomp(x)
       }
-      x <- out$covex
+      x <- x$covex
     }
     if(nrow(x) > 1) { 
       hcr <- hclust(dist(x,method=dist.method),method=clust.method)

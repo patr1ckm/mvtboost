@@ -8,7 +8,7 @@
 #' Builds on \code{gbm} (Ridgeway 2013; Friedman, 2001) to fit a univariate tree model for each outcome, selecting predictors at each iteration that explain covariance between the outcomes. The number of trees included in the model can be chosen by minimizing the multivariate mean squared error using cross validation or a test set.
 #'
 #' @param X matrix or data.frame of predictors. For best performance, continuous predictors should be scaled to have unit variance. Categorical variables should converted to factors.
-#' @param Y vector, matrix, or data.frame for outcome variables. Missing values must be imputed. For best interpretability and to easily compare influences across outcomes, outcome variables should be scaled to have unit variance.
+#' @param Y vector, matrix, or data.frame for outcome variables. Missing values must be imputed. To easily compare influences across outcomes and for numerical stability, outcome variables should be scaled to have unit variance.
 #' @param n.trees maximum number of trees to be included in the model. Trees are grown until a minimum number observations in each node is reached. This minimum can be modified using additional arguments (below).
 #' @param shrinkage a contant multiplier for the predictions from each tree to ensure a slow learning rate. Default is .01. Small shrinkage values may require a large number of trees to provide adequate fit.
 #' @param interaction.depth fixed depth of trees to be included in the model. A tree depth of 1 corresponds to fitting stumps (main effects only), higher tree depths capture higher order interactions.

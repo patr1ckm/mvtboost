@@ -12,7 +12,7 @@ mvtb(X, Y, n.trees = 100, shrinkage = 0.01, interaction.depth = 1,
 \arguments{
 \item{X}{matrix or data.frame of predictors. For best performance, continuous predictors should be scaled to have unit variance. Categorical variables should converted to factors.}
 
-\item{Y}{vector, matrix, or data.frame for outcome variables. Missing values must be imputed. For best interpretability and to easily compare influences across outcomes, outcome variables should be scaled to have unit variance.}
+\item{Y}{vector, matrix, or data.frame for outcome variables. Missing values must be imputed. To easily compare influences across outcomes and for numerical stability, outcome variables should be scaled to have unit variance.}
 
 \item{n.trees}{maximum number of trees to be included in the model. Trees are grown until a minimum number observations in each node is reached. This minimum can be modified using additional arguments (below).}
 

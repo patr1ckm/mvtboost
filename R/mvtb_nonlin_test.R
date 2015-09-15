@@ -58,12 +58,12 @@ mvtb.nonlin <-function(object, X, Y, n.trees=NULL,detect="grid",scale=TRUE) {
   if(is.null(n.trees)) { n.trees <- min(unlist(out$best.trees)) }
   data <- X
   n.preds <- ncol(data)
-  if(!is.null(names(data))) { 
-    pred.names <- names(data)
+  if(!is.null(colnames(data))) { 
+    pred.names <- colnames(data)
   } else {
     pred.names <- out$models[[1]]$var.names
   }
-  if(!is.null(names(Y))){
+  if(!is.null(colnames(Y))){
     col.names <- colnames(Y)
   } else {
     col.names <- out$ynames

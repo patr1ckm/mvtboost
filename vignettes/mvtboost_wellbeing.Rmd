@@ -6,7 +6,7 @@ output:
   rmarkdown::html_vignette:
     fig_caption: yes
 vignette: >
-  %\VignetteIndexEntry{Tree Boosting with Multivariate Outcomes}
+  %\VignetteIndexEntry{MVTBoost Example 2: Well-being}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -16,28 +16,29 @@ vignette: >
 #install.packages("mvtboost")
 library(mvtboost)
 data(wellbeing)
-str(wellbeing)
-summary(wellbeing)
+
+Y <- wellbeing[,21:26]
+X <- wellbeing[,1:20]
+Ys <- scale(Y)
 ynames <- c("Autonomy","Environmental Mastery","Personal Growth","Positive Relationships","Purpose in Life","Self Acceptance")
 xnames <- c("Gender","Age","Income","Education","Chronic Health","Somatic Health","Self Report Health","Positive Affect","Negative Affect","Perceived Social Control","Control Internal States","Commitment","Control","Challenge","Ego Resilience","Social Support - Friends","Social Support - Family","Stress-Problems","Stress-Emotions","Loneliness")
-
-Y <- wellbeing[,18:23]
-X <- wellbeing[,1:17]
-Ys <- scale(Y)
 cont.id <- unlist(lapply(X,is.numeric))
-Xs <- scale(X[,cont.id])
-res <- mvtb(Y=Ys,X=X)
+Xs <- X
+Xs[,cont.id] <- scale(X[,cont.id])
+colnames(Xs) <- xnames
+colnames(Ys) <- ynames
+res <- mvtb(Y=Ys,X=Xs)
 ```
 
 # Tuning the model by 5-Fold CV
 ```{r,eval=FALSE}
 # tuning the model
-system.time(res5 <- mvtb(Y=Ys,X=X,n.trees=10000,shrinkage=.005,cv.folds=5,compress=FALSE))
+system.time(res5 <- mvtb(Y=Ys,X=Xs,n.trees=10000,shrinkage=.005,cv.folds=5,compress=FALSE))
 save(res5,file="vignettes/wb_cv5.Rdata")
 ```
 
-```{r}
-load("wb_cv5.Rdata")
+```{r,echo=FALSE}
+load("vignettes/wb_cv5.Rdata")
 res5$best.trees
 summary(res5)
 ```
@@ -49,39 +50,49 @@ lines(x=1:10000,y=res5$cv.err,type="l",col="red")
 legend("topright",legend=c("Training Error","Cross-Validation Error"),lty=c(1,1),col=c("black","red"),bty="n")
 ```
 
-```{r,echo=FALSE}
-heat.x <- function(x,clust.method="ward.D",dist.method="manhattan",numformat=NULL,col=NULL,mar=c(5.1,7.1,4.1,2.1),cexRow=NULL,cexCol=NULL,...) {
-  if(is.null(numformat)){ numformat <- function(val){sub("^(-?)0.", "\\1.", sprintf("%.2f", val))}}
-  cellnote <- matrix(numformat(x),dim(x))
-  #cellnote <- cellnote[rowInd,colInd] DONT BE TEMPTED TO DO THIS
-  x <- t(x)
-  cellnote <- t(cellnote)
-  nc <- nrow(x) # final number of columns (usually predictors)
-  nr <- ncol(x) # final number of rows    (usually dvs)
-  if(is.null(col)) { col <- mvtboost:::colorRampPaletteAlpha(RColorBrewer::brewer.pal(9,"Greys"),100)}
-  image(x=1:nc,y=1:nr,abs(x),xlim = 0.5 + c(0, nc), ylim = 0.5 + 
-          c(0, nr),ylab="",xlab="",axes=F,col=col)
-  #axis(1,at=seq(0,1,length=nrow(x)))
-  #cexRow <- .2+1/log10(max(nc,nr))
-  if(is.null(cexRow)) { cexRow <- log10(max(nc,nr)) }
-  if(is.null(cexCol)) { cexCol <- cexRow}
-  axis(1, 1:nc, labels = rep("",nc), las = 2, line = -0.5, tick = 0, 
-       cex.axis = cexRow)
-  axis(2, 1:nr, labels = colnames(x), las = 2, line = -0.5, tick = 0, 
-       cex.axis = cexCol)
-  text(x =  c(row(cellnote)), y = c(col(cellnote)), labels = c(cellnote), 
-       col = "white", cex = 1)
-  text(1:nc,rep(0,nc), las=2,cex.axis=cexRow,adj=1,
-       labels = rownames(x), xpd = TRUE,srt=45,
-       col="black")
-}
+# Fit
+
+```{r}
+yhat <- predict(res5,newdata=Xs)
+diag(var(yhat)/var(Ys))
+```
+
+# Interpret the model
+
+```{r,fig.height=5,fig.width=8}
+round(mvtb.ri(res5),2)
+par.orig <- par()
+par(mar=c(8,8,1,1))
+numformat <- function(val){sub("^(-?)0.", "\\1.", sprintf("%.1f", val))}
+ 
+par(mar=c(8,10,1,1))
+mvtb.heat(t(mvtb.ri(res5)),clust.method = NULL,cexRow=1,cexCol=1,numformat=numformat)
+#mvtb.heat(t(mvtb.ri(res5,weighted=TRUE)))
+```
+
+```{r}
+par(mar=c(8,16.5,1,1),mfrow=c(1,1))
+mvtb.heat(res5$covex[,-c(1:7)],cexRow=.9,clust.method = NULL)
 
 ```
 
+# Non-linear effects
 
-# Interpret the model
 ```{r}
-round(mvtb.ri(res5),2)
-heat.x(t(mvtb.ri(res5)),cexRow=.8)
-mvtb.ri(res5,weighted=TRUE)
+par(mar=c(4,4,1,1),mfcol=c(2,3))
+l <- -1
+u <- 1.5
+plot(res5,predictor.no=11,response.no=1,ylim=c(l,u)) # aut on cis
+plot(res5,predictor.no=18,response.no=2,ylim=c(l,u)) # envmast on stressprob
+plot(res5,predictor.no=18,response.no=2,ylim=c(l,u)) # envmast on stressprob
+mvtb.perspec(res5,predictor.no=c(11,15),response.no=2)
+
+par(mfcol=c(1,2))
+plot(res5,predictor.no=11,response.no=3,ylim=c(l,u)) # envmast on cis
+mvtb.perspec(res5,predictor.no=c(11,18),response.no=6,zlab="Self Acceptance")
+
+
+par(mfcol=c(1,2))
+res.nl <- mvtb.nonlin(res5,Y=Ys,X=Xs)
+save(res5,file="vignettes/wb_nonlin.Rdata")
 ```
