@@ -10,7 +10,7 @@ mvtb(X, Y, n.trees = 100, shrinkage = 0.01, interaction.depth = 1,
   alpha = 0.5, cov.discrep = 1, weight.type = 1, ...)
 }
 \arguments{
-\item{X}{matrix or data.frame of predictors. For best performance, continuous predictors should be scaled to have unit variance. Categorical variables should converted to factors.}
+\item{X}{vector, matrix, or data.frame of predictors. For best performance, continuous predictors should be scaled to have unit variance. Categorical variables should converted to factors.}
 
 \item{Y}{vector, matrix, or data.frame for outcome variables. Missing values must be imputed. To easily compare influences across outcomes and for numerical stability, outcome variables should be scaled to have unit variance.}
 

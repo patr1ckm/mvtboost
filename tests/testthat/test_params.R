@@ -139,7 +139,7 @@ expect_true(all(unlist(lapply(r3$finaltree[[1]],function(t){length(t[[1]])})) ==
 context("test inputs for X and Y")
 Xf <- as.data.frame(X)
 Yf <- as.data.frame(Y)
-out <- mvtb(Y=Yf,X=Xf)
+out <- try(mvtb(Y=Yf,X=Xf))
 expect_is(out,"mvtb")
 
 # test single predictor case
@@ -150,9 +150,9 @@ B[1,1:2] <- 1
 X <- matrix(rbinom(n,size=1,prob=.5),n,nrow(B))
 E <- matrix(rnorm(n*4),nrow=n,ncol=4)
 Y <- X %*% B + E
-out <- mvtb(Y=Y,X=X)
+out <- try(mvtb(Y=Y,X=X))
 expect_is(out,"mvtb")
-out <- mvtb(Y=Y,X=as.data.frame(X))
+out <- try(mvtb(Y=Y,X=as.data.frame(X)))
 expect_is(out,"mvtb")
 
 
@@ -164,9 +164,9 @@ B[1,1] <- 1
 X <- matrix(rbinom(n,size=1,prob=.5),n,nrow(B))
 E <- matrix(rnorm(n*nrow(B)),nrow=n,ncol=nrow(B))
 Y <- X %*% B + E
-out <- mvtb(Y=Y,X=X)
+out <- try(mvtb(Y=Y,X=X))
 expect_is(out,"mvtb")
 
 # test vectors
-out <- mvtb(Y=Y[,,drop=TRUE],X=X[,,drop=TRUE])
+out <- try(mvtb(Y=Y[,,drop=TRUE],X=X[,,drop=TRUE]))
 expect_is(out,"mvtb")
