@@ -115,12 +115,11 @@ summary.mvtb <- function(object,print=TRUE,n.trees=NULL,relative="col",covex=TRU
 #' The 'covariance explained' by each predictor is the reduction in covariance between each pair of outcomes due to splitting on each predictor over all trees (\code{$covex}).
 #' To aid in the interpretability of the covariance explained matrix, this function clusters the rows (pairs of outcomes) and the columns (predictors) of \code{object$covex}
 #' so that groups of predictors that explain similar pairs of covariances are closer together.
-#' 
 #' This function can also be used to cluster the relative influence matrix. In this case, the rows (usually outcomes) and columns (usually predictors) with similar values will
 #' be clustered together.
 #'  
 #' @param x Any table (e.g. \code{object$covex}), \code{mvtb.ri(object)}. If an mvtb object, defaults to \code{object$covex}
-#' @param clust.method clustering method for rows and columns. See \code{?hclust}
+#' @param clust.method clustering method for rows and columns. See \code{?hclust} for possibilities
 #' @param dist.method  method for computing the distance between two lower triangluar covariance matrices. See \code{?dist} for alternatives.
 #' @param plot Produces a heatmap of the covariance explained matrix. see \code{?mvtb.heat}
 #' @param ... Arguments passed to \code{mvtb.heat} 
@@ -169,7 +168,7 @@ mvtb.cluster <- function(x,clust.method="ward.D",dist.method="manhattan",plot=FA
     x <- x[rowInd,colInd,drop=FALSE]
     x <- zapsmall(x)
     if(plot){
-      mvtb.heat(out,clust.method=clust.method,dist.method=dist.method,...)
+      mvtb.heat(x,clust.method=clust.method,dist.method=dist.method,...)
     }
     return(x)
 }

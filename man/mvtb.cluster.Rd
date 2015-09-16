@@ -10,7 +10,7 @@ mvtb.cluster(x, clust.method = "ward.D", dist.method = "manhattan",
 \arguments{
 \item{x}{Any table (e.g. \code{object$covex}), \code{mvtb.ri(object)}. If an mvtb object, defaults to \code{object$covex}}
 
-\item{clust.method}{clustering method for rows and columns. See \code{?hclust}}
+\item{clust.method}{clustering method for rows and columns. See \code{?hclust} for possibilities}
 
 \item{dist.method}{method for computing the distance between two lower triangluar covariance matrices. See \code{?dist} for alternatives.}
 
@@ -25,11 +25,10 @@ clustered covariance matrix, with re-ordered rows and columns.
 The 'covariance explained' by each predictor is the reduction in covariance between each pair of outcomes due to splitting on each predictor over all trees (\code{$covex}).
 To aid in the interpretability of the covariance explained matrix, this function clusters the rows (pairs of outcomes) and the columns (predictors) of \code{object$covex}
 so that groups of predictors that explain similar pairs of covariances are closer together.
-}
-\details{
 This function can also be used to cluster the relative influence matrix. In this case, the rows (usually outcomes) and columns (usually predictors) with similar values will
 be clustered together.
-
+}
+\details{
 The covariance explained by each predictor is only unambiguous if the predictors are uncorrelated and interaction.depth = 1.
 If predictors are not independent, the decomposition of covariance explained is only approximate (like the decomposition of R^2 by each predictor in a linear model).
 If interaction.depth > 1, the following heuristic is used: the covariance explained by the tree is assigned to the predictor with the largest influence in each tree.

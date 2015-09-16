@@ -27,8 +27,8 @@ Miller P.J., Lubke G.H, McArtor D.B., Bergeman C.S. (2015) Finding structure in 
 }
 \examples{
 data(wellbeing)
-Y <- wellbeing[,18:23]
-X <- wellbeing[,1:17]
+Y <- wellbeing[,21:26]
+X <- wellbeing[,1:20]
 Ys <- scale(Y)
 cont.id <- unlist(lapply(X,is.numeric))
 Xs <- scale(X[,cont.id])

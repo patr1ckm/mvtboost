@@ -15,8 +15,18 @@ Y <- Xf %*% B + E
 ## Again, tests just to make sure that they run
 out <- mvtb(Y=Y,X=X)
 summary(out)
+summary(out,covex=FALSE)
+summary(out,relative="tot",covex=FALSE)
 mvtb.cluster(out)
+mvtb.cluster(out,plot=TRUE)
+mvtb.cluster(out,dist.method="manhattan",clust.method="complete")
+#expect_identical(mvtb.cluster(out,clust.method=NULL),out$covex)
+
 mvtb.ri(out)
+mvtb.ri(out,weighted = TRUE)
+mvtb.ri(out,relative = "tot")
+mvtb.ri(out,relative = "col")
+mvtb.ri(out,relative = "n")
 gbm.ri(out)
 print.mvtb(out)
 
@@ -25,14 +35,4 @@ summary(out)
 print(out)
 mvtb.cluster(out)
 gbm.ri(out)
-
-# test single predictor case
-set.seed(123)
-n <- 1000
-B <- matrix(0,nrow=1,ncol=4)
-B[1,1:2] <- 1
-X <- matrix(rbinom(n,size=1,prob=.5),n,nrow(B))
-E <- matrix(rnorm(n*4),nrow=n,ncol=4)
-Y <- X %*% B + E
-out <- mvtb(Y=Y,X=X)
 

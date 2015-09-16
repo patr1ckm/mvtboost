@@ -128,7 +128,8 @@ mvtb <- function(X,Y,n.trees=100,shrinkage=.01,interaction.depth=1,
                  trainfrac=1,bag.frac=1,cv.folds=1,
                  s=NULL,seednum=NULL,compress=FALSE,save.cv=FALSE,mc.cores=1,samp.iter=FALSE,alpha=.5,cov.discrep=1,weight.type=1,...) {
 
-  Y <- as.matrix(Y)
+  if(class(Y) != "matrix") { Y <- as.matrix(Y) }
+  if(class(X) != "matrix") { X <- as.matrix(X) }
   params <- c(as.list(environment()))
   ## seeds
   if(!is.null(seednum)){

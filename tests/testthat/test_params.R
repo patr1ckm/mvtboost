@@ -134,3 +134,39 @@ expect_true(all(unlist(lapply(r3$finaltree[[1]],function(t){length(t[[1]])})) ==
 #r1 <- mvtb(X=X,Y=Y,n.trees=100,alpha=.5, cv.folds=1,samp.iter=FALSE,cov.discrep=1,weight.type=2,bag.frac=.5,s=1:500,seednum=8,compress=FALSE,save.cv=TRUE)
 #r <- mvtb(X=X,Y=Y,n.trees=100,alpha=.5, cv.folds=1,samp.iter=FALSE,cov.discrep=1,weight.type=2,bag.frac=.5,s=1:500,seednum=8,compress=TRUE)
 #r1 <- mvtb(X=X,Y=Y,n.trees=100,alpha=.5, cv.folds=1,samp.iter=FALSE,cov.discrep=1,weight.type=2,bag.frac=.5,s=1:500,seednum=8,compress=TRUE,save.cv=TRUE)
+
+# test data frame
+context("test inputs for X and Y")
+Xf <- as.data.frame(X)
+Yf <- as.data.frame(Y)
+out <- mvtb(Y=Yf,X=Xf)
+expect_is(out,"mvtb")
+
+# test single predictor case
+set.seed(123)
+n <- 1000
+B <- matrix(0,nrow=1,ncol=4)
+B[1,1:2] <- 1
+X <- matrix(rbinom(n,size=1,prob=.5),n,nrow(B))
+E <- matrix(rnorm(n*4),nrow=n,ncol=4)
+Y <- X %*% B + E
+out <- mvtb(Y=Y,X=X)
+expect_is(out,"mvtb")
+out <- mvtb(Y=Y,X=as.data.frame(X))
+expect_is(out,"mvtb")
+
+
+# test single outcome, single predictor
+set.seed(123)
+n <- 1000
+B <- matrix(0,nrow=1,ncol=1)
+B[1,1] <- 1
+X <- matrix(rbinom(n,size=1,prob=.5),n,nrow(B))
+E <- matrix(rnorm(n*nrow(B)),nrow=n,ncol=nrow(B))
+Y <- X %*% B + E
+out <- mvtb(Y=Y,X=X)
+expect_is(out,"mvtb")
+
+# test vectors
+out <- mvtb(Y=Y[,,drop=TRUE],X=X[,,drop=TRUE])
+expect_is(out,"mvtb")
