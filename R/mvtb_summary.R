@@ -39,6 +39,11 @@ gbm.ri <- function(object,n.trees=NULL,relative="col",...){
 #' @param weighted T/F. Reductions in SSE are weighted according the covariance explained by each predictor. See \code{?mvtb} for details.
 #' @param relative If 'col', each column sums to 100. If 'tot', the whole matrix sums to 100 (a percent). Otherwise, the raw reductions in SSE are returned.
 #' @return Matrix of (relative) influences.
+#' @details 
+#' (Relative) influences are the usual reductions in SSE due to splitting on each predictor. 
+#' 'Weighted' influences are the raw influences weighted by the covariance explained in all pairs of outcomes by that predictor. 
+#' This allows predictor selection to be informed by the covariance explained. 
+#' Different weighting types are possible, see \code{?mvtb}.
 #' @export 
 mvtb.ri <- function(object,n.trees=NULL,weighted=F,relative="col"){
   out <- object
