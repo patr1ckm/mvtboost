@@ -33,9 +33,9 @@
 #' Several methods are provided for detecting departures from non-linearity in pairs from pairs of predictors. 
 #' The "grid" method computes a grid of the model implied predictions as a function of two predictors, averaging over the others. A linear model predicting the observed outcomes from the predicted values is fit, and the mean squared residuals (times 1000) are reported. Large residuals indicate deviations from linearity.
 #' 
-#' The "influence" method computes the reductions of SSE attributable to predictors after the first split on the tree. These reductions in sums of squared error (or influnences) indicate to what extent individual predictors capture deviations from linear, main effects.
+#' The "influence" method computes the reductions of SSE attributable to predictors after the first split on the tree. These reductions in sums of squared error (or influences) indicate to what extent individual predictors capture deviations from linear, main effects.
 #' 
-#' The "lm" method is the same as the "grid" method, but produces the grid of predicted values by conditioning on the average values of the other predictors rather than averaging over the values of the other predictors (see Elith et al., 2008) . Like the "grid" approach, large residuals from a linear model (times 1000) indiciate departures from linearity. 
+#' The "lm" method is the same as the "grid" method, but produces the grid of predicted values by conditioning on the average values of the other predictors rather than averaging over the values of the other predictors (see Elith et al., 2008) . Like the "grid" approach, large residuals from a linear model (times 1000) indicate departures from linearity. 
 #'
 #' These methods are not necessarily overlapping, and can produce different results. We suggest using several approaches, and follow up by plotting the model implied effects of the two predictors.
 #' The gbm package contains the function interact.gbm to detect interactions. See ?interact.gbm for details of this function, which can be used directly on individual mvtb output models.

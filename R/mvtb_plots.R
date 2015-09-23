@@ -18,7 +18,7 @@
 #' @importFrom graphics plot rug
 #' @details 
 #' This is the classic partial dependence plot, where the model implied effect of the chosen predictor is plotted
-#' controlling for the other predictors. In additoin to the model-implied effect, the relative influence
+#' controlling for the other predictors. In addition to the model-implied effect, the relative influence
 #' of the predictor is included in the x-axis label. If this is not desired, a custom xlabel can be provided.
 #' 
 plot.mvtb <- function(x,predictor.no=1,response.no=1,n.trees=NULL,X=NULL,xlab=NULL,ylab=NULL,...){
@@ -49,7 +49,7 @@ plot.mvtb <- function(x,predictor.no=1,response.no=1,n.trees=NULL,X=NULL,xlab=NU
 #' 
 #' @param object mvtb output object
 #' @param response.no index of the response variable
-#' @param predictor.no vector containing indeces of the predictor variables to plot
+#' @param predictor.no vector containing indices of the predictor variables to plot
 #' @param n.trees desired number of trees (default: best trees)
 #' @param phi angle of viewing direction. See ?persp.
 #' @param theta angle of viewing direction See ?persp.
@@ -115,7 +115,7 @@ plot.pw.perspec <- function(out,response.no,predictor.no,npairs=3,nonlin.rank=NU
 #' @param clust.method clustering method for rows and columns. See ?hclust. If NULL, unclustered.
 #' @param dist.method  method for computing the distance between columns See ?dist for alternatives.
 #' @param numformat function to format the covex values into strings. Defaults to removing leading 0 and rounding to 2 decimal places.
-#' @param col A list of colors mappling onto covex explained values. A white to black gradient is default.
+#' @param col A list of colors mapping onto covex explained values. A white to black gradient is default.
 #' @param cexRow, See \code{cex.axis} from par. The magnification used for the row axis labels. A useful default is provided.
 #' @param cexCol, See \code{cex.axis} from par. The magnification used for the col axis labels. The default is set equal to the row axis labels.
 #' @param ... extra arguments are passed to image, then to plot. See ?image, ?par

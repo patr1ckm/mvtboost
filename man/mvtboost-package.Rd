@@ -32,7 +32,7 @@ X <- wellbeing[,1:20]
 Ys <- scale(Y)
 cont.id <- unlist(lapply(X,is.numeric))
 Xs <- scale(X[,cont.id])
-res <- mvtb(Y=Ys,X=X)
+res <- mvtb(Y=Ys,X=Xs)
 summary(res)
 plot(res,predictor.no = 11)
 predict(res,newdata=Xs)

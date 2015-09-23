@@ -10,7 +10,7 @@
 #' @param X vector, matrix, or data.frame of predictors. For best performance, continuous predictors should be scaled to have unit variance. Categorical variables should converted to factors.
 #' @param Y vector, matrix, or data.frame for outcome variables. Missing values must be imputed. To easily compare influences across outcomes and for numerical stability, outcome variables should be scaled to have unit variance.
 #' @param n.trees maximum number of trees to be included in the model. Trees are grown until a minimum number observations in each node is reached. This minimum can be modified using additional arguments (below).
-#' @param shrinkage a contant multiplier for the predictions from each tree to ensure a slow learning rate. Default is .01. Small shrinkage values may require a large number of trees to provide adequate fit.
+#' @param shrinkage a constant multiplier for the predictions from each tree to ensure a slow learning rate. Default is .01. Small shrinkage values may require a large number of trees to provide adequate fit.
 #' @param interaction.depth fixed depth of trees to be included in the model. A tree depth of 1 corresponds to fitting stumps (main effects only), higher tree depths capture higher order interactions.
 #' @param bag.frac   proportion of the training sample used to fit univariate trees for each response at each iteration. Default: 1
 #' @param cv.folds   number of cross validation folds. Default: 1. Runs k + 1 models, where the k models are run in parallel and the final model is run on the entire sample. If larger than 1, the number of trees that minimize the multivariate MSE averaged over k-folds is reported in object$best.trees.
@@ -67,7 +67,7 @@
 #' letting \code{alpha} = 1 corresponds to weighting variance explained only.
 #' 
 #' The model is tuned jointly by selecting the number of trees that minimize multivariate mean squared error in a test set (by setting \code{trainfrac}) or averaged over k folds in k-fold cross-validation (by setting \code{cv.folds > 1}).
-#' The best number of trees is avaiable via \code{$best.trees}. Cross-validation can be parallelized by setting mc.cores > 1.  
+#' The best number of trees is available via \code{$best.trees}. Cross-validation can be parallelized by setting mc.cores > 1.  
 #' If both \code{cv.folds} and \code{trainfrac} is specified, cross-validation is carried out within the training set.
 #' Cross-validation models are usually discarded but can be saved by setting \code{save.cv = TRUE}. CV models can be accessed from \code{$ocv} of the 
 #' output object. 
@@ -81,12 +81,12 @@
 #' 
 #' Note that trees are grown until a minimum number of observations in each node is reached. 
 #' If the number of training samples*bag.fraction is less the minimum number of observations, (which can occur with small data sets), this will throw an error. 
-#' Adjust the \code{n.minobsinnode}, \code{tranfrac}, or \code{bag.fraction}.
+#' Adjust the \code{n.minobsinnode}, \code{trainfrac}, or \code{bag.fraction}.
 #' 
 #' This is a beta version with details subject to change. Any contributions are welcome.
 #' @seealso \code{summary.mvtb}, \code{predict.mvtb}, \code{mvtb.nonlin} to help detect nonlinear effects, \code{plot.mvtb}, \code{mvtb.perspec} for plots, \code{mvtb.cluster}, \code{mvtb.heat} 
 #' \code{mvtb.uncomp} to uncompress a compressed output object
-#' @references Miller P.J., Lubke G.H, McArtor D.B., Bergeman C.S. (Submitted) Finding structure in data: A data mining alternative to multivariate multiple regression. Psychological Methods.
+#' @references Miller P.J., Lubke G.H, McArtor D.B., Bergeman C.S. (Submitted) Finding structure in data with multivariate tree boosting.
 #' 
 #' Ridgeway, G., Southworth, M. H., & RUnit, S. (2013). Package 'gbm'. Viitattu, 10, 2013.
 #'

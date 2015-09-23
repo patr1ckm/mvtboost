@@ -82,7 +82,7 @@ yhat <- predict(out2,newdata=X)
 
 ### 2.2 Univariate and Perspective Plots
 
-Simple univariate and multivariate plots can highlight non-linear effects of predictors (Friedman, 2001). Below, we show the effect of displacement on city and highway miles per gallon. Because mpg has been standardized, increases in $x$ correspond to standard deviation changes in either city or hw mpg. We see that displacement has a larger effect on city mpg than highway mpg.
+Simple univariate and multivariate plots can highlight non-linear effects of predictors (Friedman, 2001). Below, we show the effect of displacement on city and highway miles per gallon. Because mpg has been standardized, increases in $x$ correspond to standard deviation changes in either city or highway mpg. We see that displacement has a larger effect on city mpg than highway mpg.
 
 ```{r,fig.width=8,fig.height=3.5}
 par(mfcol=c(1,2))              # model implied effects for predictor 2 for cty and hwy
@@ -136,10 +136,15 @@ mvtb.heat(out2$covex)
 ```
 
 ## References
-Miller P.J., Lubke G.H, McArtor D.B., Bergeman C.S. (Submitted) Finding structure in data: A data mining alternative to multivariate multiple regression. Psychological Methods.
-
-Ridgeway, G., Southworth, M. H., & RUnit, S. (2013). Package 'gbm'. Viitattu, 10, 2013.
 
 Elith, J., Leathwick, J. R., & Hastie, T. (2008). A working guide to boosted regression trees. Journal of Animal Ecology, 77(4), 802-813.
 
 Friedman, J. H. (2001). Greedy function approximation: a gradient boosting machine. Annals of statistics, 1189-1232.
+
+Miller P.J., Lubke G.H, McArtor D.B., Bergeman C.S. (Submitted) Finding structure in data with multivariate tree boosting.
+
+Ridgeway, G., Southworth, M. H., & RUnit, S. (2013). Package 'gbm'. 
+
+Ryff, C. D., & Keyes, C. L. M. (1995). The structure of psychological well-being revisited. Journal of Personality and Social Psychology, 69(4), 719.
+
+

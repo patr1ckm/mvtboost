@@ -120,7 +120,7 @@ summary.mvtb <- function(object,print=TRUE,n.trees=NULL,relative="col",covex=TRU
 #'  
 #' @param x Any table (e.g. \code{object$covex}), \code{mvtb.ri(object)}. If an mvtb object, defaults to \code{object$covex}
 #' @param clust.method clustering method for rows and columns. See \code{?hclust} for possibilities
-#' @param dist.method  method for computing the distance between two lower triangluar covariance matrices. See \code{?dist} for alternatives.
+#' @param dist.method  method for computing the distance between two lower triangular covariance matrices. See \code{?dist} for alternatives.
 #' @param plot Produces a heatmap of the covariance explained matrix. see \code{?mvtb.heat}
 #' @param ... Arguments passed to \code{mvtb.heat} 
 #' @return clustered covariance matrix, with re-ordered rows and columns.
@@ -141,7 +141,7 @@ summary.mvtb <- function(object,print=TRUE,n.trees=NULL,relative="col",covex=TRU
 #' A simple heatmap of the clustered matrix can be obtained by setting \code{plot=TRUE}. Details of the plotting procedure are available via \code{mvtb.heat}.
 #' 
 #' \code{covex} values smaller than \code{getOption("digits")} are truncated to 0. Note that it is not impossible to obtain negative variance explained
-#' due to sampling fluctuaion. These can be truncated or ignored. 
+#' due to sampling fluctuation. These can be truncated or ignored. 
 #'
 #' @importFrom stats hclust dist as.dendrogram order.dendrogram
 mvtb.cluster <- function(x,clust.method="ward.D",dist.method="manhattan",plot=FALSE,...) {

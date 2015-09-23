@@ -32,7 +32,7 @@ Plots the model implied effect of 1 predictor for one outcome
 }
 \details{
 This is the classic partial dependence plot, where the model implied effect of the chosen predictor is plotted
-controlling for the other predictors. In additoin to the model-implied effect, the relative influence
+controlling for the other predictors. In addition to the model-implied effect, the relative influence
 of the predictor is included in the x-axis label. If this is not desired, a custom xlabel can be provided.
 }
 \seealso{

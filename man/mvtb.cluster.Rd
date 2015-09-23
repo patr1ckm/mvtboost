@@ -12,7 +12,7 @@ mvtb.cluster(x, clust.method = "ward.D", dist.method = "manhattan",
 
 \item{clust.method}{clustering method for rows and columns. See \code{?hclust} for possibilities}
 
-\item{dist.method}{method for computing the distance between two lower triangluar covariance matrices. See \code{?dist} for alternatives.}
+\item{dist.method}{method for computing the distance between two lower triangular covariance matrices. See \code{?dist} for alternatives.}
 
 \item{plot}{Produces a heatmap of the covariance explained matrix. see \code{?mvtb.heat}}
 
@@ -44,7 +44,7 @@ Transposing the rows and columns may also lead to different results.
 A simple heatmap of the clustered matrix can be obtained by setting \code{plot=TRUE}. Details of the plotting procedure are available via \code{mvtb.heat}.
 
 \code{covex} values smaller than \code{getOption("digits")} are truncated to 0. Note that it is not impossible to obtain negative variance explained
-due to sampling fluctuaion. These can be truncated or ignored.
+due to sampling fluctuation. These can be truncated or ignored.
 }
 \seealso{
 \code{mvtb.heat}

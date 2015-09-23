@@ -16,7 +16,7 @@ mvtb.heat(x, clust.method = "ward.D", dist.method = "manhattan",
 
 \item{numformat}{function to format the covex values into strings. Defaults to removing leading 0 and rounding to 2 decimal places.}
 
-\item{col}{A list of colors mappling onto covex explained values. A white to black gradient is default.}
+\item{col}{A list of colors mapping onto covex explained values. A white to black gradient is default.}
 
 \item{cexRow,}{See \code{cex.axis} from par. The magnification used for the row axis labels. A useful default is provided.}
 

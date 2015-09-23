@@ -13,7 +13,7 @@ mvtb.perspec(object, response.no = 1, predictor.no = 1:2, n.trees = NULL,
 
 \item{response.no}{index of the response variable}
 
-\item{predictor.no}{vector containing indeces of the predictor variables to plot}
+\item{predictor.no}{vector containing indices of the predictor variables to plot}
 
 \item{n.trees}{desired number of trees (default: best trees)}
 
