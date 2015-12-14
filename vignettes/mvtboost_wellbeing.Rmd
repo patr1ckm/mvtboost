@@ -46,7 +46,7 @@ res <- mvtb(Y=Ys,X=Xs)
 # Tuning the model by 5-Fold CV
 ```{r,echo=FALSE, eval=FALSE}
 # tuning the model
-system.time(res5 <- mvtb(Y=Ys,X=Xs,n.trees=10000,shrinkage=.005,cv.folds=5,compress=FALSE))
+res5 <- mvtb(Y=Ys,X=Xs,n.trees=10000,shrinkage=.005,cv.folds=5,compress=FALSE)
 save(res5,file="wb_cv5.Rdata")
 ```
 
@@ -125,7 +125,7 @@ The covariance explained in each pair of outcomes by predictors is estimated dir
 
 When the outcomes are standardized to unit variance, each element can be interpreted as the correlation explained in any pair of outcomes by predictor $X_j$. This decomposition is similar to decomposing R2 in multiple regression. When the trees of the ensemble are limited to a single split and the predictors are independent, this decomposition is exact, otherwise it is approximate.
 
-For the well-being data, the covariance explained matrix is obtained directly from the fitted model: `res5$covex`. We also plot it as a heatmap below:
+For the well-being data, the covariance explained matrix is obtained directly from the fitted model: `res5$covex` or as `mvtb.covex(res5)`. We also plot it as a heatmap below:
 
 ```{r,fig.height=5,fig.width=10,}
 par(mar=c(8,15,1,1),mfrow=c(1,1))

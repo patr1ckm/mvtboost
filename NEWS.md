@@ -1,3 +1,6 @@
+# mvtboost 0.4
+- Added `mvtb.covex` that directly returns the covariance explained matrix.
+
 # mvtboost 0.3
 - Added wellbeing data and vignette
 - Improved documentation for `mvtb`, and other functions
