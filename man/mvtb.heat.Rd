@@ -25,7 +25,7 @@ mvtb.heat(x, clust.method = "ward.D", dist.method = "manhattan",
 \item{...}{extra arguments are passed to image, then to plot. See ?image, ?par}
 }
 \value{
-heatmap of x, usually a covariance explained matrix or a matrix of (relative) influences.
+heatmap of \code{x}, usually a covariance explained matrix or a matrix of (relative) influences.
 }
 \description{
 Simple (clustered) heatmap of tables from mvtb (relative influence, covariance explained)

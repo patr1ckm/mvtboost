@@ -15,13 +15,13 @@ mvtb.nonlin(object, X, Y, n.trees = NULL, detect = "grid", scale = TRUE)
 
 \item{n.trees}{number of trees. Defaults to the minimum number of trees given that minimize CV, test, training error.}
 
-\item{detect}{method for testing possible non-linear effects or interactions. Possible values are "grid", "influence", and "lm". See details.}
+\item{detect}{method for testing possible non-linear effects or interactions. Possible values are \code{"grid"}, \code{"influence"}, and \code{"lm"}. See details.}
 
-\item{scale}{For method "influence", whether the resulting influences are scaled to sum to 100.}
+\item{scale}{For method \code{"influence"}, whether the resulting influences are scaled to sum to 100.}
 }
 \value{
-For each outcome, a list is produced showing the interactions in two forms. The first is $rank.list, which shows the nonlinear effect for each pair of predictors ranked according to the size of the departure from non-linearity.
-The second, $interactions, shows the departure from non-linearity for all pairs of predictors.
+For each outcome, a list is produced showing the interactions in two forms. The first is \code{$rank.list}, which shows the nonlinear effect for each pair of predictors ranked according to the size of the departure from non-linearity.
+The second, \code{$interactions}, shows the departure from non-linearity for all pairs of predictors.
 }
 \description{
 Detect departures from linearity from a multivariate tree boosting model.
@@ -31,14 +31,14 @@ This function provides statistics means to detect departures from linearity in t
 These could be interactions between pairs of variables, or more general non-linear effects. Please note that these methods should be interpreted as exploratory only.
 
 Several methods are provided for detecting departures from non-linearity in pairs from pairs of predictors.
-The "grid" method computes a grid of the model implied predictions as a function of two predictors, averaging over the others. A linear model predicting the observed outcomes from the predicted values is fit, and the mean squared residuals (times 1000) are reported. Large residuals indicate deviations from linearity.
+The \code{"grid"} method computes a grid of the model implied predictions as a function of two predictors, averaging over the others. A linear model predicting the observed outcomes from the predicted values is fit, and the mean squared residuals (times 1000) are reported. Large residuals indicate deviations from linearity.
 
-The "influence" method computes the reductions of SSE attributable to predictors after the first split on the tree. These reductions in sums of squared error (or influences) indicate to what extent individual predictors capture deviations from linear, main effects.
+The \code{"influence"} method computes the reductions of SSE attributable to predictors after the first split on the tree. These reductions in sums of squared error (or influences) indicate to what extent individual predictors capture deviations from linear, main effects.
 
-The "lm" method is the same as the "grid" method, but produces the grid of predicted values by conditioning on the average values of the other predictors rather than averaging over the values of the other predictors (see Elith et al., 2008) . Like the "grid" approach, large residuals from a linear model (times 1000) indicate departures from linearity.
+The \code{"lm"} method is the same as the \code{"grid"} method, but produces the grid of predicted values by conditioning on the average values of the other predictors rather than averaging over the values of the other predictors (see Elith et al., 2008) . Like the \code{"grid"} approach, large residuals from a linear model (times 1000) indicate departures from linearity.
 
 These methods are not necessarily overlapping, and can produce different results. We suggest using several approaches, and follow up by plotting the model implied effects of the two predictors.
-The gbm package contains the function interact.gbm to detect interactions. See ?interact.gbm for details of this function, which can be used directly on individual mvtb output models.
+The gbm package contains the function \code{interact.gbm} to detect interactions. See \code{?interact.gbm} for details of this function, which can be used directly on individual \code{mvtb} output models from \code{object$models}.
 }
 \references{
 Miller P.J., Lubke G.H, McArtor D.B., Bergeman C.S. (Submitted) Finding structure in data: A data mining alternative to multivariate multiple regression. Psychological Methods.

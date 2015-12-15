@@ -124,7 +124,7 @@ plot.pw.perspec <- function(out,response.no,predictor.no,npairs=3,nonlin.rank=NU
 #' @param cexRow, See \code{cex.axis} from par. The magnification used for the row axis labels. A useful default is provided.
 #' @param cexCol, See \code{cex.axis} from par. The magnification used for the col axis labels. The default is set equal to the row axis labels.
 #' @param ... extra arguments are passed to image, then to plot. See ?image, ?par
-#' @return heatmap of x, usually a covariance explained matrix or a matrix of (relative) influences.
+#' @return heatmap of \code{x}, usually a covariance explained matrix or a matrix of (relative) influences.
 #' @details You will probably want to modify the default colors.
 #' @export 
 #' @seealso \code{plot.mvtb}, \code{mvtb.perspec}
