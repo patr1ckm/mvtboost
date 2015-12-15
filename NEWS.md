@@ -1,6 +1,10 @@
 # mvtboost 0.4
 - Added `mvtb.covex` that directly returns the covariance explained matrix.
 - `mvtb.plot` gains `return.grid` argument to return gbm grid that is used for plotting
+- Documentation of functions improved, using more `\code{}` statements, among other things
+- Tests for summary functions improved
+- Revised package vignettes
+- corrected order of variable names for 'age', 'educ' and 'income' in wellbeing data
 
 # mvtboost 0.3
 - Added wellbeing data and vignette

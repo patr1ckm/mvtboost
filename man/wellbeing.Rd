@@ -6,9 +6,31 @@
 
 This data set contains 984 survey responses on the psychological well being (Ryff & Keyes, 1995) of middle-aged and older adults from the Notre Dame Study of Health and Well Being (Bergeman & Deboek, 2014). Psychological well-being has 6 sub-scales - autonomy, environmental mastery (envmast), personal growth (prsgrwth), positive relationships with others (posrel), purpose in life (prpsnlf), and self acceptance. These sub-scales are columns 21:26.
 
-Many potential predictors of psychological well-being are included:
+The following predictors of psychological well-being are included:
 
-gender, education (educ, with levels high-school, vocational, some-college, graduate degree, other), income (inc, with binned levels), age (18-91), chronic health problems (chrhlth), somatic health problems (somhlth), self-reported health problems (slfhlth), positive affect (posaff), negative affect (negaff), positive social control (pscntrl), control of internal states (cistot), commitment (comit), control (cntrl), challenge (chlng), ego resilience (egores), positive social support from friends/family (pssfrnd, pssfam), perceived stressful emotions (pssemot), perceived stressful problems (pssprob), loneliness (lonlnes)
+\itemize
+\item gender
+\item age (18-91)
+\item education (educ, with levels high-school, vocational, some-college, graduate degree, other)
+\item income (inc, with binned levels)
+\item chronic health problems (chrhlth)
+\item somatic health problems (somhlth) 
+\item self-reported health problems (slfhlth)
+\item positive affect (posaff)
+\item negative affect (negaff)
+\item positive social control (pscntrl)
+\item control of internal states (cistot)
+\item commitment (comit)
+\item control (cntrl)
+\item challenge (chlng)
+\item ego resilience (egores)
+\item positive social support from friends/family (pssfrnd, pssfam)
+\item perceived stressful emotions (pssemot)
+\item perceived stressful problems (pssprob)
+\item loneliness (lonlnes)
+\itemize
+
+
 
 }
              \usage{wellbeing}

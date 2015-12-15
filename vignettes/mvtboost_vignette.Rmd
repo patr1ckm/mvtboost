@@ -1,25 +1,25 @@
 ---
-title: "Tree Boosting with Multivariate Outcomes "
+title: "mvtboost example 1: mpg"
 author: "Patrick Miller"
 date: "`r Sys.Date()`"
 output: 
   rmarkdown::html_vignette:
     fig_caption: yes
 vignette: >
-  %\VignetteIndexEntry{Tree Boosting with Multivariate Outcomes}
+  %\VignetteIndexEntry{mvtboost example 1: mpg}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
 
-One important goal in data analysis is to effectively explore large data sets using methods that make few assumptions. With multiple outcome variables and many predictors, multivariate multiple regression may be an interesting possiblity, but is not very suitable for data exploration because it makes many assumptions. Specifically, important structure must be specified before hand - e.g. interaction terms, non-linear effects, etc. However, in an exploratory context, these features are not known. A more flexible approach to exploratory analyses is an additive model of decision trees fit by stochastic gradient descent, also known as tree boosting (Friedman, 2001). This model allows dependent variables to be arbitrary functions of predictors, handles missing data, and is relatively quick to estimate.
+One important goal in data analysis is to explore large data sets using methods that make few assumptions. A flexible approach to exploratory analyses is an additive model of decision trees fit by stochastic gradient descent, also known as tree boosting (Friedman, 2001), implemented in the package `gbm`. This model allows dependent variables to be arbitrary functions of predictors, handles missing data, and is relatively quick to estimate. 
 
-This package is designed to facilitate exploration of large data sets with multiple continuous dependent variables by fitting an additive model of decision trees. A gradient boosted tree model (based on the package `gbm`) is simply fit to each outcome variable separately. We refer to that package and the extensive literature on tree boosting for theoretical and technical details about how such a model is fit and interpreted (see References). The same principles will be applied here. 
+This package builds on top of `gbm` by fitting an additive model of decision trees to multiple continuous outcomes, fitting each separately. If a common set of predictors is used, the common basis accounts for covariance in the outcome variables as in seemingly unrelated regression (SUR). We refer to the package `gbm` and the extensive literature on boosting with decision trees for theoretical and technical details about how such a model is fit and interpreted (see references below).
 
 While it is in principle not too complex to fit separate tree models to each outcome variable, considering the outcome variables jointly has several benefits which the package makes possible:
 
   1. The number of trees and shrinkage can be chosen to jointly minimize prediction error in a test set (or cross validation error) over all outcomes.
   2. It very easy to compare tree models across outcomes.
-  3. We can estimate the 'covariance explained' by predictors in pairs of outcomes.
+  3. The 'covariance explained' by predictors in pairs of outcomes can be estimated
 
 In general, the joint analysis of several outcome variables can be informative. We illustrate the use of multivariate tree boosting by exploring the 'mpg' data from 'ggplot2', investigating features of cars that explain both city and highway fuel efficiency (mpg).
 
