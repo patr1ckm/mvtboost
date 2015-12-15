@@ -1,5 +1,8 @@
 .Rproj.user
 .Rhistory
 .Rdata
+.RData
+.Rprofile
+.Rbuildignore
 mvtboost.Rproj
 inst/doc

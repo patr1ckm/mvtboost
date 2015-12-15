@@ -8,7 +8,7 @@ This data set contains 984 survey responses on the psychological well being (Ryf
 
 The following predictors of psychological well-being are included:
 
-\itemize
+\itemize{
 \item gender
 \item age (18-91)
 \item education (educ, with levels high-school, vocational, some-college, graduate degree, other)
@@ -28,7 +28,7 @@ The following predictors of psychological well-being are included:
 \item perceived stressful emotions (pssemot)
 \item perceived stressful problems (pssprob)
 \item loneliness (lonlnes)
-\itemize
+}
 
 
 
