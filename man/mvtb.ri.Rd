@@ -7,13 +7,13 @@
 mvtb.ri(object, n.trees = NULL, weighted = F, relative = "col")
 }
 \arguments{
-\item{object}{mvtb output object}
+\item{object}{\code{mvtb} output object}
 
-\item{n.trees}{number of trees to use}
+\item{n.trees}{number of trees to use. Defaults to the minimum number of trees by CV, test, or training error}
 
-\item{weighted}{T/F. Reductions in SSE are weighted according the covariance explained by each predictor. See \code{?mvtb} for details.}
+\item{weighted}{\code{TRUE/FALSE}. Reductions in SSE are weighted according the covariance explained by each predictor. See \code{?mvtb} for details.}
 
-\item{relative}{If 'col', each column sums to 100. If 'tot', the whole matrix sums to 100 (a percent). Otherwise, the raw reductions in SSE are returned.}
+\item{relative}{If \code{"col"}, each column sums to 100. If \code{"tot"}, the whole matrix sums to 100 (a percent). Otherwise, the raw reductions in SSE are returned.}
 }
 \value{
 Matrix of (relative) influences.
@@ -24,7 +24,7 @@ It is often expressed as a percent (sums to 100).
 }
 \details{
 (Relative) influences are the usual reductions in SSE due to splitting on each predictor.
-'Weighted' influences are the raw influences weighted by the covariance explained in all pairs of outcomes by that predictor.
+If \code{"weighted"=TRUE}, influences are the raw influences weighted by the covariance explained in all pairs of outcomes by that predictor.
 This allows predictor selection to be informed by the covariance explained.
 Different weighting types are possible, see \code{?mvtb}.
 }

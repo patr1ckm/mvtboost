@@ -4,14 +4,15 @@
 # Purpose: plots
 
 #' Plots the model implied effect of 1 predictor for one outcome 
-#' @param x mvtb output object
+#' @param x \code{mvtb} output object
 #' @param predictor.no index of the predictor variable
 #' @param response.no index of the response variable
-#' @param n.trees desired number of trees (default: best trees)
-#' @param X predictor. If included, a rug is included with the plot showing the density of the variable.
+#' @param n.trees desired number of trees. Defaults to the minimum number of trees by CV, test, or training error
+#' @param X optional vector, matrix, or data.frame of predictors. If included, a rug is included with the plot showing the density of the variable indexed by \code{predictor.no}
 #' @param xlab label of the x axis
 #' @param ylab label of the y axis
-#' @param ... extra arguments are passed to plot. See ?par
+#' @param return.grid \code{TRUE/FALSE} return the prediction grid from \code{gbm}.
+#' @param ... extra arguments are passed to plot. See \code{?par}
 #' @return Function does not return a value, but produces a plot of the model implied effect along with the relative influence of the predictor.
 #' @seealso \code{plot.gbm}, \code{mvtb.perspec}, for other plots, \code{mvtb.heat} to plot the covariance explained by predictors in a heatmap
 #' @export
@@ -19,9 +20,9 @@
 #' @details 
 #' This is the classic partial dependence plot, where the model implied effect of the chosen predictor is plotted
 #' controlling for the other predictors. In addition to the model-implied effect, the relative influence
-#' of the predictor is included in the x-axis label. If this is not desired, a custom xlabel can be provided.
+#' of the predictor is included in the x-axis label. If this is not desired, a custom label can be provided via \code{xlab}.
 #' 
-plot.mvtb <- function(x,predictor.no=1,response.no=1,n.trees=NULL,X=NULL,xlab=NULL,ylab=NULL,...){
+plot.mvtb <- function(x,predictor.no=1,response.no=1,n.trees=NULL,X=NULL,xlab=NULL,ylab=NULL,return.grid=FALSE,...){
   if(any(unlist(lapply(x,function(li){is.raw(li)})))){
     x <- mvtb.uncomp(x)
   }
@@ -35,8 +36,12 @@ plot.mvtb <- function(x,predictor.no=1,response.no=1,n.trees=NULL,X=NULL,xlab=NU
   }
   if(is.null(ylab)) { ylab <- x$ynames[response.no]}
   grid <- gbm::plot.gbm(gbm.obj,i.var = predictor.no,n.trees = n.trees,perspective=TRUE,return.grid=TRUE)  
-  plot(y=grid$y,x=grid[,1],type="l",bty="n",xlab=xlab,ylab=ylab,...)
-  if(!is.null(X)) { rug(jitter(X[,predictor.no])) }
+  if(return.grid==FALSE){
+    plot(y=grid$y,x=grid[,1],type="l",bty="n",xlab=xlab,ylab=ylab,...)
+    if(!is.null(X)) { rug(jitter(X[,predictor.no])) }
+  } else {
+    return(grid)
+  }
 }
 
 
@@ -45,21 +50,21 @@ plot.mvtb <- function(x,predictor.no=1,response.no=1,n.trees=NULL,X=NULL,xlab=NU
 #' This is a plot of the model implied function of 2 predictors averaged over the other predictors
 #' included in the model. This is called a partial dependence plot.
 #' As an alternative to the perspective (3D) plot, a 2D heat plot can be obtained directly
-#' using ?plot.gbm.
+#' using \code{?plot.gbm}.
 #' 
-#' @param object mvtb output object
+#' @param object \code{mvtb} output object
 #' @param response.no index of the response variable
 #' @param predictor.no vector containing indices of the predictor variables to plot
-#' @param n.trees desired number of trees (default: best trees)
-#' @param phi angle of viewing direction. See ?persp.
-#' @param theta angle of viewing direction See ?persp.
-#' @param r distance from eye to center. See ?persp
-#' @param d strength of perspective. See ?persp. 
-#' @param ticktype 'detailed' gives axis points. See ?persp for other options.
+#' @param n.trees desired number of trees. Defaults to the minimum number of trees by CV, test, or training error
+#' @param phi angle of viewing direction. See \code{?persp}.
+#' @param theta angle of viewing direction See \code{?persp}.
+#' @param r distance from eye to center. See \code{?persp}.
+#' @param d strength of perspective. See \code{?persp}.
+#' @param ticktype 'detailed' gives axis points. See \code{?persp} for other options.
 #' @param xlab, title for x axis, must be character strings. 
 #' @param ylab, title for y axis, must be character strings.  
 #' @param zlab, title for z axis, must be character strings. 
-#' @param ... extra arguments are passed to persp. See ?persp
+#' @param ... extra arguments are passed to persp. See \code{?persp}
 #' @return Function returns a plot.
 #' @seealso \code{plot.gbm}, \code{plot.mvtb}, \code{mvtb.heat}
 #' @export

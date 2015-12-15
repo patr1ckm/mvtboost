@@ -2,9 +2,9 @@
 #' 
 #' The relative influence of a predictor is the reduction in sums of squares attributable to splits on individual predictors.
 #' It is often expressed as a percent (sums to 100).
-#' @param object mvtb output object
-#' @param n.trees number of trees to use
-#' @param relative How to scale the multivariate influences. If 'col', each column sums to 100. If 'tot', the whole matrix sums to 100 (a percent). If 'n', the raw reductions in SSE are returned.
+#' @param object \code{mvtb} output object
+#' @param n.trees number of trees to use. Defaults to the minimum number of trees by CV, test, or training error
+#' @param relative How to scale the multivariate influences. If \code{"col"}, each column sums to 100. If \code{"tot"}, the whole matrix sums to 100 (a percent). Otherwise, the raw reductions in SSE are returned.
 #' @param ... Additional arguments passed to \code{gbm::relative.influence}
 #' @return Matrix of (relative) influences.
 #' @export 
@@ -34,14 +34,14 @@ gbm.ri <- function(object,n.trees=NULL,relative="col",...){
 #' 
 #' The relative influence of a predictor is the reduction in sums of squares attributable to splits on individual predictors.
 #' It is often expressed as a percent (sums to 100).
-#' @param object mvtb output object
-#' @param n.trees number of trees to use
-#' @param weighted T/F. Reductions in SSE are weighted according the covariance explained by each predictor. See \code{?mvtb} for details.
-#' @param relative If 'col', each column sums to 100. If 'tot', the whole matrix sums to 100 (a percent). Otherwise, the raw reductions in SSE are returned.
+#' @param object \code{mvtb} output object
+#' @param n.trees number of trees to use. Defaults to the minimum number of trees by CV, test, or training error
+#' @param weighted \code{TRUE/FALSE}. Reductions in SSE are weighted according the covariance explained by each predictor. See \code{?mvtb} for details.
+#' @param relative If \code{"col"}, each column sums to 100. If \code{"tot"}, the whole matrix sums to 100 (a percent). Otherwise, the raw reductions in SSE are returned.
 #' @return Matrix of (relative) influences.
 #' @details 
 #' (Relative) influences are the usual reductions in SSE due to splitting on each predictor. 
-#' 'Weighted' influences are the raw influences weighted by the covariance explained in all pairs of outcomes by that predictor. 
+#' If \code{"weighted"=TRUE}, influences are the raw influences weighted by the covariance explained in all pairs of outcomes by that predictor. 
 #' This allows predictor selection to be informed by the covariance explained. 
 #' Different weighting types are possible, see \code{?mvtb}.
 #' @export 
@@ -123,9 +123,9 @@ summary.mvtb <- function(object,print=TRUE,n.trees=NULL,relative="col",covex=TRU
 #' This function can also be used to cluster the relative influence matrix. In this case, the rows (usually outcomes) and columns (usually predictors) with similar values will
 #' be clustered together.
 #'  
-#' @param x Any table (e.g. \code{object$covex}), \code{mvtb.ri(object)}. If an mvtb object, defaults to \code{object$covex}
-#' @param clust.method clustering method for rows and columns. See \code{?hclust} for possibilities
-#' @param dist.method  method for computing the distance between two lower triangular covariance matrices. See \code{?dist} for alternatives.
+#' @param x Any table, such as \code{mvtb.covex(object)}, or \code{mvtb.ri(object)}. If \code{x} is an \code{mvtb} object, defaults to \code{mvtb.covex(x)}
+#' @param clust.method clustering method for rows and columns. This should be (an unambiguous abbreviation of) one of \code{"ward.D"}, \code{"ward.D2"}, \code{"single"}, \code{"complete"}, \code{"average"} (= UPGMA), \code{"mcquitty"} (= WPGMA), \code{"median"} (= WPGMC) or \code{"centroid"} (= UPGMC).
+#' @param dist.method  method for computing the distance between two lower triangular covariance matrices. This must be one of \code{"euclidean"}, \code{"maximum"}, \code{"manhattan"}, \code{"canberra"}, \code{"binary"} or \code{"minkowski"}. Any unambiguous substring can be given.
 #' @param plot Produces a heatmap of the covariance explained matrix. see \code{?mvtb.heat}
 #' @param ... Arguments passed to \code{mvtb.heat} 
 #' @return clustered covariance matrix, with re-ordered rows and columns.
@@ -135,21 +135,21 @@ summary.mvtb <- function(object,print=TRUE,n.trees=NULL,relative="col",covex=TRU
 #' If predictors are not independent, the decomposition of covariance explained is only approximate (like the decomposition of R^2 by each predictor in a linear model). 
 #' If interaction.depth > 1, the following heuristic is used: the covariance explained by the tree is assigned to the predictor with the largest influence in each tree.
 #'
-#' Note that different distances measures (e.g. 'manhattan', 'euclidean') provide different ways to measure distances between 
+#' Note that different distances measures (e.g. \code{"manhattan"}, \code{"euclidean"}) provide different ways to measure distances between 
 #' the covariance explained patterns for each predictor. See \code{?dist} for further details.
 #' After the distances have been computed, \code{hclust} is used to form clusters. 
-#' Different clustering methods (e.g. "ward.D", "complete") generally group rows and columns differently.
+#' Different clustering methods (e.g. \code{"ward.D"}, \code{"complete"}) generally group rows and columns differently (see \code{?hclust} for further details).
 #' It is suggested to try different distance measures and clustering methods to obtain the most interpretable solution. 
-#' The defaults are for 'manhattan' distances and 'ward.D' clustering, which seem to provide reasonable solutions in many cases.
+#' The defaults are for 'manhattan' distances and \code{"ward.D2"} clustering, which seem to provide reasonable solutions in many cases.
 #' Transposing the rows and columns may also lead to different results.
 #'
 #' A simple heatmap of the clustered matrix can be obtained by setting \code{plot=TRUE}. Details of the plotting procedure are available via \code{mvtb.heat}.
 #' 
-#' \code{covex} values smaller than \code{getOption("digits")} are truncated to 0. Note that it is not impossible to obtain negative variance explained
+#' \code{covex} values smaller than \code{getOption("digits")} are truncated to 0. Note that it is possible to obtain negative variance explained
 #' due to sampling fluctuation. These can be truncated or ignored. 
 #'
 #' @importFrom stats hclust dist as.dendrogram order.dendrogram
-mvtb.cluster <- function(x,clust.method="ward.D",dist.method="manhattan",plot=FALSE,...) {
+mvtb.cluster <- function(x,clust.method="complete",dist.method="euclidean",plot=FALSE,...) {
     if(class(x) %in% "mvtb"){
       if(any(unlist(lapply(x,function(li){is.raw(li)})))){
         x <- mvtb.uncomp(x)
@@ -189,4 +189,10 @@ mvtb.uncomp <- function(object) {
   return(o)
 }
 
+#' Return the covariance explained matrix
+#' 
+#' @param object an object of class \code{mvtb}
+mvtb.covex <- function(object) {
+  return(object$covex)
+}
 

@@ -7,13 +7,13 @@
 \method{predict}{mvtb}(object, n.trees = NULL, newdata, drop = TRUE, ...)
 }
 \arguments{
-\item{object}{mvtb object}
+\item{object}{\code{mvtb} object}
 
-\item{n.trees}{number of trees. If a vector, returns predictions in an array. Defaults to the minimum best tree estimate.}
+\item{n.trees}{number of trees. If a vector, returns predictions in an array. Defaults to the minimum number of trees by CV, test, or training error}
 
 \item{newdata}{matrix of predictors.}
 
-\item{drop}{Drop any dimensions of length 1.}
+\item{drop}{\code{TRUE/FALSE} Drop any dimensions of length 1}
 
 \item{...}{unused}
 }

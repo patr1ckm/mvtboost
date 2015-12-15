@@ -20,19 +20,19 @@ mvtb(X, Y, n.trees = 100, shrinkage = 0.01, interaction.depth = 1,
 
 \item{interaction.depth}{fixed depth of trees to be included in the model. A tree depth of 1 corresponds to fitting stumps (main effects only), higher tree depths capture higher order interactions.}
 
-\item{trainfrac}{proportion of the sample used for training the multivariate additive model. The number of trees that minimize the multivariate MSE in the test set are given in out$best.trees. If both cv.folds and trainfrac are specified, the CV is done within the training set only.}
+\item{trainfrac}{proportion of the sample used for training the multivariate additive model. The number of trees that minimize the multivariate MSE in the test set are given in out$best.trees. If both \code{cv.folds} and \code{trainfrac} are specified, the CV is carried out within the training set.}
 
 \item{bag.frac}{proportion of the training sample used to fit univariate trees for each response at each iteration. Default: 1}
 
-\item{cv.folds}{number of cross validation folds. Default: 1. Runs k + 1 models, where the k models are run in parallel and the final model is run on the entire sample. If larger than 1, the number of trees that minimize the multivariate MSE averaged over k-folds is reported in object$best.trees.}
+\item{cv.folds}{number of cross validation folds. Default: 1. Runs k + 1 models, where the k models are run in parallel and the final model is run on the entire sample. If larger than 1, the number of trees that minimize the multivariate MSE averaged over k-folds is reported in \code{object$best.trees}}
 
-\item{s}{vector of indices denoting observations to be used for the training sample. If s is specified, trainfrac is ignored.}
+\item{s}{vector of indices denoting observations to be used for the training sample. If \code{s} is given, \code{trainfrac} is ignored.}
 
-\item{seednum}{integer to ensure that results are reproducible}
+\item{seednum}{integer passed to \code{set.seed}}
 
-\item{compress}{T/F. Compress output results list using bzip2 (approx 10\% of original size). Default FALSE.}
+\item{compress}{\code{TRUE/FALSE}. Compress output results list using bzip2 (approx 10\% of original size). Default is \code{FALSE}.}
 
-\item{save.cv}{T/F. Save all k-fold cross-validation models.}
+\item{save.cv}{\code{TRUE/FALSE}. Save all k-fold cross-validation models.}
 
 \item{mc.cores}{Number of cores for cross validation.}
 
@@ -50,25 +50,25 @@ mvtb(X, Y, n.trees = 100, shrinkage = 0.01, interaction.depth = 1,
 Fitted model. This is a list containing the following elements:
 
 \itemize{
-  \item models - list of gbm models for each outcome. Functions from the gbm package (e.g. to compute relative influence, print trees, obtain predictions, etc) can be directly applied to each of these models
-  \item covex - covariance explained in each pair of outcomes by each predictor. The covariance explained is only unambiguous if predictors are independent, otherwise it is an approximation. If the interaction.depth is larger than 1, the covariance explained is attributed to the predictor with the largest effect.
-  \item maxiter - maximum number of iterations run (the number of trees fit)
-  \item best.trees - list of the best number of trees given by minimizing the multivariate MSE error in the test set, by CV, or just the last tree fit. Many of the functions in the package default to using the minimum value of the three.
-  \item rel.infl - n x q x n.trees matrix of relative influences
-  \item w.rel.infl - n x q x n.trees matrix of weighted relative influences (see details)
-  \item params - arguments to mvtb
-  \item trainerr - multivariate training error at each tree.
-  \item testerr  - multivariate test error at each tree (if trainfrac < 1)
-  \item cverr    - multivariate cv error at each tree (if cv.folds > 1)
-  \item bestxs - matrix of predictors selected at each tree
-  \item resid - n x q matrix of residuals after fitting all trees
-  \item ocv - if save.cv=TRUE, returns the CV models.
-  \item wm.raw - raw decreases in covariance attributable to a given tree
-  \item wm.rel - relative decreases in covariance attributable to a given tree
-  \item s - indices of training sample
-  \item n - number of observations
-  \item xnames
-  \item ynames
+  \item \code{models} - list of gbm models for each outcome. Functions from the gbm package (e.g. to compute relative influence, print trees, obtain predictions, etc) can be directly applied to each of these models
+  \item \code{covex} - covariance explained in each pair of outcomes by each predictor. The covariance explained is only unambiguous if predictors are independent, otherwise it is an approximation. If the interaction.depth is larger than 1, the covariance explained is attributed to the predictor with the largest effect.
+  \item \code{maxiter} - maximum number of iterations run (the number of trees fit)
+  \item \code{best.trees} - list of the best number of trees given by minimizing the multivariate MSE error in the test set, by CV, or just the last tree fit. Many of the functions in the package default to using the minimum value of the three.
+  \item \code{rel.infl} - n x q x n.trees matrix of relative influences
+  \item \code{w.rel.infl} - n x q x n.trees matrix of weighted relative influences (see details)
+  \item \code{params} - arguments to mvtb
+  \item \code{trainerr} - multivariate training error at each tree.
+  \item \code{testerr}  - multivariate test error at each tree (if trainfrac < 1)
+  \item \code{cverr}    - multivariate cv error at each tree (if cv.folds > 1)
+  \item \code{bestxs} - matrix of predictors selected at each tree
+  \item \code{resid} - n x q matrix of residuals after fitting all trees
+  \item \code{ocv} - if save.cv=TRUE, returns the CV models.
+  \item \code{wm.raw} - raw decreases in covariance attributable to a given tree
+  \item \code{wm.rel} - relative decreases in covariance attributable to a given tree
+  \item \code{s} - indices of training sample
+  \item \code{n} - number of observations
+  \item \code{xnames}
+  \item \code{ynames}
 }
 }
 \description{
@@ -80,9 +80,9 @@ each predictor is then computed based on the reduction in covariance between out
 The reduction in covariance between each pair of outcomes due to splitting on each predictor over all trees is the 'covariance explained' by each predictor, and is recorded in \code{$covex}.
 
 The rows (pairs of outcomes) and the columns (predictors) of \code{$covex} can be clustered so that groups of predictors that explain similar pairs of covariances are closer together (see  \code{mvtb.cluster}).
-A simple heatmap of this matrix can be obtained by the function \code{mvtb.heat}. The \code{covex} by each predictor is only unambiguous if the predictors are uncorrelated and interaction.depth = 1.
+A simple heatmap of this matrix can be obtained by the function \code{mvtb.heat}. The \code{covex} by each predictor is only unambiguous if the predictors are uncorrelated and \code{interaction.depth = 1}.
 If predictors are not independent, the decomposition of covariance explained is only approximate (like the decomposition of R^2 by each predictor in a linear model).
-If interaction.depth > 1, the following heuristic is used: the covariance explained by the tree is assigned to the predictor with the largest influence in each tree.
+If \code{interaction.depth} > 1, the following heuristic is used: the covariance explained by the tree is assigned to the predictor with the largest influence in each tree.
 
 (Relative) influences can be retrieved using \code{mvtb.ri}, which are the usual reductions in SSE due to splitting on each predictor. 'Weighted' influences for each predictor are the usual reductions in SSE weighted by
 the covariance explained in all pairs of outcomes by that predictor. This allows predictor selection to be informed by the covariance explained. Higher weight can be given to explaining variances or covariances by controlling the parameter
@@ -104,7 +104,7 @@ All methods that use the \code{mvtb} object automatically uncompress this object
 The function \code{mvtb.uncomp} is available to manually decompress the object.
 
 Note that trees are grown until a minimum number of observations in each node is reached.
-If the number of training samples*bag.fraction is less the minimum number of observations, (which can occur with small data sets), this will throw an error.
+If the number of \code{training samples}*\code{bag.fraction} is less the minimum number of observations, (which can occur with small data sets), this will cause an error.
 Adjust the \code{n.minobsinnode}, \code{trainfrac}, or \code{bag.fraction}.
 
 This is a beta version with details subject to change. Any contributions are welcome.
@@ -148,7 +148,14 @@ Elith, J., Leathwick, J. R., & Hastie, T. (2008). A working guide to boosted reg
 Friedman, J. H. (2001). Greedy function approximation: a gradient boosting machine. Annals of statistics, 1189-1232.
 }
 \seealso{
-\code{summary.mvtb}, \code{predict.mvtb}, \code{mvtb.nonlin} to help detect nonlinear effects, \code{plot.mvtb}, \code{mvtb.perspec} for plots, \code{mvtb.cluster}, \code{mvtb.heat}
+\code{summary.mvtb}, \code{predict.mvtb}
+
+\code{mvtb.nonlin} to help detect nonlinear effects
+
+\code{plot.mvtb}, \code{mvtb.perspec} for plots
+
+\code{mvtb.cluster}, \code{mvtb.heat} to interpret \code{covex};
+
 \code{mvtb.uncomp} to uncompress a compressed output object
 }
 

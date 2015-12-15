@@ -5,24 +5,26 @@
 \title{Plots the model implied effect of 1 predictor for one outcome}
 \usage{
 \method{plot}{mvtb}(x, predictor.no = 1, response.no = 1, n.trees = NULL,
-  X = NULL, xlab = NULL, ylab = NULL, ...)
+  X = NULL, xlab = NULL, ylab = NULL, return.grid = FALSE, ...)
 }
 \arguments{
-\item{x}{mvtb output object}
+\item{x}{\code{mvtb} output object}
 
 \item{predictor.no}{index of the predictor variable}
 
 \item{response.no}{index of the response variable}
 
-\item{n.trees}{desired number of trees (default: best trees)}
+\item{n.trees}{desired number of trees. Defaults to the minimum number of trees by CV, test, or training error}
 
-\item{X}{predictor. If included, a rug is included with the plot showing the density of the variable.}
+\item{X}{optional vector, matrix, or data.frame of predictors. If included, a rug is included with the plot showing the density of the variable indexed by \code{predictor.no}}
 
 \item{xlab}{label of the x axis}
 
 \item{ylab}{label of the y axis}
 
-\item{...}{extra arguments are passed to plot. See ?par}
+\item{return.grid}{\code{TRUE/FALSE} return the prediction grid from \code{gbm}.}
+
+\item{...}{extra arguments are passed to plot. See \code{?par}}
 }
 \value{
 Function does not return a value, but produces a plot of the model implied effect along with the relative influence of the predictor.
@@ -33,7 +35,7 @@ Plots the model implied effect of 1 predictor for one outcome
 \details{
 This is the classic partial dependence plot, where the model implied effect of the chosen predictor is plotted
 controlling for the other predictors. In addition to the model-implied effect, the relative influence
-of the predictor is included in the x-axis label. If this is not desired, a custom xlabel can be provided.
+of the predictor is included in the x-axis label. If this is not desired, a custom label can be provided via \code{xlab}.
 }
 \seealso{
 \code{plot.gbm}, \code{mvtb.perspec}, for other plots, \code{mvtb.heat} to plot the covariance explained by predictors in a heatmap

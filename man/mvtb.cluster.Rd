@@ -4,15 +4,15 @@
 \alias{mvtb.cluster}
 \title{Clustering the covariance explained or relative influence matrix}
 \usage{
-mvtb.cluster(x, clust.method = "ward.D", dist.method = "manhattan",
+mvtb.cluster(x, clust.method = "complete", dist.method = "euclidean",
   plot = FALSE, ...)
 }
 \arguments{
-\item{x}{Any table (e.g. \code{object$covex}), \code{mvtb.ri(object)}. If an mvtb object, defaults to \code{object$covex}}
+\item{x}{Any table, such as \code{mvtb.covex(object)}, or \code{mvtb.ri(object)}. If \code{x} is an \code{mvtb} object, defaults to \code{mvtb.covex(x)}}
 
-\item{clust.method}{clustering method for rows and columns. See \code{?hclust} for possibilities}
+\item{clust.method}{clustering method for rows and columns. This should be (an unambiguous abbreviation of) one of \code{"ward.D"}, \code{"ward.D2"}, \code{"single"}, \code{"complete"}, \code{"average"} (= UPGMA), \code{"mcquitty"} (= WPGMA), \code{"median"} (= WPGMC) or \code{"centroid"} (= UPGMC).}
 
-\item{dist.method}{method for computing the distance between two lower triangular covariance matrices. See \code{?dist} for alternatives.}
+\item{dist.method}{method for computing the distance between two lower triangular covariance matrices. This must be one of \code{"euclidean"}, \code{"maximum"}, \code{"manhattan"}, \code{"canberra"}, \code{"binary"} or \code{"minkowski"}. Any unambiguous substring can be given.}
 
 \item{plot}{Produces a heatmap of the covariance explained matrix. see \code{?mvtb.heat}}
 
@@ -33,17 +33,17 @@ The covariance explained by each predictor is only unambiguous if the predictors
 If predictors are not independent, the decomposition of covariance explained is only approximate (like the decomposition of R^2 by each predictor in a linear model).
 If interaction.depth > 1, the following heuristic is used: the covariance explained by the tree is assigned to the predictor with the largest influence in each tree.
 
-Note that different distances measures (e.g. 'manhattan', 'euclidean') provide different ways to measure distances between
+Note that different distances measures (e.g. \code{"manhattan"}, \code{"euclidean"}) provide different ways to measure distances between
 the covariance explained patterns for each predictor. See \code{?dist} for further details.
 After the distances have been computed, \code{hclust} is used to form clusters.
-Different clustering methods (e.g. "ward.D", "complete") generally group rows and columns differently.
+Different clustering methods (e.g. \code{"ward.D"}, \code{"complete"}) generally group rows and columns differently (see \code{?hclust} for further details).
 It is suggested to try different distance measures and clustering methods to obtain the most interpretable solution.
-The defaults are for 'manhattan' distances and 'ward.D' clustering, which seem to provide reasonable solutions in many cases.
+The defaults are for 'manhattan' distances and \code{"ward.D2"} clustering, which seem to provide reasonable solutions in many cases.
 Transposing the rows and columns may also lead to different results.
 
 A simple heatmap of the clustered matrix can be obtained by setting \code{plot=TRUE}. Details of the plotting procedure are available via \code{mvtb.heat}.
 
-\code{covex} values smaller than \code{getOption("digits")} are truncated to 0. Note that it is not impossible to obtain negative variance explained
+\code{covex} values smaller than \code{getOption("digits")} are truncated to 0. Note that it is possible to obtain negative variance explained
 due to sampling fluctuation. These can be truncated or ignored.
 }
 \seealso{

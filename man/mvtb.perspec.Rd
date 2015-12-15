@@ -9,21 +9,21 @@ mvtb.perspec(object, response.no = 1, predictor.no = 1:2, n.trees = NULL,
   ylab = NULL, zlab = NULL, ticktype = "detailed", ...)
 }
 \arguments{
-\item{object}{mvtb output object}
+\item{object}{\code{mvtb} output object}
 
 \item{response.no}{index of the response variable}
 
 \item{predictor.no}{vector containing indices of the predictor variables to plot}
 
-\item{n.trees}{desired number of trees (default: best trees)}
+\item{n.trees}{desired number of trees. Defaults to the minimum number of trees by CV, test, or training error}
 
-\item{phi}{angle of viewing direction. See ?persp.}
+\item{phi}{angle of viewing direction. See \code{?persp}.}
 
-\item{theta}{angle of viewing direction See ?persp.}
+\item{theta}{angle of viewing direction See \code{?persp}.}
 
-\item{r}{distance from eye to center. See ?persp}
+\item{r}{distance from eye to center. See \code{?persp}.}
 
-\item{d}{strength of perspective. See ?persp.}
+\item{d}{strength of perspective. See \code{?persp}.}
 
 \item{xlab,}{title for x axis, must be character strings.}
 
@@ -31,9 +31,9 @@ mvtb.perspec(object, response.no = 1, predictor.no = 1:2, n.trees = NULL,
 
 \item{zlab,}{title for z axis, must be character strings.}
 
-\item{ticktype}{'detailed' gives axis points. See ?persp for other options.}
+\item{ticktype}{'detailed' gives axis points. See \code{?persp} for other options.}
 
-\item{...}{extra arguments are passed to persp. See ?persp}
+\item{...}{extra arguments are passed to persp. See \code{?persp}}
 }
 \value{
 Function returns a plot.
@@ -42,7 +42,7 @@ Function returns a plot.
 This is a plot of the model implied function of 2 predictors averaged over the other predictors
 included in the model. This is called a partial dependence plot.
 As an alternative to the perspective (3D) plot, a 2D heat plot can be obtained directly
-using ?plot.gbm.
+using \code{?plot.gbm}.
 }
 \seealso{
 \code{plot.gbm}, \code{plot.mvtb}, \code{mvtb.heat}
