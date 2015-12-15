@@ -1,5 +1,6 @@
 # mvtboost 0.4
 - Added `mvtb.covex` that directly returns the covariance explained matrix.
+- `mvtb.plot` gains `return.grid` argument to return gbm grid that is used for plotting
 
 # mvtboost 0.3
 - Added wellbeing data and vignette
