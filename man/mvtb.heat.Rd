@@ -2,17 +2,17 @@
 % Please edit documentation in R/mvtb_plots.R
 \name{mvtb.heat}
 \alias{mvtb.heat}
-\title{Simple (clustered) heatmap of tables from mvtb (relative influence, covariance explained)}
+\title{Clustered heatmap of tables from \code{mvtb}}
 \usage{
 mvtb.heat(x, clust.method = "ward.D", dist.method = "manhattan",
   numformat = NULL, col = NULL, cexRow = NULL, cexCol = NULL, ...)
 }
 \arguments{
-\item{x}{Any table. For example: the covariance explained (\code{res$covex}), or relative influence \code{mvtb.ri(res)}}
+\item{x}{Any table. For example: the covariance explained (\code{res$covex}), or relative influence \code{mvtb.ri(res)}. If \code{x} is an \code{mvtb} object, defaults to \code{mvtb.covex(x)}}
 
-\item{clust.method}{clustering method for rows and columns. See ?hclust. If NULL, unclustered.}
+\item{clust.method}{clustering method for rows and columns. This should be (an unambiguous abbreviation of) one of \code{"ward.D"}, \code{"ward.D2"}, \code{"single"}, \code{"complete"}, \code{"average"} (= UPGMA), \code{"mcquitty"} (= WPGMA), \code{"median"} (= WPGMC) or \code{"centroid"} (= UPGMC). If \code{NULL}, unclustered.}
 
-\item{dist.method}{method for computing the distance between columns See ?dist for alternatives.}
+\item{dist.method}{method for computing the distance between two lower triangular covariance matrices. This must be one of \code{"euclidean"}, \code{"maximum"}, \code{"manhattan"}, \code{"canberra"}, \code{"binary"} or \code{"minkowski"}. Any unambiguous substring can be given.}
 
 \item{numformat}{function to format the covex values into strings. Defaults to removing leading 0 and rounding to 2 decimal places.}
 
@@ -28,7 +28,7 @@ mvtb.heat(x, clust.method = "ward.D", dist.method = "manhattan",
 heatmap of \code{x}, usually a covariance explained matrix or a matrix of (relative) influences.
 }
 \description{
-Simple (clustered) heatmap of tables from mvtb (relative influence, covariance explained)
+Simple (clustered) heatmap of tables from \code{mvtb} (relative influence, covariance explained)
 }
 \details{
 You will probably want to modify the default colors.

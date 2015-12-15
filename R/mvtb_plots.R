@@ -114,11 +114,13 @@ plot.pw.perspec <- function(out,response.no,predictor.no,npairs=3,nonlin.rank=NU
   }
 }
 
-#' Simple (clustered) heatmap of tables from mvtb (relative influence, covariance explained)
+#' Clustered heatmap of tables from \code{mvtb}
 #' 
-#' @param x Any table. For example: the covariance explained (\code{res$covex}), or relative influence \code{mvtb.ri(res)}
-#' @param clust.method clustering method for rows and columns. See ?hclust. If NULL, unclustered.
-#' @param dist.method  method for computing the distance between columns See ?dist for alternatives.
+#' Simple (clustered) heatmap of tables from \code{mvtb} (relative influence, covariance explained)
+#' 
+#' @param x Any table. For example: the covariance explained (\code{res$covex}), or relative influence \code{mvtb.ri(res)}. If \code{x} is an \code{mvtb} object, defaults to \code{mvtb.covex(x)}
+#' @param clust.method clustering method for rows and columns. This should be (an unambiguous abbreviation of) one of \code{"ward.D"}, \code{"ward.D2"}, \code{"single"}, \code{"complete"}, \code{"average"} (= UPGMA), \code{"mcquitty"} (= WPGMA), \code{"median"} (= WPGMC) or \code{"centroid"} (= UPGMC). If \code{NULL}, unclustered.
+#' @param dist.method  method for computing the distance between two lower triangular covariance matrices. This must be one of \code{"euclidean"}, \code{"maximum"}, \code{"manhattan"}, \code{"canberra"}, \code{"binary"} or \code{"minkowski"}. Any unambiguous substring can be given.
 #' @param numformat function to format the covex values into strings. Defaults to removing leading 0 and rounding to 2 decimal places.
 #' @param col A list of colors mapping onto covex explained values. A white to black gradient is default.
 #' @param cexRow, See \code{cex.axis} from par. The magnification used for the row axis labels. A useful default is provided.
