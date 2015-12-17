@@ -5,6 +5,8 @@
 - Tests for summary functions improved
 - Revised package vignettes
 - corrected order of variable names for 'age', 'educ' and 'income' in wellbeing data
+- `mvtb.heat` gains a `dec` argument to specify the number of digits after the decimal to plot
+- example in `?mvtboost` has been updated to produce a cleaner plot
 
 # mvtboost 0.3
 - Added wellbeing data and vignette

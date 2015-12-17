@@ -4,7 +4,7 @@
 \alias{mvtb.heat}
 \title{Clustered heatmap of tables from \code{mvtb}}
 \usage{
-mvtb.heat(x, clust.method = "ward.D", dist.method = "manhattan",
+mvtb.heat(x, clust.method = "ward.D", dist.method = "manhattan", dec = 2,
   numformat = NULL, col = NULL, cexRow = NULL, cexCol = NULL, ...)
 }
 \arguments{
@@ -14,7 +14,9 @@ mvtb.heat(x, clust.method = "ward.D", dist.method = "manhattan",
 
 \item{dist.method}{method for computing the distance between two lower triangular covariance matrices. This must be one of \code{"euclidean"}, \code{"maximum"}, \code{"manhattan"}, \code{"canberra"}, \code{"binary"} or \code{"minkowski"}. Any unambiguous substring can be given.}
 
-\item{numformat}{function to format the covex values into strings. Defaults to removing leading 0 and rounding to 2 decimal places.}
+\item{dec}{Number of decimal places to round to if \code{numformat} is unspecified. Defaults to 2.}
+
+\item{numformat}{function to format the covex values into strings. Defaults to removing leading 0 and rounding to \code{dec = 2} decimal places.}
 
 \item{col}{A list of colors mapping onto covex explained values. A white to black gradient is default.}
 

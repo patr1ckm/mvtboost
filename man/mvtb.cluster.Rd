@@ -33,12 +33,12 @@ The covariance explained by each predictor is only unambiguous if the predictors
 If predictors are not independent, the decomposition of covariance explained is only approximate (like the decomposition of R^2 by each predictor in a linear model).
 If interaction.depth > 1, the following heuristic is used: the covariance explained by the tree is assigned to the predictor with the largest influence in each tree.
 
-Note that different distances measures (e.g. \code{"manhattan"}, \code{"euclidean"}) provide different ways to measure distances between
+Note that different distances measures (e.g. \code{"manhattan"}, \code{"euclidean"}) provide different ways to measure (dis)similarities between
 the covariance explained patterns for each predictor. See \code{?dist} for further details.
 After the distances have been computed, \code{hclust} is used to form clusters.
 Different clustering methods (e.g. \code{"ward.D"}, \code{"complete"}) generally group rows and columns differently (see \code{?hclust} for further details).
 It is suggested to try different distance measures and clustering methods to obtain the most interpretable solution.
-The defaults are for 'manhattan' distances and \code{"ward.D2"} clustering, which seem to provide reasonable solutions in many cases.
+The defaults are for \code{"euclidean"} distances and \code{"complete"} clustering.
 Transposing the rows and columns may also lead to different results.
 
 A simple heatmap of the clustered matrix can be obtained by setting \code{plot=TRUE}. Details of the plotting procedure are available via \code{mvtb.heat}.

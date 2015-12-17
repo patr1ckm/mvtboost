@@ -5,20 +5,20 @@
 
 #' Fitting a Multivariate Tree Boosting Model
 #'
-#' Builds on \code{gbm} (Ridgeway 2013; Friedman, 2001) to fit a univariate tree model for each outcome, selecting predictors at each iteration that explain covariance between the outcomes. The number of trees included in the model can be chosen by minimizing the multivariate mean squared error using cross validation or a test set.
+#' Builds on \code{gbm} (Ridgeway 2013; Friedman, 2001) to fit a univariate tree model for each outcome, selecting predictors at each iteration that explain (co)variance in the outcomes. The number of trees included in the model can be chosen by minimizing the multivariate mean squared error using cross validation or a test set.
 #'
 #' @param X vector, matrix, or data.frame of predictors. For best performance, continuous predictors should be scaled to have unit variance. Categorical variables should converted to factors.
-#' @param Y vector, matrix, or data.frame for outcome variables. Missing values must be imputed. To easily compare influences across outcomes and for numerical stability, outcome variables should be scaled to have unit variance.
-#' @param n.trees maximum number of trees to be included in the model. Trees are grown until a minimum number observations in each node is reached. This minimum can be modified using additional arguments (below).
+#' @param Y vector, matrix, or data.frame for outcome variables with no missing values. To easily compare influences across outcomes and for numerical stability, outcome variables should be scaled to have unit variance.
+#' @param n.trees maximum number of trees to be included in the model. Trees are grown until a minimum number observations in each node is reached. 
 #' @param shrinkage a constant multiplier for the predictions from each tree to ensure a slow learning rate. Default is .01. Small shrinkage values may require a large number of trees to provide adequate fit.
 #' @param interaction.depth fixed depth of trees to be included in the model. A tree depth of 1 corresponds to fitting stumps (main effects only), higher tree depths capture higher order interactions.
 #' @param bag.frac   proportion of the training sample used to fit univariate trees for each response at each iteration. Default: 1
 #' @param cv.folds   number of cross validation folds. Default: 1. Runs k + 1 models, where the k models are run in parallel and the final model is run on the entire sample. If larger than 1, the number of trees that minimize the multivariate MSE averaged over k-folds is reported in \code{object$best.trees}
-#' @param trainfrac  proportion of the sample used for training the multivariate additive model. The number of trees that minimize the multivariate MSE in the test set are given in out$best.trees. If both \code{cv.folds} and \code{trainfrac} are specified, the CV is carried out within the training set.
+#' @param trainfrac  proportion of the sample used for training the multivariate additive model. If both \code{cv.folds} and \code{trainfrac} are specified, the CV is carried out within the training set.
 #' @param s vector of indices denoting observations to be used for the training sample. If \code{s} is given, \code{trainfrac} is ignored.
 #' @param seednum integer passed to \code{set.seed}
 #' @param compress \code{TRUE/FALSE}. Compress output results list using bzip2 (approx 10\% of original size). Default is \code{FALSE}.
-#' @param save.cv  \code{TRUE/FALSE}. Save all k-fold cross-validation models.
+#' @param save.cv  \code{TRUE/FALSE}. Save all k-fold cross-validation models. Default is \code{FALSE}.
 #' @param mc.cores Number of cores for cross validation.
 #' @param alpha optional argument to select predictors that explain more variance or covariance in outcomes. Variance reductions are weighted by alpha, and covariance reductions are weighted by 1-alpha.
 #' @param weight.type Experimental.
@@ -32,8 +32,8 @@
 #'   \item \code{covex} - covariance explained in each pair of outcomes by each predictor. The covariance explained is only unambiguous if predictors are independent, otherwise it is an approximation. If the interaction.depth is larger than 1, the covariance explained is attributed to the predictor with the largest effect.
 #'   \item \code{maxiter} - maximum number of iterations run (the number of trees fit)
 #'   \item \code{best.trees} - list of the best number of trees given by minimizing the multivariate MSE error in the test set, by CV, or just the last tree fit. Many of the functions in the package default to using the minimum value of the three. 
-#'   \item \code{rel.infl} - n x q x n.trees matrix of relative influences
-#'   \item \code{w.rel.infl} - n x q x n.trees matrix of weighted relative influences (see details)
+#'   \item \code{rel.infl} - n x q x n.trees array of relative influences
+#'   \item \code{w.rel.infl} - n x q x n.trees array of weighted relative influences (see details)
 #'   \item \code{params} - arguments to mvtb
 #'   \item \code{trainerr} - multivariate training error at each tree.
 #'   \item \code{testerr}  - multivariate test error at each tree (if trainfrac < 1)
@@ -83,7 +83,9 @@
 #' If the number of \code{training samples}*\code{bag.fraction} is less the minimum number of observations, (which can occur with small data sets), this will cause an error. 
 #' Adjust the \code{n.minobsinnode}, \code{trainfrac}, or \code{bag.fraction}.
 #' 
-#' This is a beta version with details subject to change. Any contributions are welcome.
+#' Parallel cross-validation is carried out using \code{parallel:mclapply}, which makes \code{mc.cores} copies of the original enviornment.
+#' With very large models, memory limits can be reached rapidly. \code{mc.cores} will not work on Windows.
+#' 
 #' @seealso \code{summary.mvtb}, \code{predict.mvtb}
 #' 
 #' \code{mvtb.nonlin} to help detect nonlinear effects

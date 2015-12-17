@@ -9,8 +9,6 @@
 \packageDescription{mvtboost}
 }
 \details{
-\packageDESCRIPTION{mvtboost}
-\packageIndices{mvtboost}
 The most important function is \code{mvtb}, which fits the multivariate tree boosting model. See \code{?mvtb} for details.
 }
 \author{
@@ -34,8 +32,8 @@ cont.id <- unlist(lapply(X,is.numeric))
 Xs <- scale(X[,cont.id])
 res <- mvtb(Y=Ys,X=Xs)
 summary(res)
-plot(res,predictor.no = 11)
+plot(res,predictor.no = 8)
 predict(res,newdata=Xs)
 mvtb.cluster(res)
-mvtb.heat(t(mvtb.ri(res)))
+mvtb.heat(t(mvtb.ri(res)),cexRow=.8,cexCol=1,dec=0)
 }

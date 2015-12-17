@@ -8,12 +8,12 @@
 #' @param predictor.no index of the predictor variable
 #' @param response.no index of the response variable
 #' @param n.trees desired number of trees. Defaults to the minimum number of trees by CV, test, or training error
-#' @param X optional vector, matrix, or data.frame of predictors. If included, a rug is included with the plot showing the density of the variable indexed by \code{predictor.no}
+#' @param X optional vector, matrix, or data.frame of predictors. If included, a 'rug' (a small vertical line for each observation) is plotted on the x-axis showing the density of \code{predictor.no}. 
 #' @param xlab label of the x axis
 #' @param ylab label of the y axis
-#' @param return.grid \code{TRUE/FALSE} return the prediction grid from \code{gbm}.
+#' @param return.grid \code{TRUE/FALSE} return the prediction grid from \code{gbm}. Default is \code{FALSE}.
 #' @param ... extra arguments are passed to plot. See \code{?par}
-#' @return Function does not return a value, but produces a plot of the model implied effect along with the relative influence of the predictor.
+#' @return Produces a plot of the model implied effect along with the relative influence of the predictor. If \code{return.grid=TRUE}, returns the plotting matrix as well.
 #' @seealso \code{plot.gbm}, \code{mvtb.perspec}, for other plots, \code{mvtb.heat} to plot the covariance explained by predictors in a heatmap
 #' @export
 #' @importFrom graphics plot rug
@@ -121,7 +121,8 @@ plot.pw.perspec <- function(out,response.no,predictor.no,npairs=3,nonlin.rank=NU
 #' @param x Any table. For example: the covariance explained (\code{res$covex}), or relative influence \code{mvtb.ri(res)}. If \code{x} is an \code{mvtb} object, defaults to \code{mvtb.covex(x)}
 #' @param clust.method clustering method for rows and columns. This should be (an unambiguous abbreviation of) one of \code{"ward.D"}, \code{"ward.D2"}, \code{"single"}, \code{"complete"}, \code{"average"} (= UPGMA), \code{"mcquitty"} (= WPGMA), \code{"median"} (= WPGMC) or \code{"centroid"} (= UPGMC). If \code{NULL}, unclustered.
 #' @param dist.method  method for computing the distance between two lower triangular covariance matrices. This must be one of \code{"euclidean"}, \code{"maximum"}, \code{"manhattan"}, \code{"canberra"}, \code{"binary"} or \code{"minkowski"}. Any unambiguous substring can be given.
-#' @param numformat function to format the covex values into strings. Defaults to removing leading 0 and rounding to 2 decimal places.
+#' @param numformat function to format the covex values into strings. Defaults to removing leading 0 and rounding to \code{dec = 2} decimal places.
+#' @param dec Number of decimal places to round to if \code{numformat} is unspecified. Defaults to 2.
 #' @param col A list of colors mapping onto covex explained values. A white to black gradient is default.
 #' @param cexRow, See \code{cex.axis} from par. The magnification used for the row axis labels. A useful default is provided.
 #' @param cexCol, See \code{cex.axis} from par. The magnification used for the col axis labels. The default is set equal to the row axis labels.
@@ -131,7 +132,7 @@ plot.pw.perspec <- function(out,response.no,predictor.no,npairs=3,nonlin.rank=NU
 #' @export 
 #' @seealso \code{plot.mvtb}, \code{mvtb.perspec}
 #' @importFrom graphics image axis text
-mvtb.heat <- function(x,clust.method="ward.D",dist.method="manhattan",numformat=NULL,col=NULL,cexRow=NULL,cexCol=NULL,...) {
+mvtb.heat <- function(x,clust.method="ward.D",dist.method="manhattan",dec=2,numformat=NULL,col=NULL,cexRow=NULL,cexCol=NULL,...) {
   if(class(x) %in% "mvtb"){
     if(any(unlist(lapply(x,function(li){is.raw(li)})))){
       x <- mvtb.uncomp(x)
@@ -141,7 +142,9 @@ mvtb.heat <- function(x,clust.method="ward.D",dist.method="manhattan",numformat=
   if(!is.null(clust.method)){
     x <- mvtb.cluster(x,clust.method=clust.method,dist.method=dist.method)
   }
-  if(is.null(numformat)){ numformat <- function(val){sub("^(-?)0.", "\\1.", sprintf("%.2f", val))}}
+  if(is.null(numformat)){ 
+    numformat <- function(val){sub("^(-?)0.", "\\1.", sprintf(paste0("%.",dec,"f"), val))}
+  }
   cellnote <- matrix(numformat(x),dim(x))
   #cellnote <- cellnote[rowInd,colInd] DONT BE TEMPTED TO DO THIS
   x <- t(x)

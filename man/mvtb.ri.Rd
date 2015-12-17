@@ -23,8 +23,8 @@ The relative influence of a predictor is the reduction in sums of squares attrib
 It is often expressed as a percent (sums to 100).
 }
 \details{
-(Relative) influences are the usual reductions in SSE due to splitting on each predictor.
-If \code{"weighted"=TRUE}, influences are the raw influences weighted by the covariance explained in all pairs of outcomes by that predictor.
+'The 'influence' of a predictor is the reduction in SSE due to splitting on each predictor, summed over all trees.
+If \code{"weighted"=TRUE}, the influence is weighted by the covariance explained in all pairs of outcomes by that predictor.
 This allows predictor selection to be informed by the covariance explained.
 Different weighting types are possible, see \code{?mvtb}.
 }

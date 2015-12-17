@@ -16,18 +16,18 @@
 
 \item{n.trees}{desired number of trees. Defaults to the minimum number of trees by CV, test, or training error}
 
-\item{X}{optional vector, matrix, or data.frame of predictors. If included, a rug is included with the plot showing the density of the variable indexed by \code{predictor.no}}
+\item{X}{optional vector, matrix, or data.frame of predictors. If included, a 'rug' (a small vertical line for each observation) is plotted on the x-axis showing the density of \code{predictor.no}.}
 
 \item{xlab}{label of the x axis}
 
 \item{ylab}{label of the y axis}
 
-\item{return.grid}{\code{TRUE/FALSE} return the prediction grid from \code{gbm}.}
+\item{return.grid}{\code{TRUE/FALSE} return the prediction grid from \code{gbm}. Default is \code{FALSE}.}
 
 \item{...}{extra arguments are passed to plot. See \code{?par}}
 }
 \value{
-Function does not return a value, but produces a plot of the model implied effect along with the relative influence of the predictor.
+Produces a plot of the model implied effect along with the relative influence of the predictor. If \code{return.grid=TRUE}, returns the plotting matrix as well.
 }
 \description{
 Plots the model implied effect of 1 predictor for one outcome
