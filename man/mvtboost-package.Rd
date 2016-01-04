@@ -9,7 +9,7 @@
 \packageDescription{mvtboost}
 }
 \details{
-The most important function is \code{mvtb}, which fits the multivariate tree boosting model. See \code{?mvtb} for details.
+The most important function is \code{mvtb}, which fits the multivariate tree boosting model. See \code{?mvtb} for details. The fitted model objects have \code{summary}, \code{print}, \code{plot} and \code{predict} methods. Additionally, \code{mvtb.ri} to computes the relative influence of each predictor, and \code{mvtb.covex} computes an estimate of the covariance explained in pairs of outcomes by predictors. These tables can be displayed as heatmaps using \code{mvtb.heat}. Examples for fitting, tuning and interpreting the models are available in the help pages and two package vignettes.
 }
 \author{
 \packageAuthor{mvtboost}

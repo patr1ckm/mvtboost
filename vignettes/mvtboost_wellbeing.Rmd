@@ -46,7 +46,7 @@ res <- mvtb(Y=Ys,X=Xs)
 # tuning the model
 res5 <- mvtb(Y=Ys,X=Xs,n.trees=10000,shrinkage=.005,cv.folds=5,compress=FALSE)
 res5train <- mvtb(Y=Ys,X=Xs,n.trees=10000,shrinkage=.005,cv.folds=5,compress=FALSE,s=trainset)
-save(res5,file="wb_cv5.Rdata")
+save(res5,file="vignettes/wb_cv5.Rdata")
 save(res5train,file="vignettes/wb_cv5test.Rdata")
 ```
 
@@ -76,8 +76,8 @@ summary(res5,covex=FALSE)
 ```
 
 ```{r,echo=FALSE}
-load("wb_cv5.Rdata")
-load("wb_cv5test.Rdata")
+load("vignettes/wb_cv5.Rdata")
+load("vignettes/wb_cv5test.Rdata")
 res5$best.trees
 ```
 

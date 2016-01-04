@@ -55,6 +55,7 @@ context("bag.frac")
 r <- mvtb(X=X,Y=Y,n.trees=10,alpha=.5, trainfrac=1,samp.iter=FALSE,cov.discrep=1,weight.type=2,bag.frac=.5)
 for(i in 1:4) { expect_equal(r$models[[i]]$bag.fraction,.5) }
 
+
 ## stop crit - no longer necessary. all weights should be positive
 context("all wm positive")
 r <- mvtb(X=X,Y=Y,n.trees=103,alpha=.5, trainfrac=1,samp.iter=FALSE,cov.discrep=1,weight.type=2,bag.frac=.5)
@@ -129,6 +130,16 @@ expect_true(all(unlist(lapply(r$finaltree[[1]],function(t){length(t[[1]])})) == 
 expect_true(all(unlist(lapply(r2$finaltree[[1]],function(t){length(t[[1]])})) == nodes[2]))
 expect_true(all(unlist(lapply(r3$finaltree[[1]],function(t){length(t[[1]])})) == nodes[3]))
 
+context("checks")
+# test errors
+expect_error(mvtb(X=X,Y=Y,n.trees=10,alpha=-1, trainfrac=1,samp.iter=FALSE,cov.discrep=1,weight.type=2,bag.frac=.5))
+expect_error(mvtb(X=X,Y=Y,n.trees=10,alpha=2, trainfrac=1,samp.iter=FALSE,cov.discrep=1,weight.type=2,bag.frac=.5))
+expect_error(mvtb(X=X,Y=Y,n.trees=10,alpha=.5, trainfrac=0,samp.iter=FALSE,cov.discrep=1,weight.type=2,bag.frac=.5))
+expect_error(mvtb(X=X,Y=Y,n.trees=10,alpha=.5, trainfrac=2,samp.iter=FALSE,cov.discrep=1,weight.type=2,bag.frac=.5))
+expect_error(mvtb(X=X,Y=Y,n.trees=10,alpha=.5, trainfrac=.5,samp.iter=FALSE,cov.discrep=1,weight.type=2,bag.frac=-1))
+expect_error(mvtb(X=X,Y=Y,n.trees=10,alpha=.5, trainfrac=.5,samp.iter=FALSE,cov.discrep=1,weight.type=2,bag.frac=2))
+
+
 
 #r <- mvtb(X=X,Y=Y,n.trees=100,alpha=.5, cv.folds=1,samp.iter=FALSE,cov.discrep=1,weight.type=2,bag.frac=.5,s=1:500,seednum=8,compress=FALSE)
 #r1 <- mvtb(X=X,Y=Y,n.trees=100,alpha=.5, cv.folds=1,samp.iter=FALSE,cov.discrep=1,weight.type=2,bag.frac=.5,s=1:500,seednum=8,compress=FALSE,save.cv=TRUE)
@@ -170,3 +181,12 @@ expect_is(out,"mvtb")
 # test vectors
 out <- try(mvtb(Y=Y[,,drop=TRUE],X=X[,,drop=TRUE]))
 expect_is(out,"mvtb")
+
+# test errors
+expect_error(mvtb(X=X,Y=Y,n.trees=10,alpha=-1, trainfrac=1,samp.iter=FALSE,cov.discrep=1,weight.type=2,bag.frac=.5))
+expect_error(mvtb(X=X,Y=Y,n.trees=10,alpha=2, trainfrac=1,samp.iter=FALSE,cov.discrep=1,weight.type=2,bag.frac=.5))
+expect_error(mvtb(X=X,Y=Y,n.trees=10,alpha=.5, trainfrac=0,samp.iter=FALSE,cov.discrep=1,weight.type=2,bag.frac=.5))
+expect_error(mvtb(X=X,Y=Y,n.trees=10,alpha=.5, trainfrac=2,samp.iter=FALSE,cov.discrep=1,weight.type=2,bag.frac=.5))
+expect_error(mvtb(X=X,Y=Y,n.trees=10,alpha=.5, trainfrac=.5,samp.iter=FALSE,cov.discrep=1,weight.type=2,bag.frac=-1))
+expect_error(mvtb(X=X,Y=Y,n.trees=10,alpha=.5, trainfrac=.5,samp.iter=FALSE,cov.discrep=1,weight.type=2,bag.frac=2))
+
