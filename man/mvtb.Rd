@@ -14,7 +14,7 @@ mvtb(X, Y, n.trees = 100, shrinkage = 0.01, interaction.depth = 1,
 
 \item{Y}{vector, matrix, or data.frame for outcome variables with no missing values. To easily compare influences across outcomes and for numerical stability, outcome variables should be scaled to have unit variance.}
 
-\item{n.trees}{maximum number of trees to be included in the model. Trees are grown until a minimum number observations in each node is reached.}
+\item{n.trees}{maximum number of trees to be included in the model. Each individual tree is grown until a minimum number observations in each node is reached.}
 
 \item{shrinkage}{a constant multiplier for the predictions from each tree to ensure a slow learning rate. Default is .01. Small shrinkage values may require a large number of trees to provide adequate fit.}
 
@@ -112,7 +112,7 @@ If the number of \code{training samples}*\code{bag.fraction} is less the minimum
 Adjust the \code{n.minobsinnode}, \code{trainfrac}, or \code{bag.fraction}.
 
 Parallel cross-validation is carried out using \code{parallel:mclapply}, which makes \code{mc.cores} copies of the original enviornment.
-With very large models, memory limits can be reached rapidly. \code{mc.cores} will not work on Windows.
+For models with many trees (> 100K), memory limits can be reached rapidly. \code{mc.cores} will not work on Windows.
 }
 \examples{
 data(wellbeing)

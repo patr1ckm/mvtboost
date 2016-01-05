@@ -76,8 +76,8 @@ summary(res5,covex=FALSE)
 ```
 
 ```{r,echo=FALSE}
-load("vignettes/wb_cv5.Rdata")
-load("vignettes/wb_cv5test.Rdata")
+load("wb_cv5.Rdata")
+load("wb_cv5test.Rdata")
 res5$best.trees
 ```
 

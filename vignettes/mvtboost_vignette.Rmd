@@ -32,7 +32,9 @@ library(mvtboost)
 data("mpg",package="ggplot2")
 Y <- mpg[,c("cty","hwy")]      # use both city and highway mileage as dvs
 Ys <- scale(Y)                 # recommended that outcomes are on same scale
-X <- mpg[,-c(2,8:9)]           # manufacturer, displacement, year, cylinder, transmission, drive, class
+X <- mpg[,-c(2,8:9)]           # manufacturer, displacement, year, cylinder, transmission,drive, class
+char.ids <- unlist(lapply(X,is.character))
+X[,char.ids] <- lapply(X[,char.ids],as.factor)
 
 out <- mvtb(Y=Ys,X=X,          # data
         n.trees=1000,          # number of trees
