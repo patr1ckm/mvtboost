@@ -81,7 +81,7 @@ load("wb_cv5test.Rdata")
 res5$best.trees
 ```
 
-Most procedures in the `mvtboost` package will by default automatically select the lowest number of trees provided by traiing, CV, or test error, which corresponds to a minimally complex model if the number of trees is not specified.
+Most procedures in the `mvtboost` package will by default automatically select the lowest number of trees provided by training, CV, or test error, which corresponds to a minimally complex model if the number of trees is not specified.
 
 ## Showing training and cv error
 
@@ -182,7 +182,7 @@ mvtb.perspec(res5,predictor.no=c(11,18),response.no=6)
 text(-.5,.5,labels="B",xpd=TRUE)
 ```
 
-### 5. Departures from addivity
+### 5. Departures from additivity
 
 Though decision trees are models of interactions, it is difficult to detect and interpret interaction effects from a decision tree ensemble. To address this issue, we can again analyze the fitted values of the model. Following Elith et al. (2008), possible 2-way interactions can be detected by checking whether the fitted values of the approximation as a function of any pair of predictors deviates from a linear combination of the two predictors. Such departures indicate that the joint effect of the predictors is not additive, and indicate a non-linear effect or a possible interaction.
 
