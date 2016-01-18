@@ -111,7 +111,7 @@ Note that trees are grown until a minimum number of observations in each node is
 If the number of \code{training samples}*\code{bag.fraction} is less the minimum number of observations, (which can occur with small data sets), this will cause an error. 
 Adjust the \code{n.minobsinnode}, \code{trainfrac}, or \code{bag.fraction}.
 
-Parallel cross-validation is carried out using \code{parallel:mclapply}, which makes \code{mc.cores} copies of the original enviornment.
+Parallel cross-validation is carried out using \code{parallel:mclapply}, which makes \code{mc.cores} copies of the original environment.
 For models with many trees (> 100K), memory limits can be reached rapidly. \code{mc.cores} will not work on Windows.
 }
 \examples{
