@@ -14,14 +14,12 @@ vignette: >
 This document describes the analysis of psychological well-being by multivariate tree boosting from the paper (Miller, Lubke, McArtor, & Bergeman, 2015).
 
 ## Introduction
-Identifying the factors that impact well-being in aging adults is an important step to understanding successful aging and decreasing the risk for pathological aging (Wallace et al., 2002). Previous research has identified that high resilience, coping strategies, social support from family and friends, good physical health, and the lack of stress and depression are important to successful aging (Wallace et al., 2002). In our exploratory analysis, we included these predictors as well as several new predictors — control of internal states, trait-ego resilience, and hardiness — and investigated the extent to which these predictors influenced particular aspects of well-being. Most research has focused on a well-being aggregate score, and little is known about whether the influence of these predictors varies across the different sub-scales of well-being. 
+In our exploratory analysis, we investigated the factors that influence six aspects of well-being: autonomy, environmental mastery, personal growth, positive relationships with others, purpose in life, and self-acceptance (Ryff & Keyes, 1995).
 	
-## Scales 
-The Psychological Well-Being Scale (Ryff & Keyes, 1995) has six sub-scales: autonomy, environmental mastery, personal growth, positive relationships with others, purpose in life, and self-acceptance. These were used as dependent variables in the analysis. Gender, age, income, and education were included as demographic predictors. The primary predictors of interest were chronic, somatic, and self-reported health, depression (positive and negative affect), perceived social control, control of internal states, sub-scales of dispositional resilience (commitment, control, and challenge), ego resilience, social support (friends and family), self-reported stress (problems, emotions), and loneliness. Each sub-scale score is continuous, and approximately normally distributed. In total, 20 predictors were included in the analysis. 
+## Predictors 
+Gender, age, income, and education were included as demographic predictors. The primary predictors of interest were chronic, somatic, and self-reported health, depression (positive and negative affect), perceived social control, control of internal states, sub-scales of dispositional resilience (commitment, control, and challenge), ego resilience, social support (friends and family), self-reported stress (problems, emotions), and loneliness. In total, 20 predictors were included in the analysis. 
 
 ## Fitting the model
-
-This scales predictors, and gives them pretty labels.
 
 ```{r,eval=TRUE}
 #install.packages("mvtboost")
@@ -42,6 +40,9 @@ res <- mvtb(Y=Ys,X=Xs)
 ```
 
 ## Tuning the model by 5-Fold CV
+
+In gradient boosting, the number of trees, the shrinkage, and the tree depth are meta-parameters that are important to tune to improve the fit of the model. Typically, the shrinkage is fixed to a small value, and the optimal number of trees is chosen by cross-validation. This is illustrated below:
+
 ```{r,echo=FALSE, eval=FALSE}
 # tuning the model
 res5 <- mvtb(Y=Ys,X=Xs,n.trees=10000,shrinkage=.005,cv.folds=5,compress=FALSE)
@@ -54,7 +55,7 @@ save(res5train,file="vignettes/wb_cv5test.Rdata")
 res5 <- mvtb(Y=Ys,X=Xs,n.trees=10000,shrinkage=.005,cv.folds=5,compress=FALSE)
 ```
 
-We can also specify a set of observations as the training set by passing a vector of ids `trainset` to the argument `s`. Cross-validation will only occur within the training set.
+A set of observations can be explicitly specified as the training set by passing a vector of ids `trainset` to the argument `s`. Cross-validation will only occur within the training set.
 
 ```{r}
 set.seed(104)
@@ -67,7 +68,7 @@ res5train <- mvtb(Y=Ys,X=Xs,n.trees=10000,shrinkage=.005,cv.folds=5,compress=FAL
 
 ## Computing the best number of trees 
 
-As with the univariate procedure, the number of trees can be chosen to minimize a test or cross-validation estimate of the prediction error. `mvtb` uses the multivariate MSE in a test set or (kth) fold as the estimate of multivariate prediction error.
+As with univariate gradient boosted trees, the number of trees can be chosen to minimize a test or cross-validation estimate of the prediction error. `mvtb` uses the multivariate MSE in a test set or (kth) fold as the estimate of multivariate prediction error.
 
 
 ```{r,eval=FALSE}
@@ -81,7 +82,7 @@ load("wb_cv5test.Rdata")
 res5$best.trees
 ```
 
-Most procedures in the `mvtboost` package will by default automatically select the lowest number of trees provided by training, CV, or test error, which corresponds to a minimally complex model if the number of trees is not specified.
+Most procedures in the `mvtboost` package will by default automatically select the lowest number of trees provided by training, CV, or test error, which corresponds to a minimally complex model.
 
 ## Showing training and cv error
 
@@ -94,6 +95,8 @@ lines(x=1:10000,y=res5$cv.err,type="l",col="red")
 legend("topright",legend=c("Training Error","Cross-Validation Error"),lty=c(1,1),col=c("black","red"),bty="n")
 ```
 
+Increasing the depth of trees to 5 or 10 may also improve performance. 
+
 ## Interpret the model
 
 One of the challenges of using multivariate decision tree ensembles is that the model is more difficult to interpret than a single tree. While tree boosting can be used to build a very accurate predictive model, it is potentially more important for researchers to interpret the effects of predictors. Below, we describe approaches that have been developed to 
@@ -105,9 +108,9 @@ One of the challenges of using multivariate decision tree ensembles is that the 
 
 ### 1. Relative influence
 
-The first goal in interpretation is to identify which predictors influence which outcome variables. The influence (or variable importance) of each predictor from the tree ensemble has been defined as the reduction in sums of squared error due to any split on that predictor, summed over all trees in the model (Friedman, 2001).
+The influence (or variable importance) of each predictor can be used to identify 'important' predictors. It is defined as the reduction in sums of squared error due to any split on that predictor, summed over all trees in the model (Friedman, 2001). Usually the score is relative, expressed as a percent of the total sums of squared error reductions from all predictors.
 
-Below, we compute the relative influences for the well-being data, and plot using a heat map. Using the 'mvtb.ri' function, we can make the influence scores relative per outcome ('col') or across outcomes ('tot'). By default, importances are relative to the column.
+Below, we compute the relative influences for the well-being data, and plot the influences using a heat map. Using the `mvtb.ri` function,  the influence scores can sum to 100 for each outcome (`relative='col'`) or across outcomes (`relative='tot'`). By default, importances are relative to the column.
 
 ```{r,eval=FALSE}
 summary(res5,covex=FALSE)
@@ -121,11 +124,11 @@ par(mar=c(8,10,1,1))
 mvtb.heat(t(mvtb.ri(res5)),clust.method = NULL,cexRow=1,cexCol=1,numformat=numformat)
 ```
 
-We see that control of internal states affects all aspects of psychological well being except positive relationships with others. Like control of internal states, perceived stress-problems affects three aspects of well-being: self acceptance, purpose in life, and environmental mastery. Personal growth is driven by control of internal states and ego-resilience. Other patterns in the influences can be interpreted similarly, and conform to theoretical expectations (e.g. Wallace et al., 2002; Ryff & Keyes, 1995).
+For example, control of internal states affects all aspects of psychological well being except positive relationships with others. Like control of internal states, perceived stress-problems affects three aspects of well-being: self acceptance, purpose in life, and environmental mastery. Other patterns in the influences can be interpreted similarly.
 
 ### 2. Fit
 
-Because selecting variables based on relative influence scores can be problematic, we should check the fit of the model also. If the model explains little or no variance in the outcomes, there is no reason to use the model for variable selection. For the well-being data, we compute the $R^2$ in the test set for each dependent variable below. 
+As a check of the overall fit of the model, the $R^2$ in the test set can be computed for each dependent variable. 
 
 ```{r}
 testset <- (1:nrow(Ys))[!(1:nrow(Ys) %in% trainset)]
@@ -135,13 +138,13 @@ diag(var(yhat)/var(Ys[testset,]))
 
 ### 3. Covariance explained 
 
-In addition to selecting predictors for inclusion into a subsequent multivariate model (e.g. a multivariate regression model or SEM), it may also be informative to select the outcome variables that are associated with the set of predictors. One criterion for selecting outcome variables is to choose the outcome variables whose covariance can be explained by a function of a common set of predictors. This approach could be used to, for example, 1) identify a set of demographic predictors that similarly affect particular symptoms of a disorder, 2) indicate to what extent covariance in sub-scales of a construct is due to effects of predictors.
+It may also be informative to select a set of outcome variables that are associated with groups of predictors. One criterion for selecting outcome variables is to choose the outcome variables whose covariance can be explained by a function of a common set of predictors. The covariance explained in each pair of outcomes by predictors is estimated directly in `mvtb`. 
 
-The covariance explained in each pair of outcomes by predictors is estimated directly in `mvtb`. A covariance-explained matrix  be organized as a $Q(Q+1)/2 \times p$ (where $Q$ is the number of outcomes, and $p$ is the number of predictors) table, where each element is the covariance explained in any pair of outcomes by predictor.
+A covariance-explained matrix be organized as a $Q(Q+1)/2 \times p$ table, where $Q$ is the number of outcomes, and $p$ is the number of predictors.  Each element is the covariance explained in any pair of outcomes by a predictor. When the outcomes are standardized to unit variance, each element can be interpreted as the correlation explained in any pair of outcomes by a predictor. 
 
-When the outcomes are standardized to unit variance, each element can be interpreted as the correlation explained in any pair of outcomes by predictor $X_j$. This decomposition is similar to decomposing $R^2$ in multiple regression. When the trees of the ensemble are limited to a single split and the predictors are independent, this decomposition is exact, otherwise it is approximate.
+This decomposition is similar to decomposing $R^2$ in multiple regression. When the trees of the ensemble are limited to a single split and the predictors are independent, this decomposition is exact, otherwise it is approximate.
 
-For the well-being data, the covariance explained matrix is obtained directly from the fitted model: `res5$covex` or as `mvtb.covex(res5)`. We also plot it as a heatmap below:
+For the well-being data, the covariance explained matrix is obtained directly from the fitted model: `res5$covex` or as `mvtb.covex(res5)`. It can also be plotted as a heatmap, which we illustrate below:
 
 ```{r,fig.height=5,fig.width=10,}
 par(mar=c(8,15,1,1),mfrow=c(1,1))
@@ -150,13 +153,13 @@ mvtb.heat(res5$covex[,-c(1:7)],cexRow=.9,numformat=numformat,clust.method = NULL
 
 ```
 
-We see that negative affect and stress problems have widespread effects on well-being. Control of internal states explains correlations across all dimensions, and is the primary explanatory predictor for autonomy. Similarly, stress, which can be detrimental to well-being, most strongly affects purpose in life and environmental mastery. Unsurprisingly, loneliness and social support from friends primarily affect positive relationships with others. Ego resilience mainly affects personal growth.  
+Negative affect and stress problems have widespread effects on well-being. Control of internal states explains correlations across all dimensions, and is the primary explanatory predictor for autonomy. 
 
 ### Clustering covariance explained.
 
-If the number of predictors/outcomes is large, interpreting the matrix by bare eyes is challenging. The covariance explained matrix can be clustered by first computing the distance between columns (predictors) and the rows (pairs of outcomes), respectively. Predictors that explain similar patterns of covariance in the outcomes will be closer together (have smaller distance), as will pairs of outcomes that are functions of a similar set of predictors. The resulting distance matrices computed for the rows and columns can then be used to group rows or columns by hierarchical clustering. This corresponds to grouping the predictors that explain covariance in similar pairs of outcomes and grouping pairs of outcomes dependent on similar sets of predictors.
+If the number of predictors/outcomes is large, interpreting the matrix is challenging. The covariance explained matrix can be clustered by grouping the predictors that explain covariance in similar pairs of outcomes. This is done by hierarchical clustering of the  distance between columns (predictors) and the rows (pairs of outcomes).
 
-Clustering the matrix can be done with `mvtb.cluster`. Below we plot the solution below as a heatmap with `mvtb.heat`.
+Clustering the matrix can be done with `mvtb.cluster`. Below we plot the solution as a heatmap with `mvtb.heat`.
 
 ```{r,eval=FALSE}
 mvtb.cluster(res5)
@@ -168,9 +171,9 @@ mvtb.heat(res5$covex[,-c(1:7)],cexRow=.9)
 ```
 
 
-### 4. Plots
+### 4. Partial Dependence Plots
 
-These partial dependence plots effectively complement interpretations of relative influence by showing the direction and functional form of the effect of the predictor. Identifying non-linear effects with plots can also help prevent model misspecification if a parametric model is the final goal.
+Partial dependence plots complement interpretations of relative influence by showing the direction and functional form of the effect of the predictor. A partial dependence plot shows the effect of the predictor averaging over (or integrating out) the effects of other predictors.
 
 Here we show the univariate and multivariate perspective plots. The first plot shows that above-average control of internal states is associated with larger personal growth. The second shows the non-additive effect of control of internal states and perceived stress problems on self-acceptance.
 
@@ -182,11 +185,13 @@ mvtb.perspec(res5,predictor.no=c(11,18),response.no=6)
 text(-.5,.5,labels="B",xpd=TRUE)
 ```
 
+
+
 ### 5. Departures from additivity
 
-Though decision trees are models of interactions, it is difficult to detect and interpret interaction effects from a decision tree ensemble. To address this issue, we can again analyze the fitted values of the model. Following Elith et al. (2008), possible 2-way interactions can be detected by checking whether the fitted values of the approximation as a function of any pair of predictors deviates from a linear combination of the two predictors. Such departures indicate that the joint effect of the predictors is not additive, and indicate a non-linear effect or a possible interaction.
+Though decision trees are models of interactions, it is difficult to detect and interpret interaction effects from a decision tree ensemble. To address this issue, we can analyze the fitted values of the model. Following Elith et al. (2008), possible 2-way interactions can be detected by checking whether the fitted values of the model as a function of any pair of predictors deviates from a linear combination of the two predictors. Such departures indicate that the joint effect of the predictors is not additive, and indicate a non-linear effect or a possible interaction.
 
-A check of departures from additivity can be accomplished by computing the fitted values for any pair of predictors, over a grid of all possible levels for the two variables. For continuous predictors, 100 sample values are taken. The fitted values are then regressed onto the grid. Large residuals from this model indicate the fitted values are not a linear combination of the predictors, demonstrating non-linearity or a possible interaction. For computational simplicity with many predictors, this might be done only for pairs of important variables.
+In greater detail: the fitted values of the model are computed for any pair of predictors, over a grid of all possible levels for the two variables. For continuous predictors, 100 sample values are taken. The fitted values are then regressed onto the grid. Large residuals from this model indicate the fitted values are not a linear combination of the predictors, demonstrating non-linearity or a possible interaction. For computational simplicity with many predictors, this might be done only for pairs of important variables.
 
 We note that this approach is primarily a heuristic for interpreting the model. A variable with a non-additive effect (e.g. a non-linear effect like control of internal states) can produce bivariate departures from additivity which are not necessarily interactions. 
 
