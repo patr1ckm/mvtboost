@@ -2,6 +2,8 @@
 
 This fixes just a few typos, and updates package to 0.4.1
 
+- Typos in description
+- Revisions to both vignettes
 
 ## Test environments
 
