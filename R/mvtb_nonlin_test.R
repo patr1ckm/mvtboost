@@ -243,7 +243,7 @@ intx.influence <- function(object,k=1,n.trees,scale=TRUE) {
 }
 
 ## GBM Tree structure
-## [[1]] - INDEX: vector of indeces of splitting variables. -1 indicates a terminal node. starts from 0.
+## [[1]] - INDEX: vector of indices of splitting variables. -1 indicates a terminal node. starts from 0.
 ## [[2]] - prediction: split point, or c.split describing the split
 ## [[3]] - Node assignments (left). 
 ## [[4]] - Node assignments (right). 
