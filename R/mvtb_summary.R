@@ -97,7 +97,7 @@ print.mvtb <- function(x,...) {
 #' @return Returns the best number of trees, the univariate relative influence of each predictor for each outcome, and covariance explained in pairs of outcomes by each predictor
 #' @seealso \code{mvtb.ri}, \code{gbm.ri}, \code{mvtb.cluster}
 #' @export
-summary.mvtb <- function(object,print=TRUE,n.trees=NULL,relative="col",covex=TRUE,...) {
+summary.mvtb <- function(object,print=TRUE,n.trees=NULL,relative="col",covex=FALSE,...) {
   out <- object
   if(any(unlist(lapply(out,function(li){is.raw(li)})))){
     out <- mvtb.uncomp(out)
@@ -192,6 +192,7 @@ mvtb.uncomp <- function(object) {
 #' Return the covariance explained matrix
 #' 
 #' @param object an object of class \code{mvtb}
+#' @export
 mvtb.covex <- function(object) {
   return(object$covex)
 }
