@@ -31,7 +31,7 @@ The following predictors of psychological well-being are included:
 }
 
 
-* Note: Additional noise has been added to this data set to protect confidentiality and privacy. This data set is only included for demonstration of the software.
+* Note: This data set is only included for demonstration of the software. No other use of the data is permitted. Additional noise has been added to this data set to protect privacy.
 
 
 }
