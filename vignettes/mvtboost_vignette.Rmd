@@ -67,8 +67,8 @@ The `summary` of the fitted model shows the best number of trees (the minimum of
 After tuning with cross-validation, results change slightly.
 
 ```{r}
-summary(out)
-summary(out2)
+summary(out,covex=TRUE)
+summary(out2,covex=TRUE)
 ```
 
 ### 2.1 Predictions

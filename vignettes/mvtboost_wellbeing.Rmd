@@ -73,7 +73,7 @@ As with univariate gradient boosted trees, the number of trees can be chosen to 
 
 ```{r,eval=FALSE}
 res5$best.trees
-summary(res5,covex=FALSE)
+summary(res5)
 ```
 
 ```{r,echo=FALSE}
@@ -113,7 +113,7 @@ The influence (or variable importance) of each predictor can be used to identify
 Below, we compute the relative influences for the well-being data, and plot the influences using a heat map. Using the `mvtb.ri` function,  the influence scores can sum to 100 for each outcome (`relative='col'`) or across outcomes (`relative='tot'`). By default, importances are relative to the column.
 
 ```{r,eval=FALSE}
-summary(res5,covex=FALSE)
+summary(res5)
 round(mvtb.ri(res5,relative = "tot"),2) 
 ```
 

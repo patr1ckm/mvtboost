@@ -106,7 +106,7 @@ summary.mvtb <- function(object,print=TRUE,n.trees=NULL,relative="col",covex=FAL
   ri <- mvtb.ri(out,n.trees=n.trees,relative=relative)
   if(covex){
     cc <- mvtb.cluster(out)
-    sum <- list(best.trees=n.trees,relative.influence=ri,mvtb.cluster=cc)
+    sum <- list(best.trees=n.trees,relative.influence=ri,mvtb.covex=cc)
   } else {
     sum <- list(best.trees=n.trees,relative.influence=ri)
   }
