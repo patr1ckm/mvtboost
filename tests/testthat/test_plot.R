@@ -20,7 +20,7 @@ plot(out)
 mvtb.perspec(out)
 mvtb.heat(out)
 mvtb.heat(out$covex)
-mvtb.heat(t(mvtb.ri(out)))
+mvtb.heat(t(mvtb.ri(out)),cexRow=2,cexCol=.5)
 mvtb.heat(t(mvtb.ri(out)),clust.method=NULL)
 
 expect_equal(dim(plot(out,return.grid=T)),c(100,2))

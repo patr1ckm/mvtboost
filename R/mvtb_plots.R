@@ -164,7 +164,7 @@ mvtb.heat <- function(x,clust.method="ward.D",dist.method="manhattan",dec=2,numf
        cex.axis = cexCol)
   text(x =  c(row(cellnote)), y = c(col(cellnote)), labels = c(cellnote), 
        col = "white", cex = 1)
-  text(1:nc,rep(0,nc), las=2,cex.axis=cexRow,adj=1,
+  text(1:nc,rep(0,nc), las=2,cex=cexRow,adj=1,
        labels = rownames(x), xpd = TRUE,srt=45,
        col="black")
 }
