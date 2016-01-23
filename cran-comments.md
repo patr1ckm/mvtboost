@@ -1,6 +1,7 @@
 ## Resubmission
 
 This submission updates 
+ - DESCRIPTION to remove "This package..." and another typo
  - data
  - vignettes
  - a few documentation typos
