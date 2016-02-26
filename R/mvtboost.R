@@ -220,6 +220,7 @@ mvtb <- function(X,Y,n.trees=100,shrinkage=.01,interaction.depth=1,
   for(m in 1:k) { 
     finaltree[[m]] <- models[[m]]$trees
   }
+  
   # 2. Compute covariance discrepancy
   for(i in 1:(n.trees)) {        
     
@@ -342,10 +343,9 @@ mvtb.fit <- function(X,Y,n.trees=100,shrinkage=.01,interaction.depth=1,
     for(m in 1:q) {
       models[[m]] <- gbm::gbm.fit(x=as.data.frame(X[s,,drop=FALSE]),y=matrix(Y[s,m,drop=FALSE]),
                               shrinkage=shrinkage,interaction.depth=interaction.depth,
-                              n.trees=n.trees,verbose=F,distribution="gaussian",
+                              n.trees=n.trees,verbose=F,
                               bag.fraction=bag.frac,keep.data=FALSE,...)
     }
-    ## Multivariate mse. clumsy, I know.
     yhat <- predict.mvtb(list(models=models),n.trees=1:n.trees,newdata=X,drop=FALSE)
     testerr <- trainerr <- rep(0,length=n.trees)
     for(i in 1:n.trees){
