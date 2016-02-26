@@ -1,4 +1,4 @@
-#' Computes the relative influence of each predictor for each outcome from gbm.
+#' Computes the relative influence of each predictor for each outcome
 #' 
 #' The relative influence of a predictor is the reduction in sums of squares attributable to splits on individual predictors.
 #' It is often expressed as a percent (sums to 100).
@@ -8,7 +8,7 @@
 #' @param ... Additional arguments passed to \code{gbm::relative.influence}
 #' @return Matrix of (relative) influences.
 #' @export 
-gbm.ri <- function(object,n.trees=NULL,relative="col",...){
+mvtb.ri <- function(object,n.trees=NULL,relative="col",...){
   out <- object
   if(any(unlist(lapply(out,function(li){is.raw(li)})))){
     out <- mvtb.uncomp(out)
@@ -30,44 +30,9 @@ gbm.ri <- function(object,n.trees=NULL,relative="col",...){
   return(ri)  
 }
 
-#' Computes the relative influence of each predictor for each outcome.
-#' 
-#' The relative influence of a predictor is the reduction in sums of squares attributable to splits on individual predictors.
-#' It is often expressed as a percent (sums to 100).
-#' @param object \code{mvtb} output object
-#' @param n.trees number of trees to use. Defaults to the minimum number of trees by CV, test, or training error
-#' @param weighted \code{TRUE/FALSE}. Reductions in SSE are weighted according the covariance explained by each predictor. See \code{?mvtb} for details.
-#' @param relative If \code{"col"}, each column sums to 100. If \code{"tot"}, the whole matrix sums to 100 (a percent). Otherwise, the raw reductions in SSE are returned.
-#' @return Matrix of (relative) influences.
-#' @details 
-#' 'The 'influence' of a predictor is the reduction in SSE due to splitting on each predictor, summed over all trees.
-#' If \code{"weighted"=TRUE}, the influence is weighted by the covariance explained in all pairs of outcomes by that predictor. 
-#' This allows predictor selection to be informed by the covariance explained. 
-#' Different weighting types are possible, see \code{?mvtb}.
-#' @export 
-mvtb.ri <- function(object,n.trees=NULL,weighted=F,relative="col"){
-  out <- object
-  if(any(unlist(lapply(out,function(li){is.raw(li)})))){
-    out <- mvtb.uncomp(out)
-  }
-  if(is.null(n.trees)) { n.trees <- min(unlist(out$best.trees)) }
-  if(weighted) {
-    ri <- apply(out$w.rel.infl[,,1:n.trees,drop=FALSE],1:2,sum)
-  } else {
-    ri <- apply(out$rel.infl[,,1:n.trees,drop=FALSE],1:2,sum)
-  }
-  if(relative == "col"){
-    ri <- matrix(apply(ri,2,function(col){col/sum(col)})*100,nrow=nrow(ri),ncol=ncol(ri))
-  } else if (relative=="tot") {
-    ri <- ri/sum(ri)*100
-  }
-  colnames(ri) <- out$ynames
-  rownames(ri) <- out$xnames
-  return(ri)
-}
 
 #' @importFrom stats var
-r2 <- function(object,Y,X,n.trees=NULL){
+mvtb.r2 <- function(object,Y,X,n.trees=NULL){
   out <- object
   if(is.null(n.trees)) { n.trees <- out$best.iter[[2]] }
   p <- predict.mvtb(out,n.trees,newdata=X)
@@ -189,11 +154,36 @@ mvtb.uncomp <- function(object) {
   return(o)
 }
 
-#' Return the covariance explained matrix
-#' 
-#' @param object an object of class \code{mvtb}
-#' @export
-mvtb.covex <- function(object) {
-  return(object$covex)
-}
 
+#' If \code{"weighted"=TRUE}, the influence is weighted by the covariance explained in all pairs of outcomes by that predictor. 
+#' This allows predictor selection to be informed by the covariance explained. 
+#' Different weighting types are possible, see \code{?mvtb}.
+weighted.ri <- function(object,Y,X){
+  #weights <- mvtb.covex(object,iter.details=T)$weights
+  
+  #  for(m in 1:k) {
+  #rel.infl[,m] <- relative.influence(models[[m]],n.trees=i,scale=FALSE)
+  #    w.rel.infl[,m,i] <- rel.infl[,m,i]*wm.rel[i,m]
+  #  }
+  #  if(relative == "col"){
+  #    ri <- matrix(apply(ri,2,function(col){col/sum(col)})*100,nrow=nrow(ri),ncol=ncol(ri))
+  #  } else if (relative=="tot") {
+  #    ri <- ri/sum(ri)*100
+  #  }
+  
+  ri.one <- function(object,n.trees=1,var.names) {
+    get.rel.inf <- function(obj) {
+      lapply(split(obj[[6]], obj[[1]]), sum)
+    }
+    temp <- unlist(lapply(object[1:n.trees], get.rel.inf))
+    rel.inf.compact <- unlist(lapply(split(temp, names(temp)), 
+                                     sum))
+    rel.inf.compact <- rel.inf.compact[names(rel.inf.compact) != 
+                                         "-1"]
+    rel.inf <- rep(0, length(var.names))
+    i <- as.numeric(names(rel.inf.compact)) + 1
+    rel.inf[i] <- rel.inf.compact
+    return(rel.inf = rel.inf)
+  }
+  
+}

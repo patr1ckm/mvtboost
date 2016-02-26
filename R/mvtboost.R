@@ -20,10 +20,6 @@
 #' @param compress \code{TRUE/FALSE}. Compress output results list using bzip2 (approx 10\% of original size). Default is \code{FALSE}.
 #' @param save.cv  \code{TRUE/FALSE}. Save all k-fold cross-validation models. Default is \code{FALSE}.
 #' @param mc.cores Number of cores for cross validation.
-#' @param alpha optional argument to select predictors that explain more variance or covariance in outcomes. Variance reductions are weighted by alpha, and covariance reductions are weighted by 1-alpha.
-#' @param weight.type Experimental.
-#' @param cov.discrep Experimental. Choose the type of covariance discrepancy.
-#' @param samp.iter   Experimental.
 #' @param ... additional arguments passed to \code{gbm}. These include \code{distribution}, \code{weights}, \code{var.monotone}, \code{n.minobsinnode}, \code{keep.data}, \code{verbose}, \code{class.stratify.cv}.  Note that other \code{distribution} arguments have not been tested.
 #' @return Fitted model. This is a list containing the following elements:
 #' 
@@ -127,7 +123,7 @@
 #' @importFrom stats cov
 mvtb <- function(X,Y,n.trees=100,shrinkage=.01,interaction.depth=1,
                  trainfrac=1,bag.frac=1,cv.folds=1,
-                 s=NULL,seednum=NULL,compress=FALSE,save.cv=FALSE,mc.cores=1,samp.iter=FALSE,alpha=.5,cov.discrep=1,weight.type=1,...) {
+                 s=NULL,seednum=NULL,compress=FALSE,save.cv=FALSE,mc.cores=1,iter.details=F,...) {
 
   if(class(Y) != "matrix") { Y <- as.matrix(Y) }
   if(is.null(ncol(X))){ X <- as.matrix(X)}
@@ -146,23 +142,12 @@ mvtb <- function(X,Y,n.trees=100,shrinkage=.01,interaction.depth=1,
   if(is.null(colnames(Y))) { colnames(Y) <- paste("Y",1:k,sep="") } 
   xnames <- colnames(X)
   ynames <- colnames(Y)
-  D <- Rm <- matrix(0,n,k)            
   
   ## sampling
   if(is.null(s)){
     params$s <- s <- sample(1:n,floor(n*trainfrac),replace=F) #force round down if odd
   } 
-  ## ss <- matrix(0,nrow=length(s),ncol=n.trees)
 
-  ## 1. bootstrap covex if desired.
-  ## for(i in 1:n.trees) {
-  ##  if(samp.iter) {
-  ##    ss[,i] <-  sample(s,length(s),replace=TRUE) # if replace = FALSE, this just permutes the rows.
-  ##  } else {
-  ##    ss[,i] <- s
-  ##  }
-  #}  
-  
   ## parameters
   plist <- params
   plist$cov.discrep <- NULL
@@ -176,21 +161,8 @@ mvtb <- function(X,Y,n.trees=100,shrinkage=.01,interaction.depth=1,
   if(trainfrac > 1 | trainfrac <= 0){ stop("trainfrac should be > 0, < 1")}
   if(bag.frac > 1 | bag.frac <= 0){ stop("bag.frac should be > 0, < 1")}
   
-  ## Influence
-  wm.raw <- wm.rel <- matrix(0,nrow=n.trees,ncol=k)     #raw, relative
-  rel.infl <- w.rel.infl <- array(0,dim=c(p,k,n.trees)) # influences at every iteration
-  
   ## Iterations
   trainerr <- testerr <- vector(length=n.trees)
-  bestxs   <- matrix(0,nrow=n.trees,ncol=k) 
-  final.iter <- FALSE
-  
-  ## Covex
-  Res.cov <- array(0,dim=c(k,k,k,n.trees))
-  covex <- array(0,dim=c(p,k*(k+1)/2))
-  rownames(covex) <- colnames(X)
-  names <- outer(1:k,1:k,function(x,y){paste0(colnames(Y)[x],"-",colnames(Y)[y])})
-  colnames(covex) <- names[lower.tri(names,diag=TRUE)]
   
   ## 0. CV?
   if(cv.folds > 1) {
@@ -210,113 +182,18 @@ mvtb <- function(X,Y,n.trees=100,shrinkage=.01,interaction.depth=1,
   testerr <- out.fit$testerr
   yhat <- out.fit$yhat
   
-  init <- unlist(lapply(models,function(m){m$initF}))
-  for(m in 1:k) { D[,m] <- Y[,m]-init[m] } # current residuals at iteration 1
-  yhat <- array(c(rep(init,each=n),yhat),dim=c(n,k,n.trees+1))
-  Dpred <- yhat[,,2:(n.trees+1),drop=F]-yhat[,,1:(n.trees),drop=F] # Dpred is the unique contribution of each tree
-  
-  # 1. Get trees from each model
-  finaltree <- list()
-  for(m in 1:k) { 
-    finaltree[[m]] <- models[[m]]$trees
-  }
-  
-  # 2. Compute covariance discrepancy
-  for(i in 1:(n.trees)) {        
-    
-    ## 2.1 From each model get the stuff we need at the current iteration
-    for(m in 1:k) {            
-      ## 1.2 For each model compute predicted values and influence
-      tree.i <- finaltree[[m]][i]
-      rel.infl[,m,i] <- ri.one(tree.i,n.trees=1,xnames)
-      ## 1.3 Replace mth outcome with its residual, compute covariance           
-      Rm <- D
-      Rm[,m] <- D[,m]-Dpred[,m,i]
-      Res.cov[,,m,i] <- cov(as.matrix(Rm),use="pairwise.complete") 
-      #Res.cov[,,m,i] <- cov(D) - cov(D[,m]-Dpred[,m,i])
-      ## 2. Evaluate loss criteria on training sample. Covariance reduced, correlation reduced, uls, or gls
-      wm.raw[i,m] <- eval.loss(Rm=as.matrix(Rm[s,]),D=as.matrix(D[s,]),alpha=alpha,type=cov.discrep)
-    }              
-    
-    wm.raw[i,wm.raw[i,] < 0] <- 0 # truncate negative weights to 0
-    
-    ## 3. Check early stopping criteria.
-    if(all(wm.raw[i,]==0)) {
-      wm.rel[i,] <- 0
-      final.iter <- TRUE; # break at the end of the loop, so test and train error can still be computed.
-    }                     
-    
-    ## 4. Compute weight types (relative, 0-1, and none)
-    if(!final.iter) {
-      if(weight.type==1) {
-        ##print("relative weights")
-        wm.rel[i,] <- wm.raw[i,]/sum(wm.raw[i,]) # relative weights.
-      } else if(weight.type==2) {
-        wm.rel[i,which.max(wm.raw[i,])] <- 1 # 0-1 weights for covariance explained loss functions (want to maximize)       
-      } else {
-        ##print("equal weight")
-        wm.rel[i,] <- rep(1,k) # equal weight
-      }
-    }
-    # compute the best mod, and which xs were selected
-    #besty <- bestys[i] <- which.max(wm.raw[i,])           
-    ## as an approximation, choose the best x by relative influence in each col at iteration i
-    bestxs[i,] <- bestx <- apply(rel.infl[,,i,drop=F],2,function(col){which.max(col)})    
-    
-    # compute the covariance reduced (explained) by the best predictor for each outcome
-    correc <- 1+(1-shrinkage)
-    for(k in 1:m) {
-      Sd <- cov(D)-Res.cov[,,k,i]
-      Sd[lower.tri(Sd)] <- Sd[lower.tri(Sd)]*correc
-      if(k > 1) {
-        if(bestx[k] == bestx[k-1]) {
-        # the covariance elements will be counted twice. Don't want this to happen.
-        # since the covariance elements at column (row) k are already counted, set them to zero for k+1
-        # at k = m, this will only update the variance
-          Sd[1:(k-1),] <- 0
-          Sd[,1:(k-1)] <- 0
-        }
-      }
-      covex[bestx[k],] <- covex[bestx[k],] + Sd[lower.tri(Sd,diag=TRUE)]     
-      
-    }
-    
-    #Rm <- D - Dpred[,,i]
-    D <- Y - yhat[,,i+1] # i=1 is init (colMeans Y)
-    
-    ## 7. Compute best iteration criteria: training and test error, sum of residual covariace matrix, weighted sum of residual covariance matrix
-    #trainerr[i] <- mean((as.matrix(Rm[s,]))^2,na.rm=TRUE)
-    #if(length(unique(s)) == nrow(P)) { # use training error instead of testing
-    #  testerr[i] <- trainerr[i]            
-    #} else {
-    #  testerr[i] <- mean((as.matrix(Rm[-s,]))^2,na.rm=TRUE)
-    #}
-    
-    ## 8. Compute weighted influences
-    for(m in 1:k) {
-      #rel.infl[,m] <- relative.influence(models[[m]],n.trees=i,scale=FALSE)
-      w.rel.infl[,m,i] <- rel.infl[,m,i]*wm.rel[i,m]
-    }
-    
-    if(final.iter) {
-      i <- i-1 # don't count the last iteration if all weights are  0
-      break;
-    }
-  }
- 
-  
   best.trees <- list(best.testerr=which.min(testerr),best.cv=best.iters.cv,last=i)
 
-  covex <- t(covex)
   if(!save.cv){ocv <- NULL}
-
-  fl <- list(models=models, covex=covex,maxiter=i,best.trees=best.trees,
-             rel.infl=rel.infl, w.rel.infl=w.rel.infl,params=params,
-             trainerr=trainerr[1:i],testerr=testerr[1:i],cv.err=cv.err[1:i],
-             bestxs=bestxs,
-             resid=D,ocv=ocv,
-             wm.raw=matrix(wm.raw[1:i,,drop=FALSE],nrow=i,ncol=k),wm.rel=wm.rel[1:i,,drop=FALSE],
+  if(details=T){
+    fl <- list(models=models, best.trees=best.trees,params=params,
+             trainerr=trainerr,testerr=testerr,cv.err=cv.err,
+             ocv=ocv,
              s=s,n=nrow(X),xnames=colnames(X),ynames=colnames(Y))
+  } else {
+    fl <- list(models=models, best.trees=best.trees,params=params,
+               s=s,n=nrow(X),xnames=colnames(X),ynames=colnames(Y))
+  }
   if(compress) {
     # compress each element using bzip2
     fl <- lapply(fl,comp)
@@ -359,20 +236,6 @@ mvtb.fit <- function(X,Y,n.trees=100,shrinkage=.01,interaction.depth=1,
     return(fl)
 }
 
-ri.one <- function(object,n.trees=1,var.names) {
-  get.rel.inf <- function(obj) {
-    lapply(split(obj[[6]], obj[[1]]), sum)
-  }
-  temp <- unlist(lapply(object[1:n.trees], get.rel.inf))
-  rel.inf.compact <- unlist(lapply(split(temp, names(temp)), 
-                                   sum))
-  rel.inf.compact <- rel.inf.compact[names(rel.inf.compact) != 
-                                       "-1"]
-  rel.inf <- rep(0, length(var.names))
-  i <- as.numeric(names(rel.inf.compact)) + 1
-  rel.inf[i] <- rel.inf.compact
-  return(rel.inf = rel.inf)
-}
 
 #' @importFrom stats cov
 eval.loss <- function(Rm,D,alpha,type) {
