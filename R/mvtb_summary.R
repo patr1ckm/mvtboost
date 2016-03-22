@@ -57,25 +57,17 @@ print.mvtb <- function(x,...) {
 #' @param print result (default is TRUE)
 #' @param n.trees number of trees used to compute relative influence. Defaults to the minimum number of trees by CV, test, or training error
 #' @param relative relative If 'col', each column sums to 100. If 'tot', the whole matrix sums to 100 (a percent). If 'n', the raw reductions in SSE are returned.
-#' @param covex Whether to print covariance explained
-#' @param ... unused
 #' @return Returns the best number of trees, the univariate relative influence of each predictor for each outcome, and covariance explained in pairs of outcomes by each predictor
 #' @seealso \code{mvtb.ri}, \code{gbm.ri}, \code{mvtb.cluster}
 #' @export
-summary.mvtb <- function(object,print=TRUE,n.trees=NULL,relative="col",covex=FALSE,...) {
+summary.mvtb <- function(object,print=TRUE,n.trees=NULL,relative="col") {
   out <- object
   if(any(unlist(lapply(out,function(li){is.raw(li)})))){
     out <- mvtb.uncomp(out)
   }
   if(is.null(n.trees)) { n.trees <- min(unlist(out$best.trees)) }
   ri <- mvtb.ri(out,n.trees=n.trees,relative=relative)
-  if(covex){
-    cc <- mvtb.cluster(out)
-    sum <- list(best.trees=n.trees,relative.influence=ri,mvtb.covex=cc)
-  } else {
-    sum <- list(best.trees=n.trees,relative.influence=ri)
-  }
-  
+  sum <- list(best.trees=n.trees,relative.influence=ri)
   if(print){ print(lapply(sum,function(o){round(o,2)})) }
   invisible(sum)
 }
@@ -88,7 +80,7 @@ summary.mvtb <- function(object,print=TRUE,n.trees=NULL,relative="col",covex=FAL
 #' This function can also be used to cluster the relative influence matrix. In this case, the rows (usually outcomes) and columns (usually predictors) with similar values will
 #' be clustered together.
 #'  
-#' @param x Any table, such as \code{mvtb.covex(object)}, or \code{mvtb.ri(object)}. If \code{x} is an \code{mvtb} object, defaults to \code{mvtb.covex(x)}
+#' @param x Any matrix, such as \code{mvtb.covex(object)}, or \code{mvtb.ri(object)}. 
 #' @param clust.method clustering method for rows and columns. This should be (an unambiguous abbreviation of) one of \code{"ward.D"}, \code{"ward.D2"}, \code{"single"}, \code{"complete"}, \code{"average"} (= UPGMA), \code{"mcquitty"} (= WPGMA), \code{"median"} (= WPGMC) or \code{"centroid"} (= UPGMC).
 #' @param dist.method  method for computing the distance between two lower triangular covariance matrices. This must be one of \code{"euclidean"}, \code{"maximum"}, \code{"manhattan"}, \code{"canberra"}, \code{"binary"} or \code{"minkowski"}. Any unambiguous substring can be given.
 #' @param plot Produces a heatmap of the covariance explained matrix. see \code{?mvtb.heat}
@@ -115,12 +107,6 @@ summary.mvtb <- function(object,print=TRUE,n.trees=NULL,relative="col",covex=FAL
 #'
 #' @importFrom stats hclust dist as.dendrogram order.dendrogram
 mvtb.cluster <- function(x,clust.method="complete",dist.method="euclidean",plot=FALSE,...) {
-    if(class(x) %in% "mvtb"){
-      if(any(unlist(lapply(x,function(li){is.raw(li)})))){
-        x <- mvtb.uncomp(x)
-      }
-      
-    }
     if(nrow(x) > 1) { 
       hcr <- hclust(dist(x,method=dist.method),method=clust.method)
       ddr <- as.dendrogram(hcr)
