@@ -5,9 +5,9 @@
 \title{Fitting a Multivariate Tree Boosting Model}
 \usage{
 mvtb(X, Y, n.trees = 100, shrinkage = 0.01, interaction.depth = 1,
-  trainfrac = 1, bag.frac = 1, cv.folds = 1, s = NULL, seednum = NULL,
-  compress = FALSE, save.cv = FALSE, mc.cores = 1, samp.iter = FALSE,
-  alpha = 0.5, cov.discrep = 1, weight.type = 1, ...)
+  trainfrac = 1, bag.frac = 1, cv.folds = 1, distribution = "gaussian",
+  s = NULL, seednum = NULL, compress = FALSE, save.cv = FALSE,
+  iter.details = FALSE, mc.cores = 1, ...)
 }
 \arguments{
 \item{X}{vector, matrix, or data.frame of predictors. For best performance, continuous predictors should be scaled to have unit variance. Categorical variables should converted to factors.}
@@ -35,14 +35,6 @@ mvtb(X, Y, n.trees = 100, shrinkage = 0.01, interaction.depth = 1,
 \item{save.cv}{\code{TRUE/FALSE}. Save all k-fold cross-validation models. Default is \code{FALSE}.}
 
 \item{mc.cores}{Number of cores for cross validation.}
-
-\item{samp.iter}{Experimental.}
-
-\item{alpha}{optional argument to select predictors that explain more variance or covariance in outcomes. Variance reductions are weighted by alpha, and covariance reductions are weighted by 1-alpha.}
-
-\item{cov.discrep}{Experimental. Choose the type of covariance discrepancy.}
-
-\item{weight.type}{Experimental.}
 
 \item{...}{additional arguments passed to \code{gbm}. These include \code{distribution}, \code{weights}, \code{var.monotone}, \code{n.minobsinnode}, \code{keep.data}, \code{verbose}, \code{class.stratify.cv}.  Note that other \code{distribution} arguments have not been tested.}
 }

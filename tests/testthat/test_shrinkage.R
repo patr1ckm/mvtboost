@@ -62,16 +62,3 @@ for(j in 1:4) {
 
 }
 
-## for weight.type == 2, mv.shrink and shrinkage are the same thing but occur at different points in the algorithm.
-## for shrinkage, the shrinkage occurs after the first q fits, before the predictor is selected.
-## for mv.shrink, the shrinkage occurs after the predictor, after the predictor is selected.
-for(wp in c(TRUE,FALSE)) {
-    for(j in 1:4) {
-        context(paste("shrink-compare, loss ",j," wp: ",wp))        
-        out2 <- mvtb(X=X,Y=matrix(Y),n.trees=5,shrinkage=.5,trainfrac=1, weight.type=2,cov.discrep=j,s=1:nrow(X))
-        p2 <- predict.mvtb(out2,newdata=X,n.trees=out2$maxiter)
-        p3 <- predict(g,n.trees=5)
-        
-        expect_true(all(abs(p2-p3) < tol),info="uv.shrink == gbm")
-    }
-}

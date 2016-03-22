@@ -18,8 +18,8 @@ Y <- Xf %*% B + E
 out <- mvtb(Y=Y,X=X,n.trees=100,shrinkage = .5)
 plot(out)
 mvtb.perspec(out)
-mvtb.heat(out)
-mvtb.heat(out$covex)
+mvtb.heat(mvtb.covex(Y=Y,X=X,out))
+mvtb.heat(mvtb.covex(Y=Y,X=X,out),clust.method = "complete")
 mvtb.heat(t(mvtb.ri(out)))
 mvtb.heat(t(mvtb.ri(out)),clust.method=NULL)
 

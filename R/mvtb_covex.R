@@ -2,42 +2,53 @@
 #' 
 #' @param object an object of class \code{mvtb}
 #' @export
-mvtb.covex <- function(Y,X,object,n.trees=NULL,iter.details=F) {
+mvtb.covex <- function(Y,X,object,n.trees=NULL,iter.details=F,cov.discrep=1,alpha=.5,weight.type=1) {
   
   if(any(unlist(lapply(object,function(li){is.raw(li)})))){
     object <- mvtb.uncomp(object)
   }
   if(class(Y) != "matrix") { Y <- as.matrix(Y) }
   if(is.null(ncol(X))){ X <- as.matrix(X)}
+  
   stopifnot(nrow(X) == nrow(Y))
+  if(alpha > 1 | alpha < 0){ stop("alpha should be > 0, < 1")}
+  if(any(is.na(Y))){ stop("NAs not allowed in outcome variables.")}
   
   n <- nrow(X); k <- ncol(Y); p <- ncol(X);
   
   # Get models
-  if(is.null(n.trees)){n.trees <- min(object$best.trees)}
+  if(is.null(n.trees)){n.trees <- min(unlist(object$best.trees))}
   finaltree <- list()
   for(m in 1:k) { 
     finaltree[[m]] <- object$models[[m]]$trees
   }
+  shrinkage <- object$params$shrinkage
   
   ## Covex
   D <- Rm <- matrix(0,n,k)   
   Res.cov <- array(0,dim=c(k,k,k,n.trees))
   covex <- array(0,dim=c(p,k*(k+1)/2))
   rownames(covex) <- colnames(X)
-  names <- outer(1:k,1:k,function(x,y){paste0(colnames(Y)[x],"-",colnames(Y)[y])})
+  names <- outer(1:k,1:k,function(x,y){paste0(object$ynames[x],"-",object$ynames[y])})
   colnames(covex) <- names[lower.tri(names,diag=TRUE)]
   
+  ## Loss function evaluations
+  ## raw loss, relative loss, overall loss compared to cov(Y)
+  wm.raw <- wm.rel <- matrix(0,nrow=n.trees,ncol=k)
+  
   ## Influence
-  wm.raw <- wm.rel <- matrix(0,nrow=n.trees,ncol=k)     #raw, relative
   rel.infl <- w.rel.infl <- array(0,dim=c(p,k,n.trees)) # influences at every iteration
+  bestxs   <- matrix(0,nrow=n.trees,ncol=k) 
+  
   
   init <- unlist(lapply(object$models,function(m){m$initF}))
-  D <- Rm <- matrix(0,n,k) 
+  D <- Rm <- yhatm <- matrix(0,n,k) 
   for(m in 1:k) { D[,m] <- Y[,m]-init[m] } # current residuals at iteration 1
+  yhat <- mvtboost:::predict.mvtb(list(models=object$models),n.trees=1:n.trees,newdata=X,drop=FALSE)
   yhat <- array(c(rep(init,each=n),yhat),dim=c(n,k,n.trees+1))
   Dpred <- yhat[,,2:(n.trees+1),drop=F]-yhat[,,1:(n.trees),drop=F] # Dpred is the unique contribution of each tree
-  bestxs   <- matrix(0,nrow=n.trees,ncol=k) 
+  s <- object$s
+  final.iter <- FALSE
   
   ## ss <- matrix(0,nrow=length(s),ncol=n.trees)
   
@@ -58,6 +69,7 @@ mvtb.covex <- function(Y,X,object,n.trees=NULL,iter.details=F) {
     for(m in 1:k) {            
       ## 1.2 For each model compute predicted values and influence
       tree.i <- finaltree[[m]][i]
+      rel.infl[,m,i] <- ri.one(tree.i,n.trees=1,object$xnames)
       
       ## 1.3 Replace mth outcome with its residual, compute covariance           
       Rm <- D
@@ -66,15 +78,16 @@ mvtb.covex <- function(Y,X,object,n.trees=NULL,iter.details=F) {
       #Res.cov[,,m,i] <- cov(D) - cov(D[,m]-Dpred[,m,i])
       ## 2. Evaluate loss criteria on training sample. Covariance reduced, correlation reduced, uls, or gls
       wm.raw[i,m] <- eval.loss(Rm=as.matrix(Rm[s,]),D=as.matrix(D[s,]),alpha=alpha,type=cov.discrep)
+      #wm.overall[i,m] <- eval.loss(Rm=as.matrix(Rm[s,]),D=as.matrix(Y[s,]),alpha=alpha,type=cov.discrep)
     }              
     
     wm.raw[i,wm.raw[i,] < 0] <- 0 # truncate negative weights to 0
     
     ## 3. Check early stopping criteria.
-    if(all(wm.raw[i,]==0)) {
-      wm.rel[i,] <- 0
-      final.iter <- TRUE; # break at the end of the loop, so test and train error can still be computed.
-    }                     
+    #if(all(wm.raw[i,]==0)) {
+    #  wm.rel[i,] <- 0
+    #  final.iter <- TRUE; # break at the end of the loop, so test and train error can still be computed.
+    #}                     
     
     ## 4. Compute weight types (relative, 0-1, and none)
     if(!final.iter) {
@@ -117,12 +130,12 @@ mvtb.covex <- function(Y,X,object,n.trees=NULL,iter.details=F) {
   }
   covex <- t(covex)
   if(iter.details){
-    
     ## Todo to make tests pass probably
-    #fl <- list(covex=covex, weights=weights,wm.raw=matrix(wm.raw[1:i,,drop=FALSE],nrow=i,ncol=k),wm.rel=wm.rel[1:i,,drop=FALSE])
+    fl <- list(covex=covex,loss=matrix(wm.raw[1:i,,drop=FALSE],nrow=i,ncol=k),rel.loss=wm.rel[1:i,,drop=FALSE],bestxs=bestxs)
   } else {
-    return(covex)
+    fl <- covex
   }
+  return(fl)
 }
 
 #' @importFrom stats cov

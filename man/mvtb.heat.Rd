@@ -8,7 +8,7 @@ mvtb.heat(x, clust.method = "ward.D", dist.method = "manhattan", dec = 2,
   numformat = NULL, col = NULL, cexRow = NULL, cexCol = NULL, ...)
 }
 \arguments{
-\item{x}{Any table. For example: the covariance explained (\code{res$covex}), or relative influence \code{mvtb.ri(res)}. If \code{x} is an \code{mvtb} object, defaults to \code{mvtb.covex(x)}}
+\item{x}{Any table. For example: the covariance explained (\code{res$covex}), or relative influence \code{mvtb.ri(res)}.}
 
 \item{clust.method}{clustering method for rows and columns. This should be (an unambiguous abbreviation of) one of \code{"ward.D"}, \code{"ward.D2"}, \code{"single"}, \code{"complete"}, \code{"average"} (= UPGMA), \code{"mcquitty"} (= WPGMA), \code{"median"} (= WPGMC) or \code{"centroid"} (= UPGMC). If \code{NULL}, unclustered.}
 

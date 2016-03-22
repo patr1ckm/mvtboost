@@ -119,7 +119,7 @@ mvtb.cluster <- function(x,clust.method="complete",dist.method="euclidean",plot=
       if(any(unlist(lapply(x,function(li){is.raw(li)})))){
         x <- mvtb.uncomp(x)
       }
-      x <- x$covex
+      
     }
     if(nrow(x) > 1) { 
       hcr <- hclust(dist(x,method=dist.method),method=clust.method)
@@ -170,20 +170,20 @@ weighted.ri <- function(object,Y,X){
   #  } else if (relative=="tot") {
   #    ri <- ri/sum(ri)*100
   #  }
-  
-  ri.one <- function(object,n.trees=1,var.names) {
-    get.rel.inf <- function(obj) {
-      lapply(split(obj[[6]], obj[[1]]), sum)
-    }
-    temp <- unlist(lapply(object[1:n.trees], get.rel.inf))
-    rel.inf.compact <- unlist(lapply(split(temp, names(temp)), 
-                                     sum))
-    rel.inf.compact <- rel.inf.compact[names(rel.inf.compact) != 
-                                         "-1"]
-    rel.inf <- rep(0, length(var.names))
-    i <- as.numeric(names(rel.inf.compact)) + 1
-    rel.inf[i] <- rel.inf.compact
-    return(rel.inf = rel.inf)
+
+}
+
+ri.one <- function(object,n.trees=1,var.names) {
+  get.rel.inf <- function(obj) {
+    lapply(split(obj[[6]], obj[[1]]), sum)
   }
-  
+  temp <- unlist(lapply(object[1:n.trees], get.rel.inf))
+  rel.inf.compact <- unlist(lapply(split(temp, names(temp)), 
+                                   sum))
+  rel.inf.compact <- rel.inf.compact[names(rel.inf.compact) != 
+                                       "-1"]
+  rel.inf <- rep(0, length(var.names))
+  i <- as.numeric(names(rel.inf.compact)) + 1
+  rel.inf[i] <- rel.inf.compact
+  return(rel.inf = rel.inf)
 }

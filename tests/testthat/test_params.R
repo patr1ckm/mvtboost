@@ -21,14 +21,14 @@ expect_equal(r$maxiter,50)
 ## test alpha
 context("alpha")
 for(i in c(.25,.5,.75)) {
-    r <- mvtb(X=X,Y=Y[,1,drop=F],n.trees=1,alpha=i, shrinkage=1,trainfrac=1,bag.frac=1,cov.discrep=1,weight.type=1,s=1:nrow(X))
-    expect_equal(c(eval.loss(r$resid,Y[,1,drop=F],alpha=i,type=1)),r$wm.raw[1])
-    r <- mvtb(X=X,Y=Y[,1,drop=F],n.trees=1,alpha=i, shrinkage=1,trainfrac=1,bag.frac=1,cov.discrep=2,weight.type=1,s=1:nrow(X))
-    expect_equal(c(eval.loss(r$resid,Y[,1,drop=F],alpha=i,type=2)),r$wm.raw[1])
-    r <- mvtb(X=X,Y=Y[,1,drop=F],n.trees=1,alpha=i, shrinkage=1,trainfrac=1,bag.frac=1,cov.discrep=3,weight.type=1,s=1:nrow(X))
-    expect_equal(c(eval.loss(r$resid,Y[,1,drop=F],alpha=i,type=3)),r$wm.raw[1])    
-    r <- mvtb(X=X,Y=Y[,1,drop=F],n.trees=1,alpha=i, shrinkage=1,trainfrac=1,bag.frac=1,cov.discrep=4,weight.type=1,s=1:nrow(X))
-    expect_equal(c(eval.loss(r$resid,Y[,1,drop=F],alpha=i,type=4)),r$wm.raw[1])        
+#    r <- mvtb(X=X,Y=Y[,1,drop=F],n.trees=1,alpha=i, shrinkage=1,trainfrac=1,bag.frac=1,cov.discrep=1,weight.type=1,s=1:nrow(X))
+#    expect_equal(c(eval.loss(r$resid,Y[,1,drop=F],alpha=i,type=1)),r$wm.raw[1])
+#    r <- mvtb(X=X,Y=Y[,1,drop=F],n.trees=1,alpha=i, shrinkage=1,trainfrac=1,bag.frac=1,cov.discrep=2,weight.type=1,s=1:nrow(X))
+#    expect_equal(c(eval.loss(r$resid,Y[,1,drop=F],alpha=i,type=2)),r$wm.raw[1])
+#    r <- mvtb(X=X,Y=Y[,1,drop=F],n.trees=1,alpha=i, shrinkage=1,trainfrac=1,bag.frac=1,cov.discrep=3,weight.type=1,s=1:nrow(X))
+#    expect_equal(c(eval.loss(r$resid,Y[,1,drop=F],alpha=i,type=3)),r$wm.raw[1])    
+#    r <- mvtb(X=X,Y=Y[,1,drop=F],n.trees=1,alpha=i, shrinkage=1,trainfrac=1,bag.frac=1,cov.discrep=4,weight.type=1,s=1:nrow(X))
+#    expect_equal(c(eval.loss(r$resid,Y[,1,drop=F],alpha=i,type=4)),r$wm.raw[1])        
 }
 
 ## test trainfrac
@@ -58,12 +58,12 @@ for(i in 1:4) { expect_equal(r$models[[i]]$bag.fraction,.5) }
 
 ## stop crit - no longer necessary. all weights should be positive
 context("all wm positive")
-r <- mvtb(X=X,Y=Y,n.trees=103,alpha=.5, trainfrac=1,samp.iter=FALSE,cov.discrep=1,weight.type=2,bag.frac=.5)
-expect_equal(r$maxiter,103)
+#r <- mvtb(X=X,Y=Y,n.trees=103,alpha=.5, trainfrac=1,samp.iter=FALSE,cov.discrep=1,weight.type=2,bag.frac=.5)
+#expect_equal(r$maxiter,103)
 Y <- E
 for(i in 1:4) { 
     r <- mvtb(X=X,Y=Y,n.trees=25,alpha=.5, shrinkage=1,trainfrac=1,samp.iter=FALSE,cov.discrep=i,weight.type=2,bag.frac=.5)
-    expect_true(all(r$wm >= 0),info=paste0("not all weights > 0, loss ",i))
+#    expect_true(all(r$wm >= 0),info=paste0("not all weights > 0, loss ",i))
 }
 
 ## s

@@ -122,8 +122,8 @@
 #' @export
 #' @importFrom stats cov
 mvtb <- function(X,Y,n.trees=100,shrinkage=.01,interaction.depth=1,
-                 trainfrac=1,bag.frac=1,cv.folds=1,
-                 s=NULL,seednum=NULL,compress=FALSE,save.cv=FALSE,mc.cores=1,iter.details=F,...) {
+                 trainfrac=1,bag.frac=1,cv.folds=1,distribution="gaussian",
+                 s=NULL,seednum=NULL,compress=FALSE,save.cv=FALSE,iter.details=FALSE,mc.cores=1,...) {
 
   if(class(Y) != "matrix") { Y <- as.matrix(Y) }
   if(is.null(ncol(X))){ X <- as.matrix(X)}
@@ -145,19 +145,17 @@ mvtb <- function(X,Y,n.trees=100,shrinkage=.01,interaction.depth=1,
   
   ## sampling
   if(is.null(s)){
-    params$s <- s <- sample(1:n,floor(n*trainfrac),replace=F) #force round down if odd
+    params$s <- sample(1:n,floor(n*trainfrac),replace=F) #force round down if odd
   } 
 
   ## parameters
   plist <- params
-  plist$cov.discrep <- NULL
-  plist$alpha       <- NULL
-  plist$weight.type <- NULL
+  plist$iter.details <- NULL
+
   
   ## Checks
   if(any(is.na(Y))){ stop("NAs not allowed in outcome variables.")}
   if(shrinkage > 1 | shrinkage <= 0){ stop("shrinkage should be > 0, < 1")}
-  if(alpha > 1 | alpha < 0){ stop("alpha should be > 0, < 1")}
   if(trainfrac > 1 | trainfrac <= 0){ stop("trainfrac should be > 0, < 1")}
   if(bag.frac > 1 | bag.frac <= 0){ stop("bag.frac should be > 0, < 1")}
   
@@ -180,19 +178,18 @@ mvtb <- function(X,Y,n.trees=100,shrinkage=.01,interaction.depth=1,
   models <-  out.fit$models
   trainerr <- out.fit$trainerr
   testerr <- out.fit$testerr
-  yhat <- out.fit$yhat
-  
-  best.trees <- list(best.testerr=which.min(testerr),best.cv=best.iters.cv,last=i)
+
+  best.trees <- list(best.testerr=which.min(testerr),best.cv=best.iters.cv,last=n.trees)
 
   if(!save.cv){ocv <- NULL}
-  if(details=T){
+  if(iter.details==T){
     fl <- list(models=models, best.trees=best.trees,params=params,
              trainerr=trainerr,testerr=testerr,cv.err=cv.err,
              ocv=ocv,
-             s=s,n=nrow(X),xnames=colnames(X),ynames=colnames(Y))
+             s=params$s,n=nrow(X),xnames=colnames(X),ynames=colnames(Y))
   } else {
     fl <- list(models=models, best.trees=best.trees,params=params,
-               s=s,n=nrow(X),xnames=colnames(X),ynames=colnames(Y))
+               s=params$s,ocv=ocv,n=nrow(X),xnames=colnames(X),ynames=colnames(Y))
   }
   if(compress) {
     # compress each element using bzip2
@@ -232,54 +229,10 @@ mvtb.fit <- function(X,Y,n.trees=100,shrinkage=.01,interaction.depth=1,
     }
     
     ## 3. Compute multivariate MSE
-    fl <- list(models=models,trainerr=trainerr,testerr=testerr,yhat=yhat,s=s)
+    fl <- list(models=models,trainerr=trainerr,testerr=testerr,s=s)
     return(fl)
 }
 
-
-#' @importFrom stats cov
-eval.loss <- function(Rm,D,alpha,type) {
-    ## Rm = n x k matrix of residuals
-    ## D = n x k matrix of Ytilde at iteration i
-    ## S = k x k covariance matrix of Ytilde at iteration i
-    ## Res.cov = k x k covariance matrix of Rm (residuals)
-    ## Sd = S - Res.cov, k x k the discrepancy between S and Res.cov. The larger the discrepancy, the more covariance is explained.
-    Res.cov <- cov(as.matrix(Rm),use="pairwise.complete")
-    S <- cov(as.matrix(D),use="pairwise.complete")
-    Sd <- S-Res.cov
-    ## type is an integer 1:5, maps to loss function 1, 2, ... etc.
-    switch(type,
-           cov.red(S=S,Res.cov=Res.cov,alpha=alpha),
-           cor.red(Rm=Rm,D=D),
-           uls(Sd=Sd),
-           #gls(Sd=Sd,Sinv=Sinv),
-           detcov(S,Res.cov))
-}
-
-detcov <- function(S,Res.cov) {
-    det(S)-det(Res.cov)
-}
-
-## Covariance explained, weighted by alpha. alpha*diagonal (1-alpha)*off-diagonal
-cov.red <- function(S,Res.cov,alpha) {
-    Sd <- abs(S-Res.cov)
-    alpha*sum(diag(Sd),na.rm=TRUE) + (1-alpha)*sum(Sd[lower.tri(Sd)],na.rm=TRUE)
-}
-
-#' @importFrom stats cor
-cor.red <- function(Rm,D) {    
-    if(ncol(Rm) == 1) {
-        wm <- 1-cor(Rm,D,use="pairwise.complete")
-    } else {
-        Sd <- abs(cor(D,use="pairwise.complete") - cor(Rm,use="pairwise.complete"))
-        wm <- sum(Sd[upper.tri(Sd)],na.rm=TRUE)
-    }
-    return(wm)
-}
-
-## Some covariance discrepancy functions, motivated from SEM.
-## 1/2 the ||R||_F, the frobenius norm of the  covariance discrepancy matrix
-uls <- function(Sd) { .5 * sum(diag(Sd %*% t(Sd))) }
 
 ## generalized least squares. requires precomputed inverse of the sample covariance matrix of the responses.
 #gls <- function(Sd,Sinv) { .5 * sum(diag( (Sd %*% Sinv) %*% t(Sd %*% Sinv) ),na.rm=TRUE) }

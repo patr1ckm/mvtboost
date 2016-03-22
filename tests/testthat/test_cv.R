@@ -25,6 +25,7 @@ plist <- params
 plist$alpha <- NULL
 plist$cov.discrep <- NULL
 plist$weight.type <- NULL
+plist$iter.details <- NULL
 
 
 # 0. check that each observation is left out once. (samp.iter off)
