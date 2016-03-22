@@ -20,11 +20,10 @@ q <- 4
 ## Again, tests just to make sure that they run
 out <- mvtb(Y=Y,X=X)
 expect_output(summary(out),"trees")
-expect_output(summary(out,covex=TRUE),"covex")
 expect_output(summary(out),"influence")
-expect_equal(length(summary(out,covex=FALSE,print=FALSE)),2)
-expect_equal(sum(summary(out,print=FALSE,relative="tot",covex=FALSE)$relative.influence),100)
-expect_output(mvtb.covex(out),"")
+expect_equal(sum(summary(out,print=FALSE,relative="tot")$relative.influence),100)
+
+expect_output(mvtb.covex(Y=Y,X=X,out=out),"")
 expect_equal(dim(mvtb.covex(out)),c(ncovs,p))
 expect_identical(mvtb.covex(out),out$covex)
 expect_output(mvtb.cluster(out),"")

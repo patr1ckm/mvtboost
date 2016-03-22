@@ -8,7 +8,7 @@ mvtb.cluster(x, clust.method = "complete", dist.method = "euclidean",
   plot = FALSE, ...)
 }
 \arguments{
-\item{x}{Any table, such as \code{mvtb.covex(object)}, or \code{mvtb.ri(object)}. If \code{x} is an \code{mvtb} object, defaults to \code{mvtb.covex(x)}}
+\item{x}{Any matrix, such as \code{mvtb.covex(object)}, or \code{mvtb.ri(object)}.}
 
 \item{clust.method}{clustering method for rows and columns. This should be (an unambiguous abbreviation of) one of \code{"ward.D"}, \code{"ward.D2"}, \code{"single"}, \code{"complete"}, \code{"average"} (= UPGMA), \code{"mcquitty"} (= WPGMA), \code{"median"} (= WPGMC) or \code{"centroid"} (= UPGMC).}
 

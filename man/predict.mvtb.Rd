@@ -4,7 +4,7 @@
 \alias{predict.mvtb}
 \title{Predicted values}
 \usage{
-\method{predict}{mvtb}(object, n.trees = NULL, newdata, drop = TRUE, ...)
+\method{predict}{mvtb}(object, n.trees = NULL, newdata, drop = TRUE)
 }
 \arguments{
 \item{object}{\code{mvtb} object}
@@ -14,8 +14,6 @@
 \item{newdata}{matrix of predictors.}
 
 \item{drop}{\code{TRUE/FALSE} Drop any dimensions of length 1}
-
-\item{...}{unused}
 }
 \value{
 Returns an (array, matrix, vector) of predictions for all outcomes. The third dimension corresponds to the 

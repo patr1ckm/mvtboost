@@ -19,61 +19,59 @@
 #' @param seednum integer passed to \code{set.seed}
 #' @param compress \code{TRUE/FALSE}. Compress output results list using bzip2 (approx 10\% of original size). Default is \code{FALSE}.
 #' @param save.cv  \code{TRUE/FALSE}. Save all k-fold cross-validation models. Default is \code{FALSE}.
+#' @param iter.details \code{TRUE/FALSE}. Return training, test, and cross-validation error at each iteration. Default is \code{FALSE}.
 #' @param mc.cores Number of cores for cross validation.
 #' @param ... additional arguments passed to \code{gbm}. These include \code{distribution}, \code{weights}, \code{var.monotone}, \code{n.minobsinnode}, \code{keep.data}, \code{verbose}, \code{class.stratify.cv}.  Note that other \code{distribution} arguments have not been tested.
 #' @return Fitted model. This is a list containing the following elements:
 #' 
 #' \itemize{
 #'   \item \code{models} - list of gbm models for each outcome. Functions from the gbm package (e.g. to compute relative influence, print trees, obtain predictions, etc) can be directly applied to each of these models 
-#'   \item \code{covex} - covariance explained in each pair of outcomes by each predictor. The covariance explained is only unambiguous if predictors are independent, otherwise it is an approximation. If the interaction.depth is larger than 1, the covariance explained is attributed to the predictor with the largest effect.
-#'   \item \code{maxiter} - maximum number of iterations run (the number of trees fit)
-#'   \item \code{best.trees} - A list containing 
-#'     [[1]] the number of trees that minimize the multivariate MSE in a test set (if trainfrac was specified)
-#'     [[2]] the number of trees that minimized the multivariate MSE by cross-validation (if cv.folds was specified)
-#'     [[3]] the last number of trees. 
+#'   \item \code{best.trees} - A list containing  the number of trees that minimize the multivariate MSE in a test set or by CV, and \code{n.trees}.
 #'     Many of the functions in the package default to using the minimum value of the three. 
-#'   \item \code{rel.infl} - n x q x n.trees array of relative influences
-#'   \item \code{w.rel.infl} - n x q x n.trees array of weighted relative influences (see details)
 #'   \item \code{params} - arguments to mvtb
-#'   \item \code{trainerr} - multivariate training error at each tree.
-#'   \item \code{testerr}  - multivariate test error at each tree (if trainfrac < 1)
-#'   \item \code{cverr}    - multivariate cv error at each tree (if cv.folds > 1)
-#'   \item \code{bestxs} - matrix of predictors selected at each tree
-#'   \item \code{resid} - n x q matrix of residuals after fitting all trees
-#'   \item \code{ocv} - if save.cv=TRUE, returns the CV models.
-#'   \item \code{wm.raw} - raw decreases in covariance attributable to a given tree
-#'   \item \code{wm.rel} - relative decreases in covariance attributable to a given tree
+#'   \item \code{trainerr} - multivariate training error at each tree (If \code{iter.details = TRUE})
+#'   \item \code{testerr}  - multivariate test error at each tree (if \code{trainfrac < 1} and \code{iter.details = TRUE})
+#'   \item \code{cverr}    - multivariate cv error at each tree (if \code{cv.folds > 1} and \code{iter.details = TRUE})
+#'   \item \code{ocv} - the CV models if \code{save.cv=TRUE}
 #'   \item \code{s} - indices of training sample
 #'   \item \code{n} - number of observations
 #'   \item \code{xnames}
 #'   \item \code{ynames}
 #' }
 #' 
+#' @usage 
+#' mvtb(X, Y, 
+#'      n.trees = 100,
+#'      shrinkage = 0.01, 
+#'      interaction.depth = 1,
+#'      trainfrac = 1, 
+#'      bag.frac = 1, 
+#'      cv.folds = 1, 
+#'      s = NULL, 
+#'      seednum = NULL, 
+#'      compress = FALSE, 
+#'      save.cv = FALSE,
+#'      iter.details = TRUE,
+#'      mc.cores = 1, ...)
+#'      
 #' @details 
 #' 
-#' This function computes separate gbm models for each outcome (contained in \code{$models}). From these models, the covariance explained by 
-#' each predictor is then computed based on the reduction in covariance between outcomes that results from fitting a single tree to each outcome, one outcome at a time.
-#' The reduction in covariance between each pair of outcomes due to splitting on each predictor over all trees is the 'covariance explained' by each predictor, and is recorded in \code{$covex}.
+#' This function selects predictors that explain covariance in multivariate outcomes. 
+#' This is done efficiently by fitting separate gbm models for each outcome (contained in \code{$models}). 
 #' 
-#' The rows (pairs of outcomes) and the columns (predictors) of \code{$covex} can be clustered so that groups of predictors that explain similar pairs of covariances are closer together (see  \code{mvtb.cluster}). 
-#' A simple heatmap of this matrix can be obtained by the function \code{mvtb.heat}. The \code{covex} by each predictor is only unambiguous if the predictors are uncorrelated and \code{interaction.depth = 1}. 
-#' If predictors are not independent, the decomposition of covariance explained is only approximate (like the decomposition of R^2 by each predictor in a linear model). 
-#' If \code{interaction.depth} > 1, the following heuristic is used: the covariance explained by the tree is assigned to the predictor with the largest influence in each tree.
-#' 
-#' (Relative) influences can be retrieved using \code{mvtb.ri}, which are the usual reductions in SSE due to splitting on each predictor. 'Weighted' influences for each predictor are the usual reductions in SSE weighted by
-#' the covariance explained in all pairs of outcomes by that predictor. This allows predictor selection to be informed by the covariance explained. Higher weight can be given to explaining variances or covariances by controlling the parameter
-#' \code{alpha}:  weight = \code{alpha}(varex) + (1-\code{alpha})(covex). By default, \code{alpha} = .5, equally weighting variance and covariance explained. 
-#' Setting \code{alpha} = 0 corresponds to weighting covariance explained only,
-#' letting \code{alpha} = 1 corresponds to weighting variance explained only.
+#' (Relative) influences can be retrieved using \code{summary} or \code{mvtb.ri}, which are the usual reductions in SSE due to splitting on each predictor.
+#' The covariance explained in pairs of outcomes by each predictor can be computed using \code{mvtb.covex}. 
+#' Partial dependence plots can be obtained from \code{mvtb.plot}.
 #' 
 #' The model is tuned jointly by selecting the number of trees that minimize multivariate mean squared error in a test set (by setting \code{trainfrac}) or averaged over k folds in k-fold cross-validation (by setting \code{cv.folds > 1}).
-#' The best number of trees is available via \code{$best.trees}. Cross-validation can be parallelized by setting mc.cores > 1.  
+#' The best number of trees is available via \code{$best.trees}.  
 #' If both \code{cv.folds} and \code{trainfrac} is specified, cross-validation is carried out within the training set.
-#' Cross-validation models are usually discarded but can be saved by setting \code{save.cv = TRUE}. CV models can be accessed from \code{$ocv} of the 
-#' output object. 
-#' Multivariate mean squared training, test, and cv error are available from \code{$trainerr, $testerr, $cverr} from the output object.
-#' Observations can be specifically set for inclusion in the training set by passing a vector of integers indexing the rows to include to \code{s}.
 #' If \code{s} is specified, \code{trainfrac} is ignored but cross-validation will be carried out for observations in \code{s}.
+#' 
+#' Cross-validation models are usually discarded but can be saved by setting \code{save.cv = TRUE}. CV models can be accessed from \code{$ocv} of the 
+#' output object. Observations can be specifically set for inclusion in the training set by passing a vector of integers indexing the rows to include to \code{s}.
+#' Multivariate mean squared training, test, and cv error are available from \code{$trainerr, $testerr, $cverr} from the output object 
+#' when \code{iter.details = TRUE}.
 #' 
 #' Since the output objects can be large, automatic compression is available by setting \code{compress=TRUE}. 
 #' All methods that use the \code{mvtb} object automatically uncompress this object if necessary. 
@@ -83,19 +81,19 @@
 #' If the number of \code{training samples}*\code{bag.fraction} is less the minimum number of observations, (which can occur with small data sets), this will cause an error. 
 #' Adjust the \code{n.minobsinnode}, \code{trainfrac}, or \code{bag.fraction}.
 #' 
-#' Parallel cross-validation is carried out using \code{parallel:mclapply}, which makes \code{mc.cores} copies of the original environment.
+#' Cross-validation can be parallelized by setting mc.cores > 1. Parallel cross-validation is carried out using \code{parallel::mclapply}, which makes \code{mc.cores} copies of the original environment.
 #' For models with many trees (> 100K), memory limits can be reached rapidly. \code{mc.cores} will not work on Windows. 
 #' 
 #' @seealso \code{summary.mvtb}, \code{predict.mvtb}
 #' 
-#' \code{mvtb.nonlin} to help detect nonlinear effects
+#' \code{mvtb.covex} to estimate the covariance explained in pairs of outcomes by predictors
 #' 
-#' \code{plot.mvtb}, \code{mvtb.perspec} for plots
-#'  
-#' \code{mvtb.cluster}, \code{mvtb.heat} to interpret \code{covex};
+#' \code{mvtb.nonlin} to help detect nonlinear effects or interactions
+#' 
+#' \code{plot.mvtb}, \code{mvtb.perspec} for partial dependence plots
 #'
 #' \code{mvtb.uncomp} to uncompress a compressed output object
-#' @references Miller P.J., Lubke G.H, McArtor D.B., Bergeman C.S. (Submitted) Finding structure in data with multivariate tree boosting.
+#' @references Miller P.J., Lubke G.H, McArtor D.B., Bergeman C.S. (Accepted) Finding structure in data with multivariate tree boosting.
 #' 
 #' Ridgeway, G., Southworth, M. H., & RUnit, S. (2013). Package 'gbm'. Viitattu, 10, 2013.
 #'
@@ -115,15 +113,24 @@
 #' 
 #' ## Interpret the model
 #' summary(res)
+#' covex <- mvtb.covex(res, Y=Y, X=X)
 #' plot(res,predictor.no = 8)
 #' predict(res,newdata=Xs)
-#' mvtb.cluster(res)
+#' mvtb.cluster(covex)
 #' mvtb.heat(t(mvtb.ri(res)),cexRow=.8,cexCol=1,dec=0)
 #' @export
-#' @importFrom stats cov
-mvtb <- function(X,Y,n.trees=100,shrinkage=.01,interaction.depth=1,
-                 trainfrac=1,bag.frac=1,cv.folds=1,distribution="gaussian",
-                 s=NULL,seednum=NULL,compress=FALSE,save.cv=FALSE,iter.details=FALSE,mc.cores=1,...) {
+mvtb <- function(X,Y,n.trees=100,
+                 shrinkage=.01,
+                 interaction.depth=1,
+                 trainfrac=1,
+                 bag.frac=1,
+                 cv.folds=1,
+                 s=NULL,
+                 seednum=NULL,
+                 compress=FALSE,
+                 save.cv=FALSE,
+                 iter.details=TRUE,
+                 mc.cores=1,...) {
 
   if(class(Y) != "matrix") { Y <- as.matrix(Y) }
   if(is.null(ncol(X))){ X <- as.matrix(X)}
@@ -199,10 +206,29 @@ mvtb <- function(X,Y,n.trees=100,shrinkage=.01,interaction.depth=1,
   return(fl)
 }
 
-#' @importFrom gbm gbm gbm.fit
-mvtb.fit <- function(X,Y,n.trees=100,shrinkage=.01,interaction.depth=1,
-                           trainfrac=1,samp.iter=FALSE,bag.frac=1,cv.folds=1,
-                           s=NULL,seednum=NULL,compress=FALSE,save.cv=FALSE,...) {
+#' @describeIn mvtb 
+#' @usage 
+#' mvtb.fit(X,Y,
+#'          n.trees=100,
+#'          shrinkage=.01,
+#'          interaction.depth=1,
+#'          trainfrac=1,
+#'          samp.iter=FALSE,
+#'          bag.frac=1,
+#'          s=NULL,
+#'          seednum=NULL,
+#'          compress=FALSE,...)
+#' @export
+mvtb.fit <- function(X,Y,
+                     n.trees=100,
+                     shrinkage=.01,
+                     interaction.depth=1,
+                     trainfrac=1,
+                     samp.iter=FALSE,
+                     bag.frac=1,
+                     s=NULL,
+                     seednum=NULL,
+                     compress=FALSE,...) {
     if(!is.null(seednum)){
       #print(c("mvtboost: seednum ",seednum));
       set.seed(seednum)
@@ -305,47 +331,16 @@ mvtbCV <- function(params) {
     return(l)
 }
 
-### Examples ###
-
-#assign default values of arguments to workspace
-## list2env(formals(mvtb)[-c(1:2)],globalenv())
-#  params <- formals(mvtb)[-c(length(formals(mvtb)))]
-# 
-# B <- matrix(c(.5,.5,0,0,.5,.5),ncol=3,byrow=TRUE)
-# B
-# varx <- 2
-# vare <- diag(3)
-# #diag(vare) <- 1:3
-# vare[lower.tri(vare)] <- vare[upper.tri(vare)] <- 0
-# 
-# n <- 1000
-# X <- matrix(rnorm(n*2,1,2),ncol=2)
-# E <- mvrnorm(n,mu=c(0,0,0),Sigma=vare)
-# Y <- X %*% B + E
-# bhat <- solve(t(X) %*% X) %*% t(X) %*% Y
-# cov(Y)
-# cov(X %*% B)
-# colnames(X) <- paste0("X",1:varx)
-# params$X <- X
-# params$Y <- Y
-
-#out <- mvtb(X=X,Y=Y,shrinkage=1,n.trees=200,weight.type=2,weighted.predictions=TRUE)
-#out$covex
-#out$rel.covex
-
-## I think it works!
-
 #' Predicted values
 #' @param object \code{mvtb} object
 #' @param newdata matrix of predictors. 
 #' @param n.trees number of trees. If a vector, returns predictions in an array. Defaults to the minimum number of trees by CV, test, or training error
 #' @param drop \code{TRUE/FALSE} Drop any dimensions of length 1
-#' @param ... unused
 #' @return Returns an (array, matrix, vector) of predictions for all outcomes. The third dimension corresponds to the 
 #' predictions at a given number of trees, the second dimension corresponds to the number of outcomes.
 #' @export
 #' 
-predict.mvtb <- function(object, n.trees=NULL, newdata, drop=TRUE,...) {
+predict.mvtb <- function(object, n.trees=NULL, newdata, drop=TRUE) {
   out <- object
   if(any(unlist(lapply(out,function(li){is.raw(li)})))){
     out <- mvtb.uncomp(out)
