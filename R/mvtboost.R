@@ -21,6 +21,7 @@
 #' @param compress \code{TRUE/FALSE}. Compress output results list using bzip2 (approx 10\% of original size). Default is \code{FALSE}.
 #' @param save.cv  \code{TRUE/FALSE}. Save all k-fold cross-validation models. Default is \code{FALSE}.
 #' @param iter.details \code{TRUE/FALSE}. Return training, test, and cross-validation error at each iteration. Default is \code{FALSE}.
+#' @param verbose If \code{TRUE}, will print out progress and performance indicators for each model.  Default is \code{FALSE}.
 #' @param mc.cores Number of cores for cross validation.
 #' @param ... additional arguments passed to \code{gbm}. These include \code{distribution}, \code{weights}, \code{var.monotone}, \code{n.minobsinnode}, \code{keep.data}, \code{verbose}, \code{class.stratify.cv}.  Note that other \code{distribution} arguments have not been tested.
 #' @return Fitted model. This is a list containing the following elements:
@@ -54,6 +55,7 @@
 #'      compress = FALSE, 
 #'      save.cv = FALSE,
 #'      iter.details = TRUE,
+#'      verbose=FALSE,
 #'      mc.cores = 1, ...)
 #'      
 #' @details 
@@ -133,6 +135,7 @@ mvtb <- function(X,Y,n.trees=100,
                  compress=FALSE,
                  save.cv=FALSE,
                  iter.details=TRUE,
+                 verbose=FALSE,
                  mc.cores=1,...) {
 
   if(class(Y) != "matrix") { Y <- as.matrix(Y) }
@@ -183,7 +186,7 @@ mvtb <- function(X,Y,n.trees=100,
    } else {
     plist$cv.folds <- NULL
     plist$save.cv <- NULL
-    cat("mvtb: plist$distribution = ", plist$distribution, fill=T)
+    plist$train.fraction <- NULL
     out.fit <- do.call("mvtb.fit",args=c(plist))
     best.iters.cv <- NULL
     cv.err <- NULL

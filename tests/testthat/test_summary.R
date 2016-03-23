@@ -18,7 +18,7 @@ ncovs <- 10
 q <- 4
 
 ## Again, tests just to make sure that they run
-out <- mvtb(Y=Y,X=X,shrinkage=.1,n.trees=10)
+out <- mvtb(Y=Y,X=X,shrinkage=.1,n.trees=1000)
 expect_output(summary(out),"trees")
 expect_output(summary(out),"influence")
 expect_equal(sum(summary(out,print=FALSE,relative="tot")$relative.influence),100)

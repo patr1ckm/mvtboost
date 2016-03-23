@@ -18,6 +18,7 @@ mvtb(X, Y,
      compress = FALSE, 
      save.cv = FALSE,
      iter.details = TRUE,
+     verbose=FALSE,
      mc.cores = 1, ...)
 
 mvtb.fit(X,Y,
@@ -58,6 +59,8 @@ mvtb.fit(X,Y,
 \item{save.cv}{\code{TRUE/FALSE}. Save all k-fold cross-validation models. Default is \code{FALSE}.}
 
 \item{iter.details}{\code{TRUE/FALSE}. Return training, test, and cross-validation error at each iteration. Default is \code{FALSE}.}
+
+\item{verbose}{If \code{TRUE}, will print out progress and performance indicators for each model.  Default is \code{FALSE}.}
 
 \item{mc.cores}{Number of cores for cross validation.}
 
