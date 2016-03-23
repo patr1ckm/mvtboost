@@ -9,8 +9,9 @@ mvtb(X, Y,
      n.trees = 100,
      shrinkage = 0.01, 
      interaction.depth = 1,
-     trainfrac = 1, 
-     bag.frac = 1, 
+     distribution="gaussian"
+     train.fraction = 1, 
+     bag.fraction = 1, 
      cv.folds = 1, 
      s = NULL, 
      seednum = NULL, 
@@ -23,12 +24,11 @@ mvtb.fit(X,Y,
          n.trees=100,
          shrinkage=.01,
          interaction.depth=1,
-         trainfrac=1,
+         train.fraction=1,
          samp.iter=FALSE,
-         bag.frac=1,
+         bag.fraction=1,
          s=NULL,
-         seednum=NULL,
-         compress=FALSE,...)
+         seednum=NULL,...)
 }
 \arguments{
 \item{X}{vector, matrix, or data.frame of predictors. For best performance, continuous predictors should be scaled to have unit variance. Categorical variables should converted to factors.}
@@ -41,13 +41,15 @@ mvtb.fit(X,Y,
 
 \item{interaction.depth}{fixed depth of trees to be included in the model. A tree depth of 1 corresponds to fitting stumps (main effects only), higher tree depths capture higher order interactions (e.g. 2 implies a model with up to 2-way interactions)}
 
-\item{trainfrac}{proportion of the sample used for training the multivariate additive model. If both \code{cv.folds} and \code{trainfrac} are specified, the CV is carried out within the training set.}
+\item{distribution}{Character vector specifying the distribution of all outcomes. Default is "guassian" see ?gbm for futher details.}
 
-\item{bag.frac}{proportion of the training sample used to fit univariate trees for each response at each iteration. Default: 1}
+\item{train.fraction}{proportion of the sample used for training the multivariate additive model. If both \code{cv.folds} and \code{train.fraction} are specified, the CV is carried out within the training set.}
+
+\item{bag.fraction}{proportion of the training sample used to fit univariate trees for each response at each iteration. Default: 1}
 
 \item{cv.folds}{number of cross validation folds. Default: 1. Runs k + 1 models, where the k models are run in parallel and the final model is run on the entire sample. If larger than 1, the number of trees that minimize the multivariate MSE averaged over k-folds is reported in \code{object$best.trees}}
 
-\item{s}{vector of indices denoting observations to be used for the training sample. If \code{s} is given, \code{trainfrac} is ignored.}
+\item{s}{vector of indices denoting observations to be used for the training sample. If \code{s} is given, \code{train.fraction} is ignored.}
 
 \item{seednum}{integer passed to \code{set.seed}}
 
@@ -70,7 +72,7 @@ Fitted model. This is a list containing the following elements:
     Many of the functions in the package default to using the minimum value of the three. 
   \item \code{params} - arguments to mvtb
   \item \code{trainerr} - multivariate training error at each tree (If \code{iter.details = TRUE})
-  \item \code{testerr}  - multivariate test error at each tree (if \code{trainfrac < 1} and \code{iter.details = TRUE})
+  \item \code{testerr}  - multivariate test error at each tree (if \code{train.fraction < 1} and \code{iter.details = TRUE})
   \item \code{cverr}    - multivariate cv error at each tree (if \code{cv.folds > 1} and \code{iter.details = TRUE})
   \item \code{ocv} - the CV models if \code{save.cv=TRUE}
   \item \code{s} - indices of training sample
@@ -90,10 +92,10 @@ This is done efficiently by fitting separate gbm models for each outcome (contai
 The covariance explained in pairs of outcomes by each predictor can be computed using \code{mvtb.covex}. 
 Partial dependence plots can be obtained from \code{mvtb.plot}.
 
-The model is tuned jointly by selecting the number of trees that minimize multivariate mean squared error in a test set (by setting \code{trainfrac}) or averaged over k folds in k-fold cross-validation (by setting \code{cv.folds > 1}).
+The model is tuned jointly by selecting the number of trees that minimize multivariate mean squared error in a test set (by setting \code{train.fraction}) or averaged over k folds in k-fold cross-validation (by setting \code{cv.folds > 1}).
 The best number of trees is available via \code{$best.trees}.  
-If both \code{cv.folds} and \code{trainfrac} is specified, cross-validation is carried out within the training set.
-If \code{s} is specified, \code{trainfrac} is ignored but cross-validation will be carried out for observations in \code{s}.
+If both \code{cv.folds} and \code{train.fraction} is specified, cross-validation is carried out within the training set.
+If \code{s} is specified, \code{train.fraction} is ignored but cross-validation will be carried out for observations in \code{s}.
 
 Cross-validation models are usually discarded but can be saved by setting \code{save.cv = TRUE}. CV models can be accessed from \code{$ocv} of the 
 output object. Observations can be specifically set for inclusion in the training set by passing a vector of integers indexing the rows to include to \code{s}.
@@ -106,7 +108,7 @@ The function \code{mvtb.uncomp} is available to manually decompress the object.
 
 Note that trees are grown until a minimum number of observations in each node is reached. 
 If the number of \code{training samples}*\code{bag.fraction} is less the minimum number of observations, (which can occur with small data sets), this will cause an error. 
-Adjust the \code{n.minobsinnode}, \code{trainfrac}, or \code{bag.fraction}.
+Adjust the \code{n.minobsinnode}, \code{train.fraction}, or \code{bag.fraction}.
 
 Cross-validation can be parallelized by setting mc.cores > 1. Parallel cross-validation is carried out using \code{parallel::mclapply}, which makes \code{mc.cores} copies of the original environment.
 For models with many trees (> 100K), memory limits can be reached rapidly. \code{mc.cores} will not work on Windows.
