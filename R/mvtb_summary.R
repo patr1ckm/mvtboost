@@ -45,9 +45,10 @@ mvtb.r2 <- function(object,Y,X,n.trees=NULL){
 #' @export
 #' @importFrom utils str
 print.mvtb <- function(x,...) {
-  if(any(unlist(lapply(x,function(li){is.raw(li)})))){
-    x <- mvtb.uncomp(x)
-  }
+  #if(any(unlist(lapply(x,function(li){is.raw(li)})))){
+  #  x <- mvtb.uncomp(x)
+  #  cat("COMPRESSED",fill=TRUE)
+  #}
   str(x,1)
 }
 

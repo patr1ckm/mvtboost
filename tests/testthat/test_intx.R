@@ -1,5 +1,4 @@
-context("test_params")
-
+context("test_intx")
 set.seed(123)
 n <- 1000
 B <- matrix(0,nrow=5,ncol=4)
@@ -14,8 +13,10 @@ X <- cbind(X,X2)
 E <- matrix(rnorm(n*4),nrow=n,ncol=4)
 Y <- X %*% B + E
 summary(lm(Y~X[,1]*X[,2]+X[,2]*X[,3]))
-
 out <- mvtb(Y=Y,X=X[,1:3],n.trees=500,interaction.depth = 5,shrinkage = .5)
-o1 <- mvtb.nonlin(out,X=X[,1:3],Y=Y,n.trees = 500,detect = "grid")
-o2 <- mvtb.nonlin(out,X=X[,1:3],Y=Y,n.trees = 500,detect = "influence")
-o3 <- mvtb.nonlin(out,X=X[,1:3],Y=Y,n.trees = 500,detect = "lm")
+
+test_that("intx runs", {
+  expect_is(mvtb.nonlin(out,X=X[,1:3],Y=Y,n.trees = 500,detect = "grid"), "list")
+  expect_is(mvtb.nonlin(out,X=X[,1:3],Y=Y,n.trees = 500,detect = "influence"), "list")
+  expect_is(mvtb.nonlin(out,X=X[,1:3],Y=Y,n.trees = 500,detect = "lm"), "list")
+})

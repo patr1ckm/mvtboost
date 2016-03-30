@@ -4,11 +4,25 @@
 \alias{mvtb.covex}
 \title{Return the covariance explained matrix}
 \usage{
-mvtb.covex(Y, X, object, n.trees = NULL, iter.details = F,
+mvtb.covex(object, Y, X, n.trees = NULL, iter.details = F,
   cov.discrep = 1, alpha = 0.5, weight.type = 1)
 }
 \arguments{
 \item{object}{an object of class \code{mvtb}}
+
+\item{Y}{vector, matrix, or data.frame for outcome variables with no missing values. To easily compare influences across outcomes and for numerical stability, outcome variables should be scaled to have unit variance.}
+
+\item{X}{vector, matrix, or data.frame of predictors. For best performance, continuous predictors should be scaled to have unit variance. Categorical variables should converted to factors.}
+
+\item{n.trees}{number of trees to use. Defaults to the minimum number of trees by CV, test, or training error}
+
+\item{iter.details}{\code{TRUE/FALSE}. Return the loss, relative loss, and selected predictors at each iteration}
+
+\item{cov.discrep}{Norm of the covariance discrepancy (see details)}
+
+\item{alpha}{The weight given to covariance explained relative to variance explained in the loss function (see details)}
+
+\item{weight.type}{see details}
 }
 \description{
 Return the covariance explained matrix

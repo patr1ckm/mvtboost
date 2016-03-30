@@ -1,14 +1,9 @@
-## Author: Patrick Miller
-## Purpose: Multiple response (or multivariate) boosting with decision trees (stumps). Also multi-task, or multi-objective. Only for continuous Y.
-## RRV: 9/3/2015
-  
-
 #' Fitting a Multivariate Tree Boosting Model
 #'
 #' Builds on \code{gbm} (Ridgeway 2013; Friedman, 2001) to fit a univariate tree model for each outcome, selecting predictors at each iteration that explain (co)variance in the outcomes. The number of trees included in the model can be chosen by minimizing the multivariate mean squared error using cross validation or a test set.
 #'
-#' @param X vector, matrix, or data.frame of predictors. For best performance, continuous predictors should be scaled to have unit variance. Categorical variables should converted to factors.
 #' @param Y vector, matrix, or data.frame for outcome variables with no missing values. To easily compare influences across outcomes and for numerical stability, outcome variables should be scaled to have unit variance.
+#' @param X vector, matrix, or data.frame of predictors. For best performance, continuous predictors should be scaled to have unit variance. Categorical variables should converted to factors.
 #' @param n.trees maximum number of trees to be included in the model. Each individual tree is grown until a minimum number observations in each node is reached. 
 #' @param shrinkage a constant multiplier for the predictions from each tree to ensure a slow learning rate. Default is .01. Small shrinkage values may require a large number of trees to provide adequate fit.
 #' @param interaction.depth fixed depth of trees to be included in the model. A tree depth of 1 corresponds to fitting stumps (main effects only), higher tree depths capture higher order interactions (e.g. 2 implies a model with up to 2-way interactions)
@@ -42,7 +37,7 @@
 #' }
 #' 
 #' @usage 
-#' mvtb(X, Y, 
+#' mvtb(Y, X, 
 #'      n.trees = 100,
 #'      shrinkage = 0.01, 
 #'      interaction.depth = 1,
@@ -123,7 +118,7 @@
 #' mvtb.cluster(covex)
 #' mvtb.heat(t(mvtb.ri(res)),cexRow=.8,cexCol=1,dec=0)
 #' @export
-mvtb <- function(X,Y,n.trees=100,
+mvtb <- function(Y,X,n.trees=100,
                  shrinkage=.01,
                  interaction.depth=1,
                  distribution="gaussian",
@@ -164,7 +159,6 @@ mvtb <- function(X,Y,n.trees=100,
   ## parameters, prepare for calling lower level functions
   plist <- params
   plist$iter.details <- NULL
-  plist$mc.cores <- NULL
   plist$compress <- NULL
   
 
@@ -184,6 +178,7 @@ mvtb <- function(X,Y,n.trees=100,
     cv.err <- ocv$cv.err
     out.fit <- ocv$models.k[[cv.folds+1]]
    } else {
+    plist$mc.cores <- NULL
     plist$cv.folds <- NULL
     plist$save.cv <- NULL
     plist$train.fraction <- NULL
@@ -222,7 +217,6 @@ mvtb <- function(X,Y,n.trees=100,
 #'          n.trees=100,
 #'          shrinkage=.01,
 #'          interaction.depth=1,
-#'          train.fraction=1,
 #'          samp.iter=FALSE,
 #'          bag.fraction=1,
 #'          s=NULL,
@@ -232,7 +226,6 @@ mvtb.fit <- function(X,Y,
                      n.trees=100,
                      shrinkage=.01,
                      interaction.depth=1,
-                     nTrain=nrow(X),
                      bag.fraction=1,
                      s=1:nrow(X),
                      seednum=NULL,...) {
@@ -252,7 +245,7 @@ mvtb.fit <- function(X,Y,
                              interaction.depth=interaction.depth, 
                              shrinkage=shrinkage,
                              bag.fraction=bag.fraction,
-                             nTrain=nTrain,...)
+                             ...)
     }
     yhat <- predict.mvtb(list(models=models),n.trees=1:n.trees,newdata=X,drop=FALSE)
     testerr <- trainerr <- rep(0,length=n.trees)
@@ -304,6 +297,7 @@ mvtbCV <- function(params) {
         # since we already subsetted on s, fit to entire training sample
         params$s <- sorig
       }
+      params$train.fraction <- NULL # just makin sure
       out <- do.call("mvtb.fit",params) 
       return(out)
     }

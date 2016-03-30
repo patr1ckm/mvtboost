@@ -16,11 +16,21 @@ Y <- Xf %*% B + E
 
 # Right now, just makes sure the plots run with default arguments and no errors.
 out <- mvtb(Y=Y,X=X,n.trees=100,shrinkage = .5)
-plot(out)
-mvtb.perspec(out)
-mvtb.heat(mvtb.covex(Y=Y,X=X,out))
-mvtb.heat(mvtb.covex(Y=Y,X=X,out),clust.method = "complete")
-mvtb.heat(t(mvtb.ri(out)))
-mvtb.heat(t(mvtb.ri(out)),clust.method=NULL)
+test_that("mvtb.plot", {
+  plot(out)
+})
 
-expect_equal(dim(plot(out,return.grid=T)),c(100,2))
+test_that("mvtb.perspec", {
+  mvtb.perspec(out)
+})
+
+test_that("mvtb.heat", {
+  mvtb.heat(mvtb.covex(Y=Y,X=X,out))
+  mvtb.heat(mvtb.covex(Y=Y,X=X,out),clust.method = "complete")
+  mvtb.heat(t(mvtb.ri(out)))
+  mvtb.heat(t(mvtb.ri(out)),clust.method=NULL)
+})
+
+test_that("return.grid", {
+  expect_equal(dim(plot(out,return.grid=T)),c(100,2))
+})

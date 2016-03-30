@@ -16,36 +16,38 @@ Y <- Xf %*% B + E
 p <- 3
 ncovs <- 10
 q <- 4
+out <- mvtb(Y=Y,X=X,shrinkage=.1,n.trees=100)
 
-## Again, tests just to make sure that they run
-out <- mvtb(Y=Y,X=X,shrinkage=.1,n.trees=1000)
-expect_output(summary(out),"trees")
-expect_output(summary(out),"influence")
-expect_equal(sum(summary(out,print=FALSE,relative="tot")$relative.influence),100)
+test_that("summary",{ 
+  ## Again, tests just to make sure that they run
+  expect_output(print(summary(out)),"trees")
+  expect_output(summary(out),"influence")
+  expect_equal(sum(summary(out,print=FALSE,relative="tot")$relative.influence),100)
+})
 
-expect_output(mvtb.covex(Y=Y,X=X,out=out),"")
-expect_equal(dim(mvtb.covex(out)),c(ncovs,p))
-expect_identical(mvtb.covex(out),out$covex)
-expect_output(mvtb.cluster(out),"")
-expect_equal(dim(mvtb.cluster(out)),c(ncovs,p))
-mvtb.cluster(out,plot=TRUE)
-expect_output(mvtb.cluster(out,dist.method="manhattan",clust.method="complete"),"")
-#expect_identical(mvtb.cluster(out,clust.method=NULL),out$covex)
+test_that("mvtb.cluster",{
+  covex <- mvtb.covex(out, Y=Y,X=X)
+  expect_output(print(mvtb.cluster(covex)))
+  expect_equal(dim(mvtb.cluster(covex)),c(ncovs,p))
+  mvtb.cluster(covex,plot=TRUE)
+  expect_output(print(mvtb.cluster(covex,dist.method="manhattan",clust.method="complete")))
+})
 
-expect_output(mvtb.ri(out),"")
-expect_equal(dim(mvtb.ri(out)),c(p,q))
-expect_output(mvtb.ri(out,weighted = TRUE),"")
-expect_equivalent(sum(mvtb.ri(out,relative = "tot")),100)
-expect_equal(sum(colSums(mvtb.ri(out,relative = "col")))-q*100,0,tolerance=1E-12)
-expect_output(mvtb.ri(out,relative = "n"),"")
-expect_output(gbm.ri(out),"")
-expect_output(print.mvtb(out),"")
-
-context("test_summary_compression")
-
-out <- mvtb(Y=Y,X=X,compress = T)
-expect_output(summary(out),"")
-expect_output(print(out),"")
-expect_output(mvtb.cluster(out),"")
-expect_output(gbm.ri(out),"")
-
+test_that("mvtb.ri",{
+  expect_output(print(mvtb.ri(out)))
+  expect_equal(dim(mvtb.ri(out)),c(p,q))
+  expect_output(print(mvtb.ri(out)))
+  expect_equivalent(sum(mvtb.ri(out,relative = "tot")),100)
+  expect_equal(sum(colSums(mvtb.ri(out,relative = "col")))-q*100,0,tolerance=1E-12)
+  expect_output(print(mvtb.ri(out,relative = "n")))
+  expect_output(print(out), "List of ") # verifies that print.mvtb is being called
+})
+  
+test_that("test_summary_compression",{
+  out <- mvtb(Y=Y,X=X,compress = T)
+  expect_output(summary(out))
+  expect_output(print(out), "List of")
+  covex <- mvtb.covex(out, Y=Y, X=X)
+  expect_output(print(mvtb.cluster(covex)))
+  expect_output(print(mvtb.ri(out)))
+})

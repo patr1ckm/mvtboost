@@ -5,7 +5,7 @@
 \alias{mvtb.fit}
 \title{Fitting a Multivariate Tree Boosting Model}
 \usage{
-mvtb(X, Y, 
+mvtb(Y, X, 
      n.trees = 100,
      shrinkage = 0.01, 
      interaction.depth = 1,
@@ -25,16 +25,15 @@ mvtb.fit(X,Y,
          n.trees=100,
          shrinkage=.01,
          interaction.depth=1,
-         train.fraction=1,
          samp.iter=FALSE,
          bag.fraction=1,
          s=NULL,
          seednum=NULL,...)
 }
 \arguments{
-\item{X}{vector, matrix, or data.frame of predictors. For best performance, continuous predictors should be scaled to have unit variance. Categorical variables should converted to factors.}
-
 \item{Y}{vector, matrix, or data.frame for outcome variables with no missing values. To easily compare influences across outcomes and for numerical stability, outcome variables should be scaled to have unit variance.}
+
+\item{X}{vector, matrix, or data.frame of predictors. For best performance, continuous predictors should be scaled to have unit variance. Categorical variables should converted to factors.}
 
 \item{n.trees}{maximum number of trees to be included in the model. Each individual tree is grown until a minimum number observations in each node is reached.}
 
