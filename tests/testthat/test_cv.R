@@ -13,7 +13,7 @@ Y <- X %*% B + E
 
 n.trees <- 25
 
-## check cv, s, samp.iter, seednum
+## check cv, s, seednum
 
 params <- formals(mvtb)[-c(length(formals(mvtb)))]
 params$s <- s <- 1:500
@@ -44,7 +44,7 @@ test_that("mvtbCV", {
   check.samp(ocv)
   
   # 2. check that observations in k are not in training set
-  params$samp.iter <- TRUE
+
   ocv <- mvtboost:::mvtbCV(params=plist)
   k.obs <- lapply(1:3,function(k){which(ocv$cv.groups==k)})
   fold.obs <- lapply(ocv$models.k[1:3],function(out){unique(out$s)})
@@ -60,7 +60,7 @@ test_that("mvtbCV", {
 test_that("mvtb - CV param", {
 # 4. check an initial split of training and test, with CV only in the training set
 out <- mvtb(X=X,Y=Y,s=1:500,n.trees=n.trees,shrinkage=.5,cv.folds=3,save.cv=TRUE)
-out2 <- mvtb(X=X,Y=Y,n.trees=n.trees,trainfrac=.5,shrinkage=.5,cv.folds=3,samp.iter=FALSE,s=NULL,save.cv=TRUE)
+out2 <- mvtb(X=X,Y=Y,n.trees=n.trees,train.fraction=.5,shrinkage=.5,cv.folds=3,s=NULL,save.cv=TRUE)
 check.samp(out$ocv,s=out$params$s,folds=3)
 s <- out2$s
 fold.obs <- lapply(out2$ocv$models.k[1:3],function(out){unique(out$s)})
@@ -69,25 +69,24 @@ expect_true(all(s %in% unique(unlist(fold.obs))))
 
 expect_true(all(!unlist(lapply(out$ocv$models.k,function(m){any(m$s > 500)})))) # expect that not any observation numbers > 500 (s was 500)
 
-# 5. check that setting the seed obtains the same observations in each fold (with & w/o samp.iter)
-
+# 5. check that setting the seed obtains the same observations in each fold 
 out1 <- mvtb(X=X,Y=Y,s=1:500,n.trees=n.trees,shrinkage=.5,cv.folds=3,seednum=1)
 out2 <- mvtb(X=X,Y=Y,s=1:500,n.trees=n.trees,shrinkage=.5,cv.folds=3,seednum=1)
 
 expect_equal(out1,out2)
 
-out1 <- mvtb(X=X,Y=Y,trainfrac=.5,n.trees=n.trees,shrinkage=.5,cv.folds=3,seednum=1)
-out2 <- mvtb(X=X,Y=Y,trainfrac=.5,n.trees=n.trees,shrinkage=.5,cv.folds=3,seednum=1)
+out1 <- mvtb(X=X,Y=Y,train.fraction=.5,n.trees=n.trees,shrinkage=.5,cv.folds=3,seednum=1)
+out2 <- mvtb(X=X,Y=Y,train.fraction=.5,n.trees=n.trees,shrinkage=.5,cv.folds=3,seednum=1)
 
 expect_equal(out1,out2)
 
-out1 <- mvtb(X=X,Y=Y,trainfrac=.5,n.trees=n.trees,shrinkage=.5,cv.folds=3,samp.iter=TRUE,seednum=1)
-out2 <- mvtb(X=X,Y=Y,trainfrac=.5,n.trees=n.trees,shrinkage=.5,cv.folds=3,samp.iter=TRUE,seednum=1)
+out1 <- mvtb(X=X,Y=Y,train.fraction=.5,n.trees=n.trees,shrinkage=.5,cv.folds=3,seednum=1)
+out2 <- mvtb(X=X,Y=Y,train.fraction=.5,n.trees=n.trees,shrinkage=.5,cv.folds=3,seednum=1)
 
 expect_equal(out1,out2)
 
-out1 <- mvtb(X=X,Y=Y,trainfrac=.5,n.trees=n.trees,shrinkage=.5,cv.folds=3,samp.iter=TRUE,bag.frac=.5,seednum=1)
-out2 <- mvtb(X=X,Y=Y,trainfrac=.5,n.trees=n.trees,shrinkage=.5,cv.folds=3,samp.iter=TRUE,bag.frac=.5,seednum=1)
+out1 <- mvtb(X=X,Y=Y,train.fraction=.5,n.trees=n.trees,shrinkage=.5,cv.folds=3,bag.frac=.5,seednum=1)
+out2 <- mvtb(X=X,Y=Y,train.fraction=.5,n.trees=n.trees,shrinkage=.5,cv.folds=3,bag.frac=.5,seednum=1)
 
 expect_equal(out1,out2)
 })
