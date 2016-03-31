@@ -2,10 +2,9 @@
 % Please edit documentation in R/mvtb_covex.R
 \name{mvtb.covex}
 \alias{mvtb.covex}
-\title{Return the covariance explained matrix}
+\title{Estimate the covariance explained matrix}
 \usage{
-mvtb.covex(object, Y, X, n.trees = NULL, iter.details = F,
-  cov.discrep = 1, alpha = 0.5, weight.type = 1)
+mvtb.covex(object, Y, X, n.trees = NULL, iter.details = FALSE)
 }
 \arguments{
 \item{object}{an object of class \code{mvtb}}
@@ -16,15 +15,12 @@ mvtb.covex(object, Y, X, n.trees = NULL, iter.details = F,
 
 \item{n.trees}{number of trees to use. Defaults to the minimum number of trees by CV, test, or training error}
 
-\item{iter.details}{\code{TRUE/FALSE}. Return the loss, relative loss, and selected predictors at each iteration}
-
-\item{cov.discrep}{Norm of the covariance discrepancy (see details)}
-
-\item{alpha}{The weight given to covariance explained relative to variance explained in the loss function (see details)}
-
-\item{weight.type}{see details}
+\item{iter.details}{\code{TRUE/FALSE}. Return the loss, relative loss, and selected predictors at each iteration as a list}
+}
+\value{
+Covariance explained matrix, or a list if \code{iter.details} is \code{TRUE}.
 }
 \description{
-Return the covariance explained matrix
+Estimate the covariance explained matrix
 }
 

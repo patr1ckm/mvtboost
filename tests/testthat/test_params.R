@@ -84,6 +84,13 @@ expect_output(mvtb(X=X,Y=Y,n.trees=5, train.fraction=.5, bag.fraction=.5,s=1:500
 
 # r <- mvtb(X=X,Y=Y,n.trees=500, train.fraction=.5, bag.fraction=.5,s=1:500,seednum=8, compress=FALSE, cv.folds=3, save.cv=T, mc.cores=3)
 
+test_that("keep.data", {
+  r <- mvtb(X=X,Y=Y,n.trees=50, keep.data=FALSE)
+  expect_null(r$models[[1]]$data)
+  r <- mvtb(X=X,Y=Y,n.trees=50, keep.data=TRUE)
+  expect_is(r$models[[1]]$data,"list")
+})
+
 test_that("distribution", {
 r <- mvtb(X=X,Y=Y,n.trees=50)
 expect_equal(r$models[[1]]$distribution$name,"gaussian") # default is gaussian
@@ -176,6 +183,10 @@ expect_is(mvtb(Y=yf,X=X,distribution="bernoulli"), "mvtb")
 
 # test vectors
 expect_is(mvtb(Y=Y[,,drop=TRUE],X=X[,,drop=TRUE]), "mvtb")
+
+x <- rnorm(1000)
+y <- x*5 + rnorm(1000)
+expect_is(mvtb(Y=y,X=x), "mvtb")
 })
 
 

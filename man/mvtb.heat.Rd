@@ -33,7 +33,22 @@ heatmap of \code{x}, usually a covariance explained matrix or a matrix of (relat
 Simple (clustered) heatmap of tables from \code{mvtb} (relative influence, covariance explained)
 }
 \details{
-You will probably want to modify the default colors.
+The row and column names of \code{x} are used for the labels. See the examples for modifying the default colors.
+}
+\examples{
+data(wellbeing)
+Y <- wellbeing[,21:26]
+X <- wellbeing[,1:20]
+Ys <- scale(Y)
+cont.id <- unlist(lapply(X,is.numeric))
+Xs <- scale(X[,cont.id])
+
+res <- mvtb(Y=Ys,X=Xs)
+
+covex <- mvtb.covex(Y=Ys, X=Xs)
+mvtb.heat(covex,Y=Ys, X=Xs)
+col <- colorRampPaletteAlpha(RColorBrewer::brewer.pal(9,"Greys"),100)
+mvtb.heat(covex, Y=Ys, X=Xs, col=col)
 }
 \seealso{
 \code{plot.mvtb}, \code{mvtb.perspec}

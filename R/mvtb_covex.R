@@ -1,16 +1,18 @@
-#' Return the covariance explained matrix
+#' Estimate the covariance explained matrix
 #' 
 #' @param object an object of class \code{mvtb}
 #' @param Y vector, matrix, or data.frame for outcome variables with no missing values. To easily compare influences across outcomes and for numerical stability, outcome variables should be scaled to have unit variance.
 #' @param X vector, matrix, or data.frame of predictors. For best performance, continuous predictors should be scaled to have unit variance. Categorical variables should converted to factors.
 #' @param n.trees number of trees to use. Defaults to the minimum number of trees by CV, test, or training error
-#' @param iter.details \code{TRUE/FALSE}. Return the loss, relative loss, and selected predictors at each iteration
-#' @param cov.discrep Norm of the covariance discrepancy (see details)
-#' @param alpha The weight given to covariance explained relative to variance explained in the loss function (see details)
-#' @param weight.type see details
+#' @param iter.details \code{TRUE/FALSE}. Return the loss, relative loss, and selected predictors at each iteration as a list
+# #' @param cov.discrep Norm of the covariance discrepancy (see details)
+# #' @param alpha The weight given to covariance explained relative to variance explained in the loss function (see details)
+# #' @param weight.type see details
 #' @export
+#' @return Covariance explained matrix, or a list if \code{iter.details} is \code{TRUE}.
 #' @importFrom stats cov
-mvtb.covex <- function(object,Y,X,n.trees=NULL,iter.details=F,cov.discrep=1,alpha=.5,weight.type=1) {
+mvtb.covex <- function(object,Y,X,n.trees=NULL,iter.details=FALSE) {
+  cov.discrep=1; alpha=.5; weight.type=1; # these are no longer arguments for simplicity.
   
   if(any(unlist(lapply(object,function(li){is.raw(li)})))){
     object <- mvtb.uncomp(object)

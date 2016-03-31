@@ -112,7 +112,7 @@
 #' 
 #' ## Interpret the model
 #' summary(res)
-#' covex <- mvtb.covex(res, Y=Y, X=X)
+#' covex <- mvtb.covex(res, Y=Ys, X=Xs)
 #' plot(res,predictor.no = 8)
 #' predict(res,newdata=Xs)
 #' mvtb.cluster(covex)
@@ -136,7 +136,7 @@ mvtb <- function(Y,X,n.trees=100,
   if(class(Y) != "matrix") { Y <- as.matrix(Y) }
   if(is.null(ncol(X))){ X <- as.matrix(X)}
   #if(class(X) != "matrix") { X <- data.matrix(X) }
-  params <- c(as.list(environment()))
+  params <- c(as.list(environment()),list(...))
   ## seeds
   if(!is.null(seednum)){
     #print(c("mvtboost: seednum ",seednum));

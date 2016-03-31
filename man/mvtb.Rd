@@ -132,7 +132,7 @@ res <- mvtb(Y=Ys,X=Xs)
 
 ## Interpret the model
 summary(res)
-covex <- mvtb.covex(res, Y=Y, X=X)
+covex <- mvtb.covex(res, Y=Ys, X=Xs)
 plot(res,predictor.no = 8)
 predict(res,newdata=Xs)
 mvtb.cluster(covex)

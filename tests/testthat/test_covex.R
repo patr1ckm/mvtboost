@@ -12,6 +12,10 @@ X <- matrix(rnorm(n),n,1)
 
 Y <- X %*% B 
 
+x <- rnorm(n)
+y <- x*5 + rnorm(n)
+o <- mvtb(Y=y, X=x)
+
 out <- mvtb(Y=Y,X=X)
 covex <- mvtb.covex(out, Y=Y,X=X)
 expect_output(print(covex),"")
@@ -19,6 +23,13 @@ expect_equal(dim(covex),c((q*(q+1))/2,p))
 
 a <- stats::cov(Y)[1,3]
 shrink <- c(.2,.5,.9,1)
+
+test_that("mvtb.covex", {
+  expect_is(mvtb.covex(out,Y=Y,X=X),"matrix")
+  expect_is(mvtb.covex(o, Y=y, X=x),"matrix")
+  expect_is(mvtb.covex(o, Y=y, X=x, iter.details=T),"list")
+  
+})
 
 test_that("covex-noE", { 
 for(i in 1:length(shrink)){
@@ -57,6 +68,7 @@ for(i in seq_along(shrink)){
   expect_equal(covex[covex > .01],rep(a,3), tolerance=1E-10)
 }
 })
+
 ## test alpha
 
 for(i in c(.25,.5,.75)) {
@@ -70,13 +82,3 @@ for(i in c(.25,.5,.75)) {
   #    expect_equal(c(eval.loss(r$resid,Y[,1,drop=F],alpha=i,type=4)),r$wm.raw[1])        
 }
 
-
-## stop crit - no longer necessary. all weights should be positive
-
-#r <- mvtb(X=X,Y=Y,n.trees=103,alpha=.5, trainfrac=1,samp.iter=FALSE,cov.discrep=1,weight.type=2,bag.frac=.5)
-#expect_equal(r$maxiter,103)
-Y <- E
-for(i in 1:4) { 
-  #r <- mvtb(X=X,Y=Y,n.trees=25,alpha=.5, shrinkage=1,trainfrac=1,samp.iter=FALSE,cov.discrep=i,weight.type=2,bag.frac=.5)
-  #    expect_true(all(r$wm >= 0),info=paste0("not all weights > 0, loss ",i))
-}
