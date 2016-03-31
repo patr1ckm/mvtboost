@@ -22,7 +22,7 @@ for(i in seq(.1,.9,by=.1)) {
 })
 
 test_that("bag.fraction", {
-r <- mvtb(X=X,Y=Y,n.trees=10,alpha=.5, trainfrac=1,samp.iter=FALSE,cov.discrep=1,weight.type=2,bag.frac=.5)
+r <- mvtb(X=X,Y=Y,n.trees=10,train.fraction=1,samp.iter=FALSE,bag.fraction=.5)
 for(i in 1:4) { expect_equal(r$models[[i]]$bag.fraction,.5) }
 })
 
