@@ -16,7 +16,7 @@ X2 <- factor(X[,2])
 Xf <- data.frame(X1=X[,1],X2)
 d1 <- data.frame(y=Y[,1],X1=X[,1],X2=X2)
 
-m <- mvtb(X=Xf,Y=Y,n.trees=50,interaction.depth=3,shrinkage=.5,alpha=.5,weight.type=3,bag.frac=1,trainfrac=1,samp.iter=FALSE,compress=FALSE,cv.folds=1,s=1:1000)
+m <- mvtb(X=Xf,Y=Y,n.trees=50,interaction.depth=3,shrinkage=.5,bag.fraction=1,train.fraction=1,compress=FALSE,cv.folds=1,s=1:1000)
 m1 <- gbm::gbm(y~.,distribution="gaussian",n.trees=50,interaction.depth=3,data=d1,bag.fraction=1,train.fraction=1,shrinkage=.5)
 
 test_that("predictions - mixed continuous categorical", {
@@ -44,7 +44,7 @@ X <- data.frame(X1=factor(X[,1]),X2=factor(X[,2]))
 newdata <- X
 d1 <- data.frame(y=Y[,1],X)
 
-m <- mvtb(X=X,Y=Y,n.trees=50,shrinkage=.5,alpha=.05,weight.type=3,bag.frac=1,trainfrac=1,samp.iter=FALSE,compress=FALSE,cv.folds=1,s=1:1000)
+m <- mvtb(X=X,Y=Y,n.trees=50,shrinkage=.5,bag.fraction=1,train.fraction=1,compress=FALSE,cv.folds=1,s=1:1000)
 m1 <- gbm::gbm(y~.,distribution="gaussian",n.trees=50,data=d1,bag.fraction=1,train.fraction=1,shrinkage=.5)
 
 test_that("predictions - categorical", {
@@ -70,7 +70,7 @@ newdata <- Xf
 d2 <- data.frame(y=Y[,1],Xf)
 
 set.seed(100)
-m <- mvtb(X=Xf,Y=Y,n.trees=50,shrinkage=.5,interaction.depth=3,alpha=.05,weight.type=3,bag.frac=1,trainfrac=1,samp.iter=FALSE,compress=FALSE,cv.folds=1,s=1:1000)
+m <- mvtb(X=Xf,Y=Y,n.trees=50,shrinkage=.5,interaction.depth=3,bag.fraction=1,train.fraction=1,compress=FALSE,cv.folds=1,s=1:1000)
 m1 <- gbm::gbm(y~.,distribution="gaussian",n.trees=50,data=d2,interaction.depth=3,bag.fraction=1,train.fraction=1,shrinkage=.5)
 
 test_that("two continuous", {

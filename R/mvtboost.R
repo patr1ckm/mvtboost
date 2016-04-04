@@ -136,7 +136,7 @@ mvtb <- function(Y,X,n.trees=100,
   if(class(Y) != "matrix") { Y <- as.matrix(Y) }
   if(is.null(ncol(X))){ X <- as.matrix(X)}
   #if(class(X) != "matrix") { X <- data.matrix(X) }
-  params <- c(as.list(environment()),list(...))
+  params <- c(as.list(environment()),list(...)) # no copies here
   ## seeds
   if(!is.null(seednum)){
     #print(c("mvtboost: seednum ",seednum));
@@ -157,9 +157,9 @@ mvtb <- function(Y,X,n.trees=100,
   } 
 
   ## parameters, prepare for calling lower level functions
-  plist <- params
-  plist$iter.details <- NULL
-  plist$compress <- NULL
+  #plist <- params
+  params$iter.details <- NULL
+  params$compress <- NULL
   
 
   ## Checks
@@ -173,16 +173,16 @@ mvtb <- function(Y,X,n.trees=100,
   
   ## 0. CV?
   if(cv.folds > 1) {
-    ocv <- mvtbCV(params=plist)
+    ocv <- mvtbCV(params=params)
     best.iters.cv <- ocv$best.iters.cv
     cv.err <- ocv$cv.err
     out.fit <- ocv$models.k[[cv.folds+1]]
    } else {
-    plist$mc.cores <- NULL
-    plist$cv.folds <- NULL
-    plist$save.cv <- NULL
-    plist$train.fraction <- NULL
-    out.fit <- do.call("mvtb.fit",args=c(plist))
+    params$mc.cores <- NULL
+    params$cv.folds <- NULL
+    params$save.cv <- NULL
+    params$train.fraction <- NULL
+    out.fit <- do.call("mvtb.fit",args=c(params))
     best.iters.cv <- NULL
     cv.err <- NULL
     ocv <- NULL
@@ -192,6 +192,13 @@ mvtb <- function(Y,X,n.trees=100,
   testerr <- out.fit$testerr
 
   best.trees <- list(best.testerr=which.min(testerr),best.cv=best.iters.cv,last=n.trees)
+  
+  params$iter.details <- iter.details
+  params$compress <- compress
+  params$mc.cores <- mc.cores
+  params$cv.folds <- cv.folds
+  params$save.cv <- save.cv
+  params$train.fraction <- train.fraction
 
   if(!save.cv){ocv <- NULL}
   if(iter.details==T){
