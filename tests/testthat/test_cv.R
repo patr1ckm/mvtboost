@@ -15,37 +15,29 @@ n.trees <- 25
 
 ## check cv, s, seednum
 
-params <- formals(mvtb)[-c(length(formals(mvtb)))]
-params$s <- s <- 1:500
-params$cv.folds <- 3
-params$X <- X
-params$Y <- Y
-params$save.cv=TRUE
-plist <- params
-plist$alpha <- NULL
-plist$cov.discrep <- NULL
-plist$weight.type <- NULL
-plist$iter.details <- NULL
+s <- 1:500
+cv.folds <- 3
+save.cv=TRUE
 
-check.samp <- function(ocv,s=1:500,folds=params$cv.folds,n=1000) {
+check.samp <- function(ocv,s=1:500,folds=cv.folds,n=1000) {
   ## get the training sample used in every fold
   fold.obs <- lapply(ocv$models.k[1:folds],function(out){unique(out$s)})
   ## check which obs in s (1:500) are in each f. The row sums of the resulting matrix should be k-1
   expect_true(all(rowSums(t(plyr::laply(fold.obs,function(f){matrix(s %in% f)})))==(folds-1)))
   expect_equal(sum(sapply(fold.obs,length)),n)
-  for(k in 1:params$cv.folds) {
+  for(k in 1:cv.folds) {
     expect_true(!any(intersect(which(ocv$cv.groups==k),fold.obs[[k]])))
   }
 }
 
 test_that("mvtbCV", {
-  ocv <- mvtboost:::mvtbCV(params=plist)
+  ocv <- mvtboost:::mvtbCV(Y=Y, X=X, distribution="gaussian", n.trees=n.trees, cv.folds=3, s=s, save.cv=TRUE, mc.cores=1, verbose=F)
   # 1. check that each observation is left out once.
   check.samp(ocv)
   
   # 2. check that observations in k are not in training set
 
-  ocv <- mvtboost:::mvtbCV(params=plist)
+  ocv <- mvtboost:::mvtbCV(Y=Y, X=X, distribution="gaussian", n.trees=n.trees, cv.folds=3, s=s, save.cv=TRUE, mc.cores=1, verbose=F)
   k.obs <- lapply(1:3,function(k){which(ocv$cv.groups==k)})
   fold.obs <- lapply(ocv$models.k[1:3],function(out){unique(out$s)})
   expect_true(length(unlist(mapply(intersect,k.obs,fold.obs))) < 1)

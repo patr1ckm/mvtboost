@@ -1,3 +1,12 @@
+# mvtboost 0.4.4
+- `mvtb.covex` now estimates the covariance explained matrix. 
+- Arguments in `mvtb` correspond directly to `gbm`
+- Better testing
+- Revised documentation
+- `mvtb.fit` is now exported
+- `distribution` can be any supported by `gbm`, but covariance explained can only
+be estimated when `distribution=gaussian`
+
 # mvtboost 0.4
 - Added `mvtb.covex` that directly returns the covariance explained matrix.
 - `mvtb.plot` gains `return.grid` argument to return gbm grid that is used for plotting
