@@ -20,8 +20,8 @@
 
 #' Detect departures from linearity from a multivariate tree boosting model.
 #' @param object object of class \code{mvtb}
-#' @param X matrix of predictors
-#' @param Y matrix of responses
+#' @param Y matrix of predictors
+#' @param X matrix of responses
 #' @param n.trees number of trees. Defaults to the minimum number of trees given that minimize CV, test, training error.
 #' @param detect method for testing possible non-linear effects or interactions. Possible values are \code{"grid"}, \code{"influence"}, and \code{"lm"}. See details.
 #' @param scale For method \code{"influence"}, whether the resulting influences are scaled to sum to 100.
@@ -48,7 +48,7 @@
 #' 
 #' Friedman, J. H., & Meulman, J. J. (2003). Multiple additive regression trees with application in epidemiology. Statistics in medicine, 22(9), 1365-1381.
 #' @export
-mvtb.nonlin <-function(object, X, Y, n.trees=NULL,detect="grid",scale=TRUE) {
+mvtb.nonlin <-function(object, Y, X, n.trees=NULL,detect="grid",scale=TRUE) {
   #
   # p. miller, February 2015. Updated for multiple outcome variables
   # j. leathwick, j. elith - May 2007
