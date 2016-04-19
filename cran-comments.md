@@ -1,6 +1,13 @@
 ## Resubmission
 
-This submission updates data, vignettes, fixes a few typos, and updates package to 0.4.1
+This submission updates 
+ - DESCRIPTION to remove "This package..." and another typo
+ - data
+ - vignettes
+ - a few documentation typos
+ - a bug in mvtb.heat with cex
+
+Updates package to 0.4.1
 
 
 ## Test environments

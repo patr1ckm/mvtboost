@@ -20,6 +20,7 @@ x <- rnorm(1000)
 y <- x*5 + rnorm(1000)
 o1 <- mvtb(Y=y, X=x)
 
+
 test_that("mvtb.plot", {
   plot(out)
   plot(o1)
