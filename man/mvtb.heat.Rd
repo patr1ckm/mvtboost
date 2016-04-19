@@ -8,7 +8,7 @@ mvtb.heat(x, clust.method = "ward.D", dist.method = "manhattan", dec = 2,
   numformat = NULL, col = NULL, cexRow = NULL, cexCol = NULL, ...)
 }
 \arguments{
-\item{x}{Any table. For example: the covariance explained (\code{res$covex}), or relative influence \code{mvtb.ri(res)}.}
+\item{x}{Any table. For example: the covariance explained from \code{mvtb.covex}, or relative influence \code{mvtb.ri(res)}.}
 
 \item{clust.method}{clustering method for rows and columns. This should be (an unambiguous abbreviation of) one of \code{"ward.D"}, \code{"ward.D2"}, \code{"single"}, \code{"complete"}, \code{"average"} (= UPGMA), \code{"mcquitty"} (= WPGMA), \code{"median"} (= WPGMC) or \code{"centroid"} (= UPGMC). If \code{NULL}, unclustered.}
 
@@ -24,7 +24,7 @@ mvtb.heat(x, clust.method = "ward.D", dist.method = "manhattan", dec = 2,
 
 \item{cexCol, }{See \code{cex.axis} from par. The magnification used for the col axis labels. The default is set equal to the row axis labels.}
 
-\item{...}{extra arguments are passed to image, then to plot. See ?image, ?par}
+\item{...}{extra arguments are passed to image, then to plot. See \code{?image}, \code{?par}}
 }
 \value{
 heatmap of \code{x}, usually a covariance explained matrix or a matrix of (relative) influences.
@@ -45,10 +45,15 @@ Xs <- scale(X[,cont.id])
 
 res <- mvtb(Y=Ys,X=Xs)
 
-covex <- mvtb.covex(Y=Ys, X=Xs)
-mvtb.heat(covex,Y=Ys, X=Xs)
+covex <- mvtb.covex(res, Y=Ys, X=Xs)
+par(mar=c(4,7,1,1))
+mvtb.heat(covex,cexRow=.8)
+
 col <- colorRampPaletteAlpha(RColorBrewer::brewer.pal(9,"Greys"),100)
-mvtb.heat(covex, Y=Ys, X=Xs, col=col)
+mvtb.heat(covex, Y=Ys, X=Xs, col=col, cexRow=.8)
+
+par(mar=c(5,5,1,1))
+mvtb.heat(t(mvtb.ri(res)),cexRow=.8,cexCol=1,dec=0)
 }
 \seealso{
 \code{plot.mvtb}, \code{mvtb.perspec}

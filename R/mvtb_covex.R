@@ -54,65 +54,45 @@ mvtb.covex <- function(object,Y,X,n.trees=NULL,iter.details=FALSE) {
   init <- unlist(lapply(object$models,function(m){m$initF}))
   D <- Rm <- yhatm <- matrix(0,n,k) 
   for(m in 1:k) { D[,m] <- Y[,m]-init[m] } # current residuals at iteration 1
-  yhat <- mvtboost:::predict.mvtb(list(models=object$models),n.trees=1:n.trees,newdata=X,drop=FALSE)
+  yhat <- predict.mvtb(list(models=object$models),n.trees=1:n.trees,newdata=X,drop=FALSE)
   yhat <- array(c(rep(init,each=n),yhat),dim=c(n,k,n.trees+1))
   Dpred <- yhat[,,2:(n.trees+1),drop=F]-yhat[,,1:(n.trees),drop=F] # Dpred is the unique contribution of each tree
   s <- object$s
   final.iter <- FALSE
   
-  ## ss <- matrix(0,nrow=length(s),ncol=n.trees)
-  
-  ## 1. bootstrap covex if desired.
-  ## for(i in 1:n.trees) {
-  ##  if(samp.iter) {
-  ##    ss[,i] <-  sample(s,length(s),replace=TRUE) # if replace = FALSE, this just permutes the rows.
-  ##  } else {
-  ##    ss[,i] <- s
-  ##  }
-  #}  
-  
-  
-  # 2. Compute covariance discrepancy
+  # 1. Compute covariance discrepancy
   for(i in 1:(n.trees)) {        
     
-    ## 2.1 From each model get the stuff we need at the current iteration
+    ## From each model get the stuff we need at the current iteration
     for(m in 1:k) {            
-      ## 1.2 For each model compute predicted values and influence
+      ## For each model compute predicted values and influence
       tree.i <- finaltree[[m]][i]
       rel.infl[,m,i] <- ri.one(tree.i,n.trees=1,object$xnames)
       
-      ## 1.3 Replace mth outcome with its residual, compute covariance           
+      ## Replace mth outcome with its residual, compute covariance           
       Rm <- D
       Rm[,m] <- D[,m]-Dpred[,m,i]
       Res.cov[,,m,i] <- cov(as.matrix(Rm),use="pairwise.complete") 
-      #Res.cov[,,m,i] <- cov(D) - cov(D[,m]-Dpred[,m,i])
-      ## 2. Evaluate loss criteria on training sample. Covariance reduced, correlation reduced, uls, or gls
+      
+      ## Evaluate loss criteria on training sample. Covariance reduced, correlation reduced, uls, or gls
       wm.raw[i,m] <- eval.loss(Rm=as.matrix(Rm[s,]),D=as.matrix(D[s,]),alpha=alpha,type=cov.discrep)
-      #wm.overall[i,m] <- eval.loss(Rm=as.matrix(Rm[s,]),D=as.matrix(Y[s,]),alpha=alpha,type=cov.discrep)
+      
     }              
     
     wm.raw[i,wm.raw[i,] < 0] <- 0 # truncate negative weights to 0
-    
-    ## 3. Check early stopping criteria.
-    #if(all(wm.raw[i,]==0)) {
-    #  wm.rel[i,] <- 0
-    #  final.iter <- TRUE; # break at the end of the loop, so test and train error can still be computed.
-    #}                     
+
     
     ## 4. Compute weight types (relative, 0-1, and none)
     if(!final.iter) {
       if(weight.type==1) {
-        ##print("relative weights")
         wm.rel[i,] <- wm.raw[i,]/sum(wm.raw[i,]) # relative weights.
       } else if(weight.type==2) {
         wm.rel[i,which.max(wm.raw[i,])] <- 1 # 0-1 weights for covariance explained loss functions (want to maximize)       
       } else {
-        ##print("equal weight")
         wm.rel[i,] <- rep(1,k) # equal weight
       }
     }
-    # compute the best mod, and which xs were selected
-    #besty <- bestys[i] <- which.max(wm.raw[i,])           
+       
     ## as an approximation, choose the best x by relative influence in each col at iteration i
     bestxs[i,] <- bestx <- apply(rel.infl[,,i,drop=F],2,function(col){which.max(col)})    
     
@@ -134,13 +114,11 @@ mvtb.covex <- function(object,Y,X,n.trees=NULL,iter.details=FALSE) {
       
     }
     
-    #Rm <- D - Dpred[,,i]
     D <- Y - yhat[,,i+1] # i=1 is init (colMeans Y)
     
   }
   covex <- t(covex)
   if(iter.details){
-    ## Todo to make tests pass probably
     fl <- list(covex=covex,loss=matrix(wm.raw[1:i,,drop=FALSE],nrow=i,ncol=k),rel.loss=wm.rel[1:i,,drop=FALSE],bestxs=bestxs)
   } else {
     fl <- covex

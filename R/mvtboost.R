@@ -41,7 +41,7 @@
 #'      n.trees = 100,
 #'      shrinkage = 0.01, 
 #'      interaction.depth = 1,
-#'      distribution="gaussian"
+#'      distribution="gaussian",
 #'      train.fraction = 1, 
 #'      bag.fraction = 1, 
 #'      cv.folds = 1, 
@@ -190,6 +190,7 @@ mvtb <- function(Y,X,n.trees=100,
   best.trees <- list(best.testerr=which.min(testerr),best.cv=best.iters.cv,last=n.trees)
 
   if(!save.cv){ocv <- NULL}
+
   if(iter.details==T){
     fl <- list(models=models, best.trees=best.trees,params=params,
              trainerr=trainerr,testerr=testerr,cv.err=cv.err,
@@ -209,13 +210,12 @@ mvtb <- function(Y,X,n.trees=100,
 
 #' @describeIn mvtb 
 #' @usage 
-#' mvtb.fit(X,Y,
+#' mvtb.fit(Y,X,
 #'          n.trees=100,
 #'          shrinkage=.01,
 #'          interaction.depth=1,
-#'          samp.iter=FALSE,
 #'          bag.fraction=1,
-#'          s=NULL,
+#'          s=1:nrow(X),
 #'          seednum=NULL,...)
 #' @export
 mvtb.fit <- function(Y,X,
@@ -320,11 +320,13 @@ mvtbCV <- function(Y, X, n.trees, cv.folds, save.cv, s, mc.cores, ...) {
 #' @param newdata matrix of predictors. 
 #' @param n.trees number of trees. If a vector, returns predictions in an array. Defaults to the minimum number of trees by CV, test, or training error
 #' @param drop \code{TRUE/FALSE} Drop any dimensions of length 1
+#' @param ... not used
 #' @return Returns an (array, matrix, vector) of predictions for all outcomes. The third dimension corresponds to the 
 #' predictions at a given number of trees, the second dimension corresponds to the number of outcomes.
 #' @export
+#' @importFrom gbm predict.gbm
 #' 
-predict.mvtb <- function(object, n.trees=NULL, newdata, drop=TRUE) {
+predict.mvtb <- function(object, n.trees=NULL, newdata, drop=TRUE, ...) {
   out <- object
   if(any(unlist(lapply(out,function(li){is.raw(li)})))){
     out <- mvtb.uncomp(out)
@@ -335,7 +337,7 @@ predict.mvtb <- function(object, n.trees=NULL, newdata, drop=TRUE) {
   Pred <- array(0,dim=c(nrow(newdata),K,treedim))  
   for(k in 1:K) {                                     
     p <- rep(0,nrow(newdata))        
-    p <- gbm::predict.gbm(out$models[[k]],n.trees=n.trees,newdata=newdata)    
+    p <- predict.gbm(out$models[[k]],n.trees=n.trees,newdata=newdata)    
     Pred[,k,] <- p
   }
   #if(length(n.trees) == 1) {

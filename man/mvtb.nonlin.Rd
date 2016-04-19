@@ -4,14 +4,14 @@
 \alias{mvtb.nonlin}
 \title{Detect departures from linearity from a multivariate tree boosting model.}
 \usage{
-mvtb.nonlin(object, X, Y, n.trees = NULL, detect = "grid", scale = TRUE)
+mvtb.nonlin(object, Y, X, n.trees = NULL, detect = "grid", scale = TRUE)
 }
 \arguments{
 \item{object}{object of class \code{mvtb}}
 
-\item{X}{matrix of predictors}
+\item{Y}{matrix of predictors}
 
-\item{Y}{matrix of responses}
+\item{X}{matrix of responses}
 
 \item{n.trees}{number of trees. Defaults to the minimum number of trees given that minimize CV, test, training error.}
 

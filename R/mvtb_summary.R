@@ -58,10 +58,11 @@ print.mvtb <- function(x,...) {
 #' @param print result (default is TRUE)
 #' @param n.trees number of trees used to compute relative influence. Defaults to the minimum number of trees by CV, test, or training error
 #' @param relative relative If 'col', each column sums to 100. If 'tot', the whole matrix sums to 100 (a percent). If 'n', the raw reductions in SSE are returned.
+#' @param ... additional arguments affecting the summary produced.
 #' @return Returns the best number of trees, the univariate relative influence of each predictor for each outcome, and covariance explained in pairs of outcomes by each predictor
 #' @seealso \code{mvtb.ri}, \code{gbm.ri}, \code{mvtb.cluster}
 #' @export
-summary.mvtb <- function(object,print=TRUE,n.trees=NULL,relative="col") {
+summary.mvtb <- function(object,print=TRUE,n.trees=NULL,relative="col",...) {
   out <- object
   if(any(unlist(lapply(out,function(li){is.raw(li)})))){
     out <- mvtb.uncomp(out)
@@ -142,10 +143,10 @@ mvtb.uncomp <- function(object) {
 }
 
 
-#' If \code{"weighted"=TRUE}, the influence is weighted by the covariance explained in all pairs of outcomes by that predictor. 
-#' This allows predictor selection to be informed by the covariance explained. 
-#' Different weighting types are possible, see \code{?mvtb}.
-weighted.ri <- function(object,Y,X){
+# If \code{"weighted"=TRUE}, the influence is weighted by the covariance explained in all pairs of outcomes by that predictor. 
+# This allows predictor selection to be informed by the covariance explained. 
+# Different weighting types are possible, see \code{?mvtb}.
+#weighted.ri <- function(object,Y,X){
   #weights <- mvtb.covex(object,iter.details=T)$weights
   
   #  for(m in 1:k) {
@@ -158,7 +159,7 @@ weighted.ri <- function(object,Y,X){
   #    ri <- ri/sum(ri)*100
   #  }
 
-}
+#}
 
 ri.one <- function(object,n.trees=1,var.names) {
   get.rel.inf <- function(obj) {

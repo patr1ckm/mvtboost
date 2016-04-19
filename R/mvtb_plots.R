@@ -119,7 +119,7 @@ plot.pw.perspec <- function(out,response.no,predictor.no,npairs=3,nonlin.rank=NU
 #' 
 #' Simple (clustered) heatmap of tables from \code{mvtb} (relative influence, covariance explained)
 #' 
-#' @param x Any table. For example: the covariance explained (\code{res$covex}), or relative influence \code{mvtb.ri(res)}. 
+#' @param x Any table. For example: the covariance explained from \code{mvtb.covex}, or relative influence \code{mvtb.ri(res)}. 
 #' @param clust.method clustering method for rows and columns. This should be (an unambiguous abbreviation of) one of \code{"ward.D"}, \code{"ward.D2"}, \code{"single"}, \code{"complete"}, \code{"average"} (= UPGMA), \code{"mcquitty"} (= WPGMA), \code{"median"} (= WPGMC) or \code{"centroid"} (= UPGMC). If \code{NULL}, unclustered.
 #' @param dist.method  method for computing the distance between two lower triangular covariance matrices. This must be one of \code{"euclidean"}, \code{"maximum"}, \code{"manhattan"}, \code{"canberra"}, \code{"binary"} or \code{"minkowski"}. Any unambiguous substring can be given.
 #' @param numformat function to format the covex values into strings. Defaults to removing leading 0 and rounding to \code{dec = 2} decimal places.
@@ -127,7 +127,7 @@ plot.pw.perspec <- function(out,response.no,predictor.no,npairs=3,nonlin.rank=NU
 #' @param col A list of colors mapping onto covex explained values. A white to black gradient is default.
 #' @param cexRow, See \code{cex.axis} from par. The magnification used for the row axis labels. A useful default is provided.
 #' @param cexCol, See \code{cex.axis} from par. The magnification used for the col axis labels. The default is set equal to the row axis labels.
-#' @param ... extra arguments are passed to image, then to plot. See ?image, ?par
+#' @param ... extra arguments are passed to image, then to plot. See \code{?image}, \code{?par}
 #' @return heatmap of \code{x}, usually a covariance explained matrix or a matrix of (relative) influences.
 #' @details The row and column names of \code{x} are used for the labels. See the examples for modifying the default colors.
 #' @export 
@@ -141,10 +141,15 @@ plot.pw.perspec <- function(out,response.no,predictor.no,npairs=3,nonlin.rank=NU
 #' 
 #' res <- mvtb(Y=Ys,X=Xs)
 #' 
-#' covex <- mvtb.covex(Y=Ys, X=Xs)
-#' mvtb.heat(covex,Y=Ys, X=Xs)
+#' covex <- mvtb.covex(res, Y=Ys, X=Xs)
+#' par(mar=c(4,7,1,1))
+#' mvtb.heat(covex,cexRow=.8)
+#' 
 #' col <- colorRampPaletteAlpha(RColorBrewer::brewer.pal(9,"Greys"),100)
-#' mvtb.heat(covex, Y=Ys, X=Xs, col=col)
+#' mvtb.heat(covex, Y=Ys, X=Xs, col=col, cexRow=.8)
+#' 
+#' par(mar=c(5,5,1,1))
+#' mvtb.heat(t(mvtb.ri(res)),cexRow=.8,cexCol=1,dec=0)
 #' @seealso \code{plot.mvtb}, \code{mvtb.perspec}
 #' @importFrom graphics image axis text
 mvtb.heat <- function(x,clust.method="ward.D",dist.method="manhattan",dec=2,numformat=NULL,col=NULL,cexRow=NULL,cexCol=NULL,...) {

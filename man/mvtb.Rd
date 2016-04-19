@@ -9,7 +9,7 @@ mvtb(Y, X,
      n.trees = 100,
      shrinkage = 0.01, 
      interaction.depth = 1,
-     distribution="gaussian"
+     distribution="gaussian",
      train.fraction = 1, 
      bag.fraction = 1, 
      cv.folds = 1, 
@@ -21,13 +21,12 @@ mvtb(Y, X,
      verbose=FALSE,
      mc.cores = 1, ...)
 
-mvtb.fit(X,Y,
+mvtb.fit(Y,X,
          n.trees=100,
          shrinkage=.01,
          interaction.depth=1,
-         samp.iter=FALSE,
          bag.fraction=1,
-         s=NULL,
+         s=1:nrow(X),
          seednum=NULL,...)
 }
 \arguments{
