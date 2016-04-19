@@ -25,7 +25,7 @@ In general, the joint analysis of several outcome variables can be informative. 
 
 ## 1. Fitting the model
 
-Fitting the model is very similar to `gbm.fit`. Currently there is no formula interface, so matrices (data frames) of `X` and `Y` are given. Standardizing the outcomes is recommended.
+Fitting the model is very similar to `gbm.fit`. Standardizing the outcomes is recommended.
 
 ```{r}
 library(mvtboost)
@@ -52,8 +52,8 @@ out2 <- mvtb(Y=Ys,X=X,
             shrinkage=.01,
             interaction.depth=3,
             
-            bag.frac=.5,          # fit each tree to a sub sample of this fraction
-            trainfrac=.5,         # only fit the model to this fraction of the data set
+            bag.fraction=.5,      # fit each tree to a sub sample of this fraction
+            train.fraction=.5,    # only fit the model to this fraction of the data set
             cv.folds=3,           # number of cross-validation folds
             mc.cores=1,           # run the cross-validation in parallel
             seednum=103)          # set the seed number for reproducibility
@@ -62,13 +62,13 @@ out2$best.trees
 
 ## 2. Interpreting the model
 
-The `summary` of the fitted model shows the best number of trees (the minimum of training, test or CV error if available), the relative influences of each predictor for each outcome, and the correlation explained in pairs of outcomes by predictors. We can see that displacement explains correlation in city and highway mpg, while class and manufacturer primarily explain variance in city mpg.
+The `summary` of the fitted model shows the best number of trees (the minimum of training, test or CV error if available), the relative influences of each predictor for each outcome.
 
 After tuning with cross-validation, results change slightly.
 
 ```{r}
-summary(out,covex=TRUE)
-summary(out2,covex=TRUE)
+summary(out)
+summary(out2)
 ```
 
 ### 2.1 Predictions
@@ -100,7 +100,7 @@ mvtb.perspec(out2,response.no = 1,predictor.no = c(2,8),xlab="displacement",ylab
 
 ### 2.3 Detecting departures from additivity
 
-Decision tree ensembles can approximate multi-way interactions, but multi-way interactions are difficult to detect. The function `mvtb.nonlin` detects when the model implied predictions depart from additivity as a function of all pairs of predictors. This will detect non-linear effects, and may indicate the presence of interaction effects. There are 3 implemented ways to compute this (see `Details` of `?mvtb.nonlin`) and more research is necessary to assess which approach is the most beneficial. 
+Decision tree ensembles can approximate multi-way interactions, but multi-way interactions are difficult to detect. The function `mvtb.nonlin` detects when the model implied predictions depart from additivity as a function of all pairs of predictors. This heuristic may indicate the presence of non-linear and interaction effects.
 
 Below, we show an example of computing departures from additivity. Pairs of predictors with significant non-linear effects might be plotted (as above) to investigate whether 2-way interactions exist. Below, we show that the most important non-linear effects all involve displacement, which has a very large non-linear effect.
 
@@ -113,28 +113,23 @@ nonlin.out$cty$rank.list
 
 ### 2.4 Covariance explained
 
-One of the important features of considering multivariate outcomes jointly is the possibility of modeling the covariance between pairs of outcome variables as functions of individual predictors. I define this as the 'covariance explained' in pairs of outcomes by predictors. 
-  
-### Estimation of covariance explained
-
-In multivariate boosting, each outcome is replaced with its residual (times shrinkage), one outcome variable at a time. If a predictor causes multiple outcomes to covary, there will be a discrepancy between the sample covariance matrix after each boosting iteration. The covariance explained of a predictor is calculated by taking the $\mathcal{L}_2$ norm of the discrepancy, summed over all trees.
-  
-The covariance explained matrix can then be organized in a $p \times q(q+1)/2$ table where $q$ is the number of outcomes, and $p$ is the number of predictors. Each element is the covariance explained by a predictor for any pair of outcomes. When the outcomes are standardized to unit variance, each element can be interpreted as the correlation explained in any pair of outcomes by a predictor. Like the $R^2$ of the linear model, this decomposition is unambiguous only if the predictors are independent. Below we show the original covariance explained matrix.
+One of the important features of considering multivariate outcomes jointly is the possibility of estimating the covariance between pairs of outcome variables as functions of individual predictors. This is estimated below. The resulting table has rows corresponding to pairs of outcomes, and columns for each predictor. Details are in Miller \& Lubke et al., (2016).
    
 ```{r}
-round(out2$covex,2)
+covex <- mvtb.covex(out2, Y=Ys, X=X)
+round(covex,2)
 ```
    
 ### Clustering the covariance explained matrix
 
 If the number of predictors/outcomes is large, interpreting the matrix is challenging. The covariance explained matrix can be clustered by grouping the predictors that explain covariance in similar pairs of outcomes. This is done by hierarchical clustering of the  distance between columns (predictors) and the rows (pairs of outcomes).
 
-Below, we cluster the covariance explained matrix, and display it as a heat map. Note that the method of computing the distance between covariance matrices `dist.method` and method of clustering the rows and columns `clust.method` can be played with, leading to different clustering solutions.
+Below, we cluster the covariance explained matrix, and display it as a heat map. Note that the method of computing the distance between covariance matrices `dist.method` and method of clustering the rows and columns `clust.method` can be changed to result in different clustering solutions.
    
 ```{r,fig.width=8}
-cc <- mvtb.cluster(out2, clust.method = "ward.D", dist.method = "manhattan")
+cc <- mvtb.cluster(covex, clust.method = "ward.D", dist.method = "manhattan")
 round(cc,2)
-mvtb.heat(out2$covex)
+mvtb.heat(covex)
 ```
 
 
@@ -145,7 +140,7 @@ Elith, J., Leathwick, J. R., & Hastie, T. (2008). A working guide to boosted reg
 
 Friedman, J. H. (2001). Greedy function approximation: a gradient boosting machine. Annals of statistics, 1189-1232.
 
-Miller P.J., Lubke G.H, McArtor D.B., Bergeman C.S. (Submitted) Finding structure in data with multivariate tree boosting.
+Miller P.J., Lubke G.H, McArtor D.B., Bergeman C.S. (2016) Finding structure in data with multivariate tree boosting.
 
 Ridgeway, G., Southworth, M. H., & RUnit, S. (2013). Package 'gbm'. 
 
