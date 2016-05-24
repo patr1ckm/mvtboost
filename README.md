@@ -42,7 +42,7 @@ The most recent version can be installed directly from github using the devtools
     mvtb.heat(covex)               # heat map of the clustered covariance explained matrix
     mvtb.cluster(covex)            # clustered covariance explained 
     
-    mvtb.nonlin(out,X=X,Y=Y)       # indicators of predictors with nonlinear effects
+    mvtb.nonlin(out,Y=Y,X=X)       # indicators of predictors with nonlinear effects
 
 ## Tune the model
 
@@ -55,3 +55,9 @@ The most recent version can be installed directly from github using the devtools
             train.fraction=.5,    # only fit the model to this fraction of the data set
             cv.folds=3,           # number of cross-validation folds
             mc.cores=3)           # run the cross-validation in parallel (not tested on windows)
+
+
+### Vignettes
+
+    vignette("mvtboost_vignette")
+    vignette("mvtboost_wellbeing")
