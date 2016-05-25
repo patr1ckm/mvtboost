@@ -8,7 +8,7 @@
 - Any `distribution` can be any supported by `mvtb`, but covariance explained can only
 be estimated when `distribution=gaussian`
 
-Updates package to 0.4.4
+Updates package to 0.5
 
 
 ## Test environments
@@ -21,6 +21,8 @@ Updates package to 0.4.4
 
 Status: OK
 
+R CMD check results
+0 errors | 0 warnings | 0 notes
+
 R CMD check succeeded
 
-No notes or warnings.
