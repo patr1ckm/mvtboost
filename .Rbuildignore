@@ -2,7 +2,6 @@
 ^\.Rproj\.user$
 .travis.yml
 cran-comments.md
-NEWS.md
 .DS_Store
 .Rhistory
 .gitignore

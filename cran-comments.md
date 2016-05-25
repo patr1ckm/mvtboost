@@ -2,7 +2,7 @@
 
 - `mvtb.covex` now estimates the covariance explained matrix, it is not estimated by default 
 - Arguments in `mvtb` correspond directly to `gbm`
-- Tests are more flexible, maintainable, have improved coverage
+- Tests are more flexible, maintainable, have improved coverage; now consistent with testthat
 - Documentation for several functions has been simplified
 - `mvtb.fit` is now exported
 - Any `distribution` can be any supported by `mvtb`, but covariance explained can only
@@ -19,10 +19,16 @@ Updates package to 0.5.0
 
 ## R CMD check results
 
-Status: OK
+Status: 1 Note
 
-R CMD check results
-0 errors | 0 warnings | 0 notes
+Maintainer: ‘Patrick Miller <patrick.mil10@gmail.com>’
 
-R CMD check succeeded
+New submission
+
+Package was archived on CRAN
+
+CRAN repository db overrides:
+  X-CRAN-Comment: Archived on 2016-05-02 as check problems were not
+    corrected despite reminders.
+
 
