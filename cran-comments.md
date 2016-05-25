@@ -25,6 +25,10 @@ Maintainer: ‘Patrick Miller <patrick.mil10@gmail.com>’
 
 New submission
 
+Possibly mis-spelled words in DESCRIPTION:
+  covariance (8:189)
+  univariate (8:285)
+
 Package was archived on CRAN
 
 CRAN repository db overrides:
