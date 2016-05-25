@@ -7,7 +7,7 @@
 #' @param n.trees maximum number of trees to be included in the model. Each individual tree is grown until a minimum number observations in each node is reached. 
 #' @param shrinkage a constant multiplier for the predictions from each tree to ensure a slow learning rate. Default is .01. Small shrinkage values may require a large number of trees to provide adequate fit.
 #' @param interaction.depth fixed depth of trees to be included in the model. A tree depth of 1 corresponds to fitting stumps (main effects only), higher tree depths capture higher order interactions (e.g. 2 implies a model with up to 2-way interactions)
-#' @param distribution Character vector specifying the distribution of all outcomes. Default is "guassian" see ?gbm for futher details.
+#' @param distribution Character vector specifying the distribution of all outcomes. Default is "gaussian" see ?gbm for further details.
 #' @param train.fraction  proportion of the sample used for training the multivariate additive model. If both \code{cv.folds} and \code{train.fraction} are specified, the CV is carried out within the training set.
 #' @param bag.fraction   proportion of the training sample used to fit univariate trees for each response at each iteration. Default: 1
 #' @param cv.folds   number of cross validation folds. Default: 1. Runs k + 1 models, where the k models are run in parallel and the final model is run on the entire sample. If larger than 1, the number of trees that minimize the multivariate MSE averaged over k-folds is reported in \code{object$best.trees}

@@ -40,7 +40,7 @@ mvtb.fit(Y,X,
 
 \item{interaction.depth}{fixed depth of trees to be included in the model. A tree depth of 1 corresponds to fitting stumps (main effects only), higher tree depths capture higher order interactions (e.g. 2 implies a model with up to 2-way interactions)}
 
-\item{distribution}{Character vector specifying the distribution of all outcomes. Default is "guassian" see ?gbm for futher details.}
+\item{distribution}{Character vector specifying the distribution of all outcomes. Default is "gaussian" see ?gbm for further details.}
 
 \item{train.fraction}{proportion of the sample used for training the multivariate additive model. If both \code{cv.folds} and \code{train.fraction} are specified, the CV is carried out within the training set.}
 
