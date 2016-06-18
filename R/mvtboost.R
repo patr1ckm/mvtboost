@@ -288,14 +288,10 @@ mvtbCV <- function(Y, X, n.trees, cv.folds, save.cv, s, mc.cores, ...) {
     
     # Last fold contains the full sample
     ## The 'if' notation is just to make sure it works on windows.
-    if(mc.cores > 1) { 
-      for(k in 1:(cv.folds+1)){
-        out.k[[k]] <- runone(k=k, cv.groups=cv.groups, sorig=s, Y=Y, X=X, n.trees=n.trees, ...) 
-      }
+    if(.Platform$OS.type == "unix") { 
+      out.k <- mclapply(1:(cv.folds + 1), runone, cv.groups=cv.groups, sorig=s, Y=Y, X=X, n.trees=n.trees, ..., mc.cores=mc.cores)
     } else {
-      for(k in 1:(cv.folds+1)){
-        out.k[[k]] <- runone(k=k, cv.groups=cv.groups, sorig=s, Y=Y, X=X, n.trees=n.trees, ...) 
-      }
+      out.k <- mclapply(1:(cv.folds + 1), runone, cv.groups=cv.groups, sorig=s, Y=Y, X=X, n.trees=n.trees, ..., mc.cores=1)
     }
         
     for(k in 1:cv.folds) {
