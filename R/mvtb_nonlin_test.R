@@ -192,7 +192,7 @@ intx.lm <- function (object,n.trees,which.y,data,n.preds,pred.names) {
         }
       }        
       ## form the prediction
-      prediction <- predict.mvtb(object,newdata=data.frame(pred.frame),n.trees = n.trees,drop=FALSE)[,which.y,]
+      prediction <- predict.mvtb.array(object,newdata=data.frame(pred.frame),n.trees = n.trees, drop=F)[,which.y,]
       interaction.test.model <- lm(prediction ~ as.factor(pred.frame[,1]) + as.factor(pred.frame[,2]))             
       interaction.flag <- round(mean(resid(interaction.test.model)^2)*1000,2)
       cross.tab[i,j] <- interaction.flag
