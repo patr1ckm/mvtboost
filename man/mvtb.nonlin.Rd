@@ -13,7 +13,7 @@ mvtb.nonlin(object, Y, X, n.trees = NULL, detect = "grid", scale = TRUE)
 
 \item{X}{matrix of responses}
 
-\item{n.trees}{number of trees. Defaults to the minimum number of trees given that minimize CV, test, training error.}
+\item{n.trees}{number of trees. Defaults to the minimum number of trees given that minimize CV, test, training error for each outcome.}
 
 \item{detect}{method for testing possible non-linear effects or interactions. Possible values are \code{"grid"}, \code{"influence"}, and \code{"lm"}. See details.}
 

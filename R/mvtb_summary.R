@@ -3,39 +3,41 @@
 #' The relative influence of a predictor is the reduction in sums of squares attributable to splits on individual predictors.
 #' It is often expressed as a percent (sums to 100).
 #' @param object \code{mvtb} output object
-#' @param n.trees number of trees to use. Defaults to the minimum number of trees by CV, test, or training error
+#' @param n.trees number of trees to use. Defaults to the minimum number of trees by CV, test, or training error for each outcome.
 #' @param relative How to scale the multivariate influences. If \code{"col"}, each column sums to 100. If \code{"tot"}, the whole matrix sums to 100 (a percent). Otherwise, the raw reductions in SSE are returned.
 #' @param ... Additional arguments passed to \code{gbm::relative.influence}
 #' @return Matrix of (relative) influences.
 #' @export 
 mvtb.ri <- function(object,n.trees=NULL,relative="col",...){
-  out <- object
-  if(any(unlist(lapply(out,function(li){is.raw(li)})))){
-    out <- mvtb.uncomp(out)
+  
+  if(any(unlist(lapply(object,function(li){is.raw(li)})))){
+    object <- mvtb.uncomp(object)
   }
-  if(is.null(n.trees)) { n.trees <- min(unlist(out$best.trees)) }
-  k <- length(out$models)
-  ri <- matrix(0,nrow=length(out$xnames),ncol=k)
+  k <- length(object$models)
+  if(is.null(n.trees)) { n.trees <- apply(object$best.trees, 1, min, na.rm=T) }
+  if(length(n.trees) == 1){ n.trees <- rep(n.trees, k)}
+  
+  ri <- matrix(0,nrow=length(object$xnames),ncol=k)
   for(i in 1:k) {
-    gbm.obj <- out$models[[i]]
-    ri[,i] <- gbm::relative.influence(gbm.obj,n.trees=n.trees,...)
+    gbm.obj <- object$models[[i]]
+    ri[,i] <- gbm::relative.influence(gbm.obj,n.trees=n.trees[i],...)
   }
   if(relative == "col"){
     ri <- matrix(apply(ri,2,function(col){col/sum(col)})*100,nrow=nrow(ri),ncol=ncol(ri))
   } else if (relative=="tot") {
     ri <- ri/sum(ri)*100
   }
-  colnames(ri) <- out$ynames
-  rownames(ri) <- out$xnames
+  colnames(ri) <- object$ynames
+  rownames(ri) <- object$xnames
   return(ri)  
 }
 
 
 #' @importFrom stats var
 mvtb.r2 <- function(object,Y,X,n.trees=NULL){
-  out <- object
-  if(is.null(n.trees)) { n.trees <- out$best.iter[[2]] }
-  p <- predict.mvtb(out,n.trees,newdata=X)
+  
+  if(is.null(n.trees)) { n.trees <- object$best.iter[[2]] }
+  p <- predict.mvtb(object,n.trees,newdata=X)
   1-apply(Y - p,2,var)/apply(Y,2,var)
 }
 
@@ -56,19 +58,20 @@ print.mvtb <- function(x,...) {
 #' 
 #' @param object mvtb output object
 #' @param print result (default is TRUE)
-#' @param n.trees number of trees used to compute relative influence. Defaults to the minimum number of trees by CV, test, or training error
+#' @param n.trees number of trees to use. Defaults to the minimum number of trees by CV, test, or training error for each outcome.
 #' @param relative relative If 'col', each column sums to 100. If 'tot', the whole matrix sums to 100 (a percent). If 'n', the raw reductions in SSE are returned.
 #' @param ... additional arguments affecting the summary produced.
 #' @return Returns the best number of trees, the univariate relative influence of each predictor for each outcome, and covariance explained in pairs of outcomes by each predictor
 #' @seealso \code{mvtb.ri}, \code{gbm.ri}, \code{mvtb.cluster}
 #' @export
 summary.mvtb <- function(object,print=TRUE,n.trees=NULL,relative="col",...) {
-  out <- object
-  if(any(unlist(lapply(out,function(li){is.raw(li)})))){
-    out <- mvtb.uncomp(out)
+  
+  if(any(unlist(lapply(object,function(li){is.raw(li)})))){
+    object <- mvtb.uncomp(object)
   }
-  if(is.null(n.trees)) { n.trees <- min(unlist(out$best.trees)) }
-  ri <- mvtb.ri(out,n.trees=n.trees,relative=relative)
+  if(is.null(n.trees)) { n.trees <- apply(object$best.trees, 1, min, na.rm=T) }
+  if(length(n.trees) == 1){ n.trees <- rep(n.trees, k)}
+  ri <- mvtb.ri(object,n.trees=n.trees,relative=relative)
   sum <- list(best.trees=n.trees,relative.influence=ri)
   if(print){ print(lapply(sum,function(o){round(o,2)})) }
   invisible(sum)
@@ -174,8 +177,4 @@ ri.one <- function(object,n.trees=1,var.names) {
   i <- as.numeric(names(rel.inf.compact)) + 1
   rel.inf[i] <- rel.inf.compact
   return(rel.inf = rel.inf)
-}
-
-get.best.trees <- function(object){
-  object$best.trees
 }

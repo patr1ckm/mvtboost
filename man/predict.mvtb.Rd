@@ -4,22 +4,20 @@
 \alias{predict.mvtb}
 \title{Predicted values}
 \usage{
-\method{predict}{mvtb}(object, n.trees = NULL, newdata, drop = TRUE, ...)
+\method{predict}{mvtb}(object, newdata, n.trees = NULL, ...)
 }
 \arguments{
 \item{object}{\code{mvtb} object}
 
-\item{n.trees}{number of trees. If a vector, returns predictions in an array. Defaults to the minimum number of trees by CV, test, or training error}
-
 \item{newdata}{matrix of predictors.}
 
-\item{drop}{\code{TRUE/FALSE} Drop any dimensions of length 1}
+\item{n.trees}{(vector) of the number of trees for each outcome. Defaults to the minimum number of trees by CV, test, or training error for each outcome.}
 
 \item{...}{not used}
 }
 \value{
-Returns an (array, matrix, vector) of predictions for all outcomes. The third dimension corresponds to the 
-predictions at a given number of trees, the second dimension corresponds to the number of outcomes.
+Returns a matrix or vector of predictions for all outcomes. 
+#' @export
 }
 \description{
 Predicted values

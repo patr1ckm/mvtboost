@@ -249,7 +249,7 @@ mvtb.fit <- function(Y,X,
                                   bag.fraction=bag.fraction,
                                   ...)
     }
-    yhat <- predict.mvtb(list(models=models),n.trees=1:n.trees,newdata=X,drop=FALSE)
+    yhat <- predict.mvtb.array(list(models=models),n.trees=1:n.trees,newdata=X,drop=FALSE)
     testerr <- trainerr <- rep(0,length=n.trees)
     for(i in 1:n.trees){
       R <- Y-yhat[,,i]
@@ -294,9 +294,9 @@ mvtbCV <- function(Y, X, n.trees, cv.folds, save.cv, s, mc.cores, ...) {
     # Last fold contains the full sample
     ## The 'if' notation is just to make sure it works on windows.
     if(.Platform$OS.type == "unix") { 
-      out.k <- mclapply(1:(cv.folds + 1), runone, cv.groups=cv.groups, sorig=s, Y=Y, X=X, n.trees=n.trees, ..., mc.cores=mc.cores)
+      out.k <- parallel::mclapply(1:(cv.folds + 1), runone, cv.groups=cv.groups, sorig=s, Y=Y, X=X, n.trees=n.trees, ..., mc.cores=mc.cores)
     } else {
-      out.k <- mclapply(1:(cv.folds + 1), runone, cv.groups=cv.groups, sorig=s, Y=Y, X=X, n.trees=n.trees, ..., mc.cores=1)
+      out.k <- parallel::mclapply(1:(cv.folds + 1), runone, cv.groups=cv.groups, sorig=s, Y=Y, X=X, n.trees=n.trees, ..., mc.cores=1)
     }
         
     for(k in 1:cv.folds) {
@@ -316,23 +316,13 @@ mvtbCV <- function(Y, X, n.trees, cv.folds, save.cv, s, mc.cores, ...) {
     return(l)
 }
 
-#' Predicted values
-#' @param object \code{mvtb} object
-#' @param newdata matrix of predictors. 
-#' @param n.trees number of trees. If a vector, returns predictions in an array. Defaults to the minimum number of trees by CV, test, or training error
-#' @param drop \code{TRUE/FALSE} Drop any dimensions of length 1
-#' @param ... not used
-#' @return Returns an (array, matrix, vector) of predictions for all outcomes. The third dimension corresponds to the 
-#' predictions at a given number of trees, the second dimension corresponds to the number of outcomes.
-#' @export
 #' @importFrom gbm predict.gbm
-#' 
-predict.mvtb <- function(object, n.trees=NULL, newdata, drop=TRUE, ...) {
+predict.mvtb.array <- function(object, newdata, n.trees, drop=TRUE, ...) {
   out <- object
   if(any(unlist(lapply(out,function(li){is.raw(li)})))){
     out <- mvtb.uncomp(out)
   }
-  if(is.null(n.trees)) { n.trees <- min(unlist(out$best.trees)) }
+  #if(is.null(n.trees)) { n.trees <- min(unlist(out$best.trees)) }
   K <- length(out$models)
   treedim <- ifelse(length(n.trees) > 1,max(n.trees),1)
   Pred <- array(0,dim=c(nrow(newdata),K,treedim))  
@@ -350,6 +340,33 @@ predict.mvtb <- function(object, n.trees=NULL, newdata, drop=TRUE, ...) {
   return(Pred)
 }
 
-#
+#' Predicted values
+#' @param object \code{mvtb} object
+#' @param newdata matrix of predictors. 
+#' @param n.trees (vector) of the number of trees for each outcome. Defaults to the minimum number of trees by CV, test, or training error for each outcome.
+#' @param ... not used
+#' @return Returns a matrix or vector of predictions for all outcomes. 
+#'#' @export
+#' @importFrom gbm predict.gbm
+predict.mvtb <- function(object, newdata, n.trees=NULL, ...) {
+  out <- object
+  if(any(unlist(lapply(out,function(li){is.raw(li)})))){
+    out <- mvtb.uncomp(out)
+  }
+  K <- length(out$models)
+  if(is.null(n.trees)) { n.trees <- apply(object$best.trees, 1, min, na.rm=T) }
+  if(length(n.trees) == 1){ n.trees <- rep(n.trees, k)}
+
+  
+  
+  Pred <- matrix(0,nrow(newdata),K)
+  for(k in 1:K) {                                     
+    p <- rep(0,nrow(newdata))        
+    p <- predict.gbm(out$models[[k]],n.trees=n.trees,newdata=newdata)    
+    Pred[,k] <- p
+  }
+  return(Pred)
+}
+
 
 

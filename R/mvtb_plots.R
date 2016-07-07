@@ -7,7 +7,7 @@
 #' @param x \code{mvtb} output object
 #' @param predictor.no index of the predictor variable
 #' @param response.no index of the response variable
-#' @param n.trees desired number of trees. Defaults to the minimum number of trees by CV, test, or training error
+#' @param n.trees desired number of trees. Defaults to the minimum number of trees by CV, test, or training error for a given outcome
 #' @param X optional vector, matrix, or data.frame of predictors. If included, a 'rug' (a small vertical line for each observation) is plotted on the x-axis showing the density of \code{predictor.no}. 
 #' @param xlab label of the x axis
 #' @param ylab label of the y axis
@@ -26,16 +26,18 @@ plot.mvtb <- function(x,predictor.no=1,response.no=1,n.trees=NULL,X=NULL,xlab=NU
   if(any(unlist(lapply(x,function(li){is.raw(li)})))){
     x <- mvtb.uncomp(x)
   }
-  if(is.null(n.trees)) { n.trees <- min(unlist(x$best.trees)) }
+  if(is.null(n.trees)) { n.trees <- apply(object$best.trees, 1, min, na.rm=T)[response.no] }
   gbm.obj <- x$models[[response.no]]
-  ri <- gbm::relative.influence(gbm.obj,n.trees=n.trees)/sum(gbm::relative.influence(gbm.obj,n.trees=n.trees))*100
+  ri <- gbm::relative.influence(gbm.obj,n.trees=n.trees)
+  ri <-  ri / sum(ri)*100 
   ri <- ri[predictor.no]
-  #gbm.obj <- convert.mvtb.gbm(out,k=response.no)
+  
   if(is.null(xlab)){ 
     xlab <- paste0(names(ri)," ", formatC(ri,2), "%")
   }
   if(is.null(ylab)) { ylab <- x$ynames[response.no]}
-  grid <- gbm::plot.gbm(gbm.obj,i.var = predictor.no,n.trees = n.trees,perspective=TRUE,return.grid=TRUE)  
+  grid <- gbm::plot.gbm(gbm.obj,i.var = predictor.no,n.trees = n.trees, 
+                        perspective=TRUE, return.grid=TRUE)  
   if(return.grid==FALSE){
     plot(y=grid$y,x=grid[,1],type="l",bty="n",xlab=xlab,ylab=ylab,...)
     if(!is.null(X)) { rug(jitter(X[,predictor.no])) }
@@ -55,7 +57,7 @@ plot.mvtb <- function(x,predictor.no=1,response.no=1,n.trees=NULL,X=NULL,xlab=NU
 #' @param object \code{mvtb} output object
 #' @param response.no index of the response variable
 #' @param predictor.no vector containing indices of the predictor variables to plot
-#' @param n.trees desired number of trees. Defaults to the minimum number of trees by CV, test, or training error
+#' @param n.trees desired number of trees. Defaults to the minimum number of trees by CV, test, or training error for a given outcome
 #' @param phi angle of viewing direction. See \code{?persp}.
 #' @param theta angle of viewing direction See \code{?persp}.
 #' @param r distance from eye to center. See \code{?persp}.
@@ -75,7 +77,8 @@ mvtb.perspec <- function(object,response.no=1,predictor.no=1:2,n.trees=NULL,
     object <- mvtb.uncomp(object)
   }
   if(length(object$var.names) == 1) stop("Need more than one predictor for perspective plot") 
-  if(is.null(n.trees)) { n.trees <- min(unlist(object$best.trees)) }
+  if(is.null(n.trees)) { n.trees <- apply(object$best.trees, 1, min, na.rm=T)[response.no] }
+
   gbm.obj <- object$models[[response.no]]
   grid <- gbm::plot.gbm(gbm.obj,i.var = predictor.no,n.trees = n.trees,perspective=TRUE,return.grid=TRUE)
   x <- as.numeric(unique(grid[,1]))

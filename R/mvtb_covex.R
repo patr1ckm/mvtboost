@@ -3,7 +3,7 @@
 #' @param object an object of class \code{mvtb}
 #' @param Y vector, matrix, or data.frame for outcome variables with no missing values. To easily compare influences across outcomes and for numerical stability, outcome variables should be scaled to have unit variance.
 #' @param X vector, matrix, or data.frame of predictors. For best performance, continuous predictors should be scaled to have unit variance. Categorical variables should converted to factors.
-#' @param n.trees number of trees to use. Defaults to the minimum number of trees by CV, test, or training error
+#' @param n.trees number of trees to use. Defaults to the minimum number of trees by CV, test, or training error, and the maximum of this for all outcomes.
 #' @param iter.details \code{TRUE/FALSE}. Return the loss, relative loss, and selected predictors at each iteration as a list
 # #' @param cov.discrep Norm of the covariance discrepancy (see details)
 # #' @param alpha The weight given to covariance explained relative to variance explained in the loss function (see details)
@@ -24,10 +24,12 @@ mvtb.covex <- function(object,Y,X,n.trees=NULL,iter.details=FALSE) {
   if(alpha > 1 | alpha < 0){ stop("alpha should be > 0, < 1")}
   if(any(is.na(Y))){ stop("NAs not allowed in outcome variables.")}
   
+  if(is.null(n.trees)) { n.trees <- max(apply(object$best.trees, 1, min, na.rm=T))}
+
   n <- nrow(X); k <- ncol(Y); p <- ncol(X);
   
   # Get models
-  if(is.null(n.trees)){n.trees <- min(unlist(object$best.trees))}
+
   finaltree <- list()
   for(m in 1:k) { 
     finaltree[[m]] <- object$models[[m]]$trees
@@ -36,7 +38,7 @@ mvtb.covex <- function(object,Y,X,n.trees=NULL,iter.details=FALSE) {
   
   ## Covex
   D <- Rm <- matrix(0,n,k)   
-  Res.cov <- array(0,dim=c(k,k,k,n.trees))
+  Res.cov <- array(0,dim=c(k,k,k, n.trees))
   covex <- array(0,dim=c(p,k*(k+1)/2))
   rownames(covex) <- colnames(X)
   names <- outer(1:k,1:k,function(x,y){paste0(object$ynames[x],"-",object$ynames[y])})
@@ -44,17 +46,17 @@ mvtb.covex <- function(object,Y,X,n.trees=NULL,iter.details=FALSE) {
   
   ## Loss function evaluations
   ## raw loss, relative loss, overall loss compared to cov(Y)
-  wm.raw <- wm.rel <- matrix(0,nrow=n.trees,ncol=k)
+  wm.raw <- wm.rel <- matrix(NA,nrow=max(n.trees),ncol=k)
   
   ## Influence
   rel.infl <- w.rel.infl <- array(0,dim=c(p,k,n.trees)) # influences at every iteration
-  bestxs   <- matrix(0,nrow=n.trees,ncol=k) 
+  bestxs   <- matrix(0,nrow=max(n.trees),ncol=k) 
   
   
   init <- unlist(lapply(object$models,function(m){m$initF}))
   D <- Rm <- yhatm <- matrix(0,n,k) 
   for(m in 1:k) { D[,m] <- Y[,m]-init[m] } # current residuals at iteration 1
-  yhat <- predict.mvtb(list(models=object$models),n.trees=1:n.trees,newdata=X,drop=FALSE)
+  yhat <- predict.mvtb.array(list(models=object$models),n.trees=1:n.trees,newdata=X,drop=FALSE)
   yhat <- array(c(rep(init,each=n),yhat),dim=c(n,k,n.trees+1))
   Dpred <- yhat[,,2:(n.trees+1),drop=F]-yhat[,,1:(n.trees),drop=F] # Dpred is the unique contribution of each tree
   s <- object$s

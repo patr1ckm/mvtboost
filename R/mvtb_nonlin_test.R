@@ -22,7 +22,7 @@
 #' @param object object of class \code{mvtb}
 #' @param Y matrix of predictors
 #' @param X matrix of responses
-#' @param n.trees number of trees. Defaults to the minimum number of trees given that minimize CV, test, training error.
+#' @param n.trees number of trees. Defaults to the minimum number of trees given that minimize CV, test, training error for each outcome.
 #' @param detect method for testing possible non-linear effects or interactions. Possible values are \code{"grid"}, \code{"influence"}, and \code{"lm"}. See details.
 #' @param scale For method \code{"influence"}, whether the resulting influences are scaled to sum to 100.
 #' @return For each outcome, a list is produced showing the interactions in two forms. The first is \code{$rank.list}, which shows the nonlinear effect for each pair of predictors ranked according to the size of the departure from non-linearity. 
@@ -56,7 +56,9 @@ mvtb.nonlin <-function(object, Y, X, n.trees=NULL,detect="grid",scale=TRUE) {
   if(any(unlist(lapply(out,function(li){is.raw(li)})))){
     out <- mvtb.uncomp(out)
   }
-  if(is.null(n.trees)) { n.trees <- min(unlist(out$best.trees)) }
+  if(is.null(n.trees)) { n.trees <- apply(object$best.trees, 1, min, na.rm=T) }
+  if(length(n.trees) == 1){ n.trees <- rep(n.trees, k)}
+  
   data <- X
   n.preds <- ncol(data)
   if(!is.null(colnames(data))) { 
@@ -81,11 +83,11 @@ mvtb.nonlin <-function(object, Y, X, n.trees=NULL,detect="grid",scale=TRUE) {
   
   doone <- function(which.y,mvtb.out,detect.function=1,data=data,n.preds=n.preds,pred.names=pred.names,n.trees=n.trees,scale=scale) {
     if(detect.function==1) {
-      cross.tab <- intx.grid(mvtb.out,num.pred=n.preds,k=which.y, n.trees=n.trees)
+      cross.tab <- intx.grid(mvtb.out,num.pred=n.preds,k=which.y, n.trees=n.trees[which.y])
     } else if (detect.function==2) {
-      cross.tab <- intx.lm(mvtb.out,n.trees=n.trees,which.y=which.y,data=data,n.preds=n.preds,pred.names=pred.names)
+      cross.tab <- intx.lm(mvtb.out,n.trees=n.trees[which.y],which.y=which.y,data=data,n.preds=n.preds,pred.names=pred.names)
     } else {
-      cross.tab <- intx.influence(mvtb.out,k=which.y,n.trees=n.trees,scale=scale)
+      cross.tab <- intx.influence(mvtb.out,k=which.y,n.trees=n.trees[which.y],scale=scale)
     }
     dimnames(cross.tab) <- list(pred.names,pred.names)
     

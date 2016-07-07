@@ -14,7 +14,7 @@
 
 \item{response.no}{index of the response variable}
 
-\item{n.trees}{desired number of trees. Defaults to the minimum number of trees by CV, test, or training error}
+\item{n.trees}{desired number of trees. Defaults to the minimum number of trees by CV, test, or training error for a given outcome}
 
 \item{X}{optional vector, matrix, or data.frame of predictors. If included, a 'rug' (a small vertical line for each observation) is plotted on the x-axis showing the density of \code{predictor.no}.}
 

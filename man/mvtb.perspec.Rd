@@ -15,7 +15,7 @@ mvtb.perspec(object, response.no = 1, predictor.no = 1:2, n.trees = NULL,
 
 \item{predictor.no}{vector containing indices of the predictor variables to plot}
 
-\item{n.trees}{desired number of trees. Defaults to the minimum number of trees by CV, test, or training error}
+\item{n.trees}{desired number of trees. Defaults to the minimum number of trees by CV, test, or training error for a given outcome}
 
 \item{phi}{angle of viewing direction. See \code{?persp}.}
 

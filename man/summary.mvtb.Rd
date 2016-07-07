@@ -12,7 +12,7 @@
 
 \item{print}{result (default is TRUE)}
 
-\item{n.trees}{number of trees used to compute relative influence. Defaults to the minimum number of trees by CV, test, or training error}
+\item{n.trees}{number of trees to use. Defaults to the minimum number of trees by CV, test, or training error for each outcome.}
 
 \item{relative}{relative If 'col', each column sums to 100. If 'tot', the whole matrix sums to 100 (a percent). If 'n', the raw reductions in SSE are returned.}
 
