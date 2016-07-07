@@ -7,7 +7,7 @@ mvtb.sep <- function(Y,X,n.trees=100,
                  train.fraction=1,
                  bag.fraction=1,
                  cv.folds=1,
-                 subset=NULL,
+                 s=NULL,
                  seednum=NULL,
                  compress=FALSE,
                  mc.cores=1,
@@ -22,14 +22,15 @@ mvtb.sep <- function(Y,X,n.trees=100,
   if(!is.null(seednum)) set.seed(seednum)
   if(train.fraction < 1) nTrain <- ceiling(train.fraction*n) 
   
-  if(is.null(subset)) { 
+  if(is.null(s)) { 
     s <- 1:n 
+    snull <- TRUE
   } else {
+    snull <- FALSE
     nTrain <- NULL
-    s <- subset
   }
 
-  do.one <- function(y, x, s, ...){ gbm.fit(y=y[s], x=x[s,], ...) }
+  do.one <- function(y, x, s, ...){ gbm::gbm.fit(y=y[s], x=x[s,], ...) }
   
   get.pred.err <- function(o, y, x, n.trees){
     yhat.iter <- predict(o, newdata=x, n.trees=1:n.trees) 
@@ -53,7 +54,7 @@ mvtb.sep <- function(Y,X,n.trees=100,
     for(i in 1:cv.folds){
       train <- s[folds != i]
       test <- s[folds == i]
-      cv.mods[[i]] <- mclapply(Y, FUN=do.one, x=X, n.trees=n.trees, shrinkage=shrinkage, 
+      cv.mods[[i]] <- parallel::mclapply(Y, FUN=do.one, x=X, n.trees=n.trees, shrinkage=shrinkage, 
                              interaction.depth=interaction.depth, distribution=distribution,
                              nTrain=nTrain, bag.fraction=bag.fraction, s=s, 
                              keep.data=FALSE, verbose=verbose, mc.cores=mc.cores,...)
@@ -61,7 +62,7 @@ mvtb.sep <- function(Y,X,n.trees=100,
     }
   }
   
-  mods <- mclapply(Y, FUN=do.one, x=X, n.trees=n.trees, shrinkage=shrinkage, 
+  mods <- parallel::mclapply(Y, FUN=do.one, x=X, n.trees=n.trees, shrinkage=shrinkage, 
                  interaction.depth=interaction.depth, distribution=distribution,
                  nTrain=nTrain, bag.fraction=bag.fraction, s=s, 
                  keep.data=FALSE, verbose=verbose, mc.cores=mc.cores,...)
@@ -74,7 +75,7 @@ mvtb.sep <- function(Y,X,n.trees=100,
     cv.err <- lapply(1:ncol(Y), function(i){ rep(NaN, n.trees) })
   }
   names(cv.err) <- colnames(Y)
-  if(is.null(subset)){
+  if(snull){
     test.err <- lapply(mods, function(o){ o$valid.error})
   } else {
     test.err <- get.test.err(mods, Y=Y, x=X, s=s, n.trees=n.trees)
@@ -93,8 +94,12 @@ mvtb.sep <- function(Y,X,n.trees=100,
                      test = sapply(test.err, which.min.na),
                      oob = sapply(oob.err, which.min.na), 
                      cv = sapply(cv.err, which.min.na))
-  
-  return(list(mods=mods, best.trees=best.trees, 
-              train.err=train.err, oob.err=oob.err, cv.err=cv.err, test.err=test.err))
+  rownames(best.trees) <- colnames(Y)
+  fl <- list(mods=mods, best.trees=best.trees, 
+              train.err=train.err, oob.err=oob.err, cv.err=cv.err, test.err=test.err,
+              s=s,n=nrow(X),xnames=colnames(X),ynames=colnames(Y))
+  class(fl) <- "mvtb"
+  return(fl)
    
 }
+

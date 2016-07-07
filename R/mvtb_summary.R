@@ -175,3 +175,7 @@ ri.one <- function(object,n.trees=1,var.names) {
   rel.inf[i] <- rel.inf.compact
   return(rel.inf = rel.inf)
 }
+
+get.best.trees <- function(object){
+  object$best.trees
+}

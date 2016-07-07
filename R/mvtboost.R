@@ -186,8 +186,13 @@ mvtb <- function(Y,X,n.trees=100,
   models <-  out.fit$models
   trainerr <- out.fit$trainerr
   testerr <- out.fit$testerr
+  cv <- ifelse(is.null(best.iters.cv), NA, best.iters.cv)
+  test <- ifelse(all(is.nan(testerr)), NA, which.min(testerr))
 
-  best.trees <- list(best.testerr=which.min(testerr),best.cv=best.iters.cv,last=n.trees)
+  # can't do oob
+  best.trees <- list(train=which.min(trainerr),test=test, oob=NA, cv=cv)
+  best.trees <- do.call(rbind, lapply(1:k, function(i){data.frame(best.trees)}))
+  rownames(best.trees) <- colnames(Y)
 
   if(!save.cv){ocv <- NULL}
 
