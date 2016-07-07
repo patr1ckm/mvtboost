@@ -16,8 +16,7 @@
 \item{...}{not used}
 }
 \value{
-Returns a matrix or vector of predictions for all outcomes. 
-#' @export
+Returns a matrix or vector of predictions for all outcomes.
 }
 \description{
 Predicted values

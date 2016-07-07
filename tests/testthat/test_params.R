@@ -11,7 +11,7 @@ Y <- X %*% B + E
 
 test_that("n.trees", {
 r <- mvtb(X=X,Y=Y,n.trees=50)
-expect_equal(r$best.trees$last,50)
+expect_equal(r$best.trees$train,rep(50, 4))
 })
 
 test_that("train.fraction", {
@@ -65,9 +65,9 @@ test_that("mvtb.uncomp", {
 test_that("iter.details", {
 r <- mvtb(X=X,Y=Y,n.trees=5, seednum=8, compress=FALSE, cv.folds=3, save.cv=T, iter.details = T)
 expect_true(all(c("trainerr", "testerr", "cv.err", "ocv") %in% names(r)))
-expect_length(r$testerr, r$best.trees$last)
-expect_length(r$trainerr, r$best.trees$last)
-expect_length(r$cv.err, r$best.trees$last)
+expect_length(r$testerr, r$best.trees$train[1])
+expect_length(r$trainerr, r$best.trees$train[1])
+expect_length(r$cv.err, r$best.trees$train[1])
 
 r <- mvtb(X=X,Y=Y,n.trees=5, seednum=8, compress=FALSE, cv.folds=3, save.cv=F, iter.details = F)
 expect_named(r,c("models", "best.trees", "params", "s", "ocv", "n", "xnames", "ynames"))

@@ -69,6 +69,7 @@ summary.mvtb <- function(object,print=TRUE,n.trees=NULL,relative="col",...) {
   if(any(unlist(lapply(object,function(li){is.raw(li)})))){
     object <- mvtb.uncomp(object)
   }
+  k <- length(object$models)
   if(is.null(n.trees)) { n.trees <- apply(object$best.trees, 1, min, na.rm=T) }
   if(length(n.trees) == 1){ n.trees <- rep(n.trees, k)}
   ri <- mvtb.ri(object,n.trees=n.trees,relative=relative)

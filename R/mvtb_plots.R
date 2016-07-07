@@ -26,7 +26,7 @@ plot.mvtb <- function(x,predictor.no=1,response.no=1,n.trees=NULL,X=NULL,xlab=NU
   if(any(unlist(lapply(x,function(li){is.raw(li)})))){
     x <- mvtb.uncomp(x)
   }
-  if(is.null(n.trees)) { n.trees <- apply(object$best.trees, 1, min, na.rm=T)[response.no] }
+  if(is.null(n.trees)) { n.trees <- apply(x$best.trees, 1, min, na.rm=T)[response.no] }
   gbm.obj <- x$models[[response.no]]
   ri <- gbm::relative.influence(gbm.obj,n.trees=n.trees)
   ri <-  ri / sum(ri)*100 
@@ -98,13 +98,13 @@ mvtb.perspec <- function(object,response.no=1,predictor.no=1:2,n.trees=NULL,
 
 
 # Pairwise plot for 2 predictors and 1 response. 
-plot.pw.perspec <- function(out,response.no,predictor.no,npairs=3,nonlin.rank=NULL,p1=NULL,p2=NULL,theta=rep(-55,npairs),...){
-  if(any(unlist(lapply(out,function(li){is.raw(li)})))){
-    out <- mvtb.uncomp(out)
+plot.pw.perspec <- function(object,response.no,predictor.no,npairs=3,nonlin.rank=NULL,p1=NULL,p2=NULL,theta=rep(-55,npairs),...){
+  if(any(unlist(lapply(object,function(li){is.raw(li)})))){
+    object <- mvtb.uncomp(object)
   }
-  pred.names <- out$iter.models[[1]][[1]]$var.names
+  pred.names <- object$iter.models[[1]][[1]]$var.names
   if(is.null(nonlin.rank)){
-    ris <- sort(out$ri[[2]][,response.no],decreasing=T)
+    ris <- sort(object$ri[[2]][,response.no],decreasing=T)
     if(is.null(p1)) p1 <- rep(match(names(ris[predictor.no]),pred.names),npairs)
     if(is.null(p2)) p2 <- match(names(ris[(predictor.no+1):(predictor.no+npairs+1)]),pred.names)
   } else {
@@ -113,7 +113,7 @@ plot.pw.perspec <- function(out,response.no,predictor.no,npairs=3,nonlin.rank=NU
     if(is.null(p2)) p2 <- r$var2.index[predictor.no:(predictor.no+npairs-1)]
   }
   for(i in 1:npairs) {
-    mvtb.perspec(out,response.no=response.no,predictor.no=c(p1[i],p2[i]),
+    mvtb.perspec(object,response.no=response.no,predictor.no=c(p1[i],p2[i]),
                  xlab=pred.names[p1[i]],ylab=pred.names[p2[i]],theta=theta[i],...)
   }
 }

@@ -52,10 +52,11 @@ mvtb.nonlin <-function(object, Y, X, n.trees=NULL,detect="grid",scale=TRUE) {
   #
   # p. miller, February 2015. Updated for multiple outcome variables
   # j. leathwick, j. elith - May 2007
-  out <- object
-  if(any(unlist(lapply(out,function(li){is.raw(li)})))){
-    out <- mvtb.uncomp(out)
+  object <- object
+  if(any(unlist(lapply(object,function(li){is.raw(li)})))){
+    object <- mvtb.uncomp(object)
   }
+  k <- length(object$models)
   if(is.null(n.trees)) { n.trees <- apply(object$best.trees, 1, min, na.rm=T) }
   if(length(n.trees) == 1){ n.trees <- rep(n.trees, k)}
   
@@ -64,12 +65,12 @@ mvtb.nonlin <-function(object, Y, X, n.trees=NULL,detect="grid",scale=TRUE) {
   if(!is.null(colnames(data))) { 
     pred.names <- colnames(data)
   } else {
-    pred.names <- out$models[[1]]$var.names
+    pred.names <- object$models[[1]]$var.names
   }
   if(!is.null(colnames(Y))){
     col.names <- colnames(Y)
   } else {
-    col.names <- out$ynames
+    col.names <- object$ynames
   }
   Y <- as.matrix(Y)
   
@@ -81,13 +82,13 @@ mvtb.nonlin <-function(object, Y, X, n.trees=NULL,detect="grid",scale=TRUE) {
     detect.function <- 2
   }
   
-  doone <- function(which.y,mvtb.out,detect.function=1,data=data,n.preds=n.preds,pred.names=pred.names,n.trees=n.trees,scale=scale) {
+  doone <- function(which.y,mvtb.object,detect.function=1,data=data,n.preds=n.preds,pred.names=pred.names,n.trees=n.trees,scale=scale) {
     if(detect.function==1) {
-      cross.tab <- intx.grid(mvtb.out,num.pred=n.preds,k=which.y, n.trees=n.trees[which.y])
+      cross.tab <- intx.grid(mvtb.object,num.pred=n.preds,k=which.y, n.trees=n.trees[which.y])
     } else if (detect.function==2) {
-      cross.tab <- intx.lm(mvtb.out,n.trees=n.trees[which.y],which.y=which.y,data=data,n.preds=n.preds,pred.names=pred.names)
+      cross.tab <- intx.lm(mvtb.object,n.trees=n.trees[which.y],which.y=which.y,data=data,n.preds=n.preds,pred.names=pred.names)
     } else {
-      cross.tab <- intx.influence(mvtb.out,k=which.y,n.trees=n.trees[which.y],scale=scale)
+      cross.tab <- intx.influence(mvtb.object,k=which.y,n.trees=n.trees[which.y],scale=scale)
     }
     dimnames(cross.tab) <- list(pred.names,pred.names)
     
@@ -120,15 +121,15 @@ mvtb.nonlin <-function(object, Y, X, n.trees=NULL,detect="grid",scale=TRUE) {
     return(list(rank.list = rank.list, nonlin.full = cross.tab))
   }
   
-  res <- lapply(1:ncol(Y),doone,mvtb.out=out,detect.function=detect.function,n.trees=n.trees,pred.names=pred.names,n.preds=n.preds,data=data,scale=scale)
+  res <- lapply(1:ncol(Y),doone,mvtb.object=object,detect.function=detect.function,n.trees=n.trees,pred.names=pred.names,n.preds=n.preds,data=data,scale=scale)
   names(res) <- colnames(Y)
   return(res)
 }
 
 #' @importFrom stats residuals resid lm
-intx.grid <- function(mvtb.out,num.pred,k=1,n.trees) {
-  #gbm.obj <- convert.mvtb.gbm(r=mvtb.out,k=k)
-  gbm.obj <- mvtb.out$models[[k]]
+intx.grid <- function(mvtb.object,num.pred,k=1,n.trees) {
+  #gbm.obj <- convert.mvtb.gbm(r=mvtb.object,k=k)
+  gbm.obj <- mvtb.object$models[[k]]
   cross.tab <- matrix(0,num.pred,num.pred)
   #dimnames(cross.tab) <- list(pred.names,pred.names)
   for(i in 1:(num.pred-1)) {
@@ -155,7 +156,7 @@ intx.grid <- function(mvtb.out,num.pred,k=1,n.trees) {
 }
 
 #' @importFrom stats residuals resid lm
-intx.lm <- function (out,n.trees,which.y,data,n.preds,pred.names) {
+intx.lm <- function (object,n.trees,which.y,data,n.preds,pred.names) {
   cross.tab <- matrix(0,n.preds,n.preds)
   for (i in 1:(n.preds - 1)) {  # step through the predictor set
     if (is.vector(data[,i])) {  # create a sequence through the range
@@ -191,7 +192,7 @@ intx.lm <- function (out,n.trees,which.y,data,n.preds,pred.names) {
         }
       }        
       ## form the prediction
-      prediction <- predict.mvtb(out,newdata=data.frame(pred.frame),n.trees = n.trees,drop=FALSE)[,which.y,]
+      prediction <- predict.mvtb(object,newdata=data.frame(pred.frame),n.trees = n.trees,drop=FALSE)[,which.y,]
       interaction.test.model <- lm(prediction ~ as.factor(pred.frame[,1]) + as.factor(pred.frame[,2]))             
       interaction.flag <- round(mean(resid(interaction.test.model)^2)*1000,2)
       cross.tab[i,j] <- interaction.flag
@@ -203,7 +204,7 @@ intx.lm <- function (out,n.trees,which.y,data,n.preds,pred.names) {
 
 ## Purpose: Another way to detect possible interactions. This is done by computing
 ## the relative influence attributable to splitting on any predictors after the first split.
-## The results are printed for each outcome variable in a table where the first split is on the 
+## The results are printed for each objectcome variable in a table where the first split is on the 
 ## predictor in the column, and the other splits are in the rows.
 
 ## Arguments: 

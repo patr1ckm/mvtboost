@@ -280,23 +280,23 @@ mvtbCV <- function(Y, X, n.trees, cv.folds, save.cv, s, mc.cores, ...) {
     testerr.k <- matrix(NA,nrow=n.trees,ncol=cv.folds)
     out.k <- list()
 
-    runone <- function(k,cv.groups,sorig, ...){
+    runone <- function(k,cv.groups,sorig, x, ...){
       if(any(k %in% cv.groups)) {
         s <- sorig[which(cv.groups != k)]
       } else { 
         # since we already subsetted on s, fit to entire training sample
         s <- sorig
       }
-      out <- mvtb.fit(s=s, ...) # the only thing that changes is s. everything is passed via ..., including Y and X
+      out <- mvtb.fit(s=s, X=x, ...) # the only thing that changes is s. everything is passed via ..., including Y and X
       return(out)
     }
     
     # Last fold contains the full sample
     ## The 'if' notation is just to make sure it works on windows.
     if(.Platform$OS.type == "unix") { 
-      out.k <- parallel::mclapply(1:(cv.folds + 1), runone, cv.groups=cv.groups, sorig=s, Y=Y, X=X, n.trees=n.trees, ..., mc.cores=mc.cores)
+      out.k <- parallel::mclapply(1:(cv.folds + 1), FUN=runone, cv.groups=cv.groups, sorig=s, Y=Y, x=X, n.trees=n.trees, ..., mc.cores=mc.cores)
     } else {
-      out.k <- parallel::mclapply(1:(cv.folds + 1), runone, cv.groups=cv.groups, sorig=s, Y=Y, X=X, n.trees=n.trees, ..., mc.cores=1)
+      out.k <- parallel::mclapply(1:(cv.folds + 1), FUN=runone, cv.groups=cv.groups, sorig=s, Y=Y, x=X, n.trees=n.trees, ..., mc.cores=1)
     }
         
     for(k in 1:cv.folds) {
@@ -318,17 +318,17 @@ mvtbCV <- function(Y, X, n.trees, cv.folds, save.cv, s, mc.cores, ...) {
 
 #' @importFrom gbm predict.gbm
 predict.mvtb.array <- function(object, newdata, n.trees, drop=TRUE, ...) {
-  out <- object
-  if(any(unlist(lapply(out,function(li){is.raw(li)})))){
-    out <- mvtb.uncomp(out)
+
+  if(any(unlist(lapply(object,function(li){is.raw(li)})))){
+    object <- mvtb.uncomp(object)
   }
-  #if(is.null(n.trees)) { n.trees <- min(unlist(out$best.trees)) }
-  K <- length(out$models)
+  #if(is.null(n.trees)) { n.trees <- min(unlist(object$best.trees)) }
+  K <- length(object$models)
   treedim <- ifelse(length(n.trees) > 1,max(n.trees),1)
   Pred <- array(0,dim=c(nrow(newdata),K,treedim))  
   for(k in 1:K) {                                     
     p <- rep(0,nrow(newdata))        
-    p <- predict.gbm(out$models[[k]],n.trees=n.trees,newdata=newdata)    
+    p <- predict.gbm(object$models[[k]],n.trees=n.trees,newdata=newdata)    
     Pred[,k,] <- p
   }
   #if(length(n.trees) == 1) {
@@ -346,23 +346,20 @@ predict.mvtb.array <- function(object, newdata, n.trees, drop=TRUE, ...) {
 #' @param n.trees (vector) of the number of trees for each outcome. Defaults to the minimum number of trees by CV, test, or training error for each outcome.
 #' @param ... not used
 #' @return Returns a matrix or vector of predictions for all outcomes. 
-#'#' @export
+#' @export
 #' @importFrom gbm predict.gbm
 predict.mvtb <- function(object, newdata, n.trees=NULL, ...) {
-  out <- object
-  if(any(unlist(lapply(out,function(li){is.raw(li)})))){
-    out <- mvtb.uncomp(out)
+  if(any(unlist(lapply(object,function(li){is.raw(li)})))){
+    object <- mvtb.uncomp(object)
   }
-  K <- length(out$models)
+  K <- length(object$models)
   if(is.null(n.trees)) { n.trees <- apply(object$best.trees, 1, min, na.rm=T) }
-  if(length(n.trees) == 1){ n.trees <- rep(n.trees, k)}
-
-  
+  if(length(n.trees) == 1){ n.trees <- rep(n.trees, K)}
   
   Pred <- matrix(0,nrow(newdata),K)
   for(k in 1:K) {                                     
     p <- rep(0,nrow(newdata))        
-    p <- predict.gbm(out$models[[k]],n.trees=n.trees,newdata=newdata)    
+    p <- predict.gbm(object$models[[k]],n.trees=n.trees,newdata=newdata)    
     Pred[,k] <- p
   }
   return(Pred)
