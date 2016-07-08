@@ -13,6 +13,7 @@ mvtb(Y, X,
      train.fraction = 1, 
      bag.fraction = 1, 
      cv.folds = 1, 
+     keep.data = FALSE,
      s = NULL, 
      seednum = NULL, 
      compress = FALSE, 
@@ -47,6 +48,8 @@ mvtb.fit(Y,X,
 \item{bag.fraction}{proportion of the training sample used to fit univariate trees for each response at each iteration. Default: 1}
 
 \item{cv.folds}{number of cross validation folds. Default: 1. Runs k + 1 models, where the k models are run in parallel and the final model is run on the entire sample. If larger than 1, the number of trees that minimize the multivariate MSE averaged over k-folds is reported in \code{object$best.trees}}
+
+\item{keep.data}{a logical variable indicating whether to keep the data stored with the object.}
 
 \item{s}{vector of indices denoting observations to be used for the training sample. If \code{s} is given, \code{train.fraction} is ignored.}
 

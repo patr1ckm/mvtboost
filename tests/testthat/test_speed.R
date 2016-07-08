@@ -1,16 +1,9 @@
 
-## ps <- c(10,50)
-## niters <- c(10,100)
-## lps <- list()
-## res <- cbind(expand.grid(niters=niters,ps=ps),time=rep(0,length(ps)*length(niters)))
+context("speed")
+x <- matrix(rnorm(1000*5), 1000, 5)
+y <- x * 5 + rnorm(n)
 
-## context("speed")
-## ## set.seed(123)
-## ## for(i in 1:nrow(res)) {
-## ##     d <- sparse.dgen(p=res$ps[i],numpred=3)
-## ##     res$time[i] <- system.time(mvtb(X=d$X,Y=d$Y,niter=res$niters[i],alpha=.5,mv.shrink=.01,trainfrac=1,samp.iter=FALSE,loss.function=1,weight.type=2))[1]
-## ## }
-
-
-## #print(res)
-
+o <- replicate(5, system.time(mvtb.sep(Y=y, X=x, n.trees=100))[3])
+o2 <- replicate(5, system.time(mvtb(Y=y, X=x, n.trees=100))[3])
+expect_lt(mean(o), mean(o2))
+cat(paste0("percent improvement: ", round((mean(o2) - mean(o))/mean(o2), 3)*100, "%"), fill=T)

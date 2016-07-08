@@ -11,6 +11,7 @@
 #' @param train.fraction  proportion of the sample used for training the multivariate additive model. If both \code{cv.folds} and \code{train.fraction} are specified, the CV is carried out within the training set.
 #' @param bag.fraction   proportion of the training sample used to fit univariate trees for each response at each iteration. Default: 1
 #' @param cv.folds   number of cross validation folds. Default: 1. Runs k + 1 models, where the k models are run in parallel and the final model is run on the entire sample. If larger than 1, the number of trees that minimize the multivariate MSE averaged over k-folds is reported in \code{object$best.trees}
+#' @param keep.data a logical variable indicating whether to keep the data stored with the object.
 #' @param s vector of indices denoting observations to be used for the training sample. If \code{s} is given, \code{train.fraction} is ignored.
 #' @param seednum integer passed to \code{set.seed}
 #' @param compress \code{TRUE/FALSE}. Compress output results list using bzip2 (approx 10\% of original size). Default is \code{FALSE}.
@@ -45,6 +46,7 @@
 #'      train.fraction = 1, 
 #'      bag.fraction = 1, 
 #'      cv.folds = 1, 
+#'      keep.data = FALSE,
 #'      s = NULL, 
 #'      seednum = NULL, 
 #'      compress = FALSE, 
@@ -125,6 +127,7 @@ mvtb <- function(Y,X,n.trees=100,
                  train.fraction=1,
                  bag.fraction=1,
                  cv.folds=1,
+                 keep.data=FALSE,
                  s=NULL,
                  seednum=NULL,
                  compress=FALSE,
@@ -154,7 +157,6 @@ mvtb <- function(Y,X,n.trees=100,
   } 
   
   ## Checks
-  if(any(is.na(Y))){ stop("NAs not allowed in outcome variables.")}
   if(shrinkage > 1 | shrinkage <= 0){ stop("shrinkage should be > 0, < 1")}
   if(train.fraction > 1 | train.fraction <= 0){ stop("train.fraction should be > 0, < 1")}
   if(bag.fraction > 1 | bag.fraction <= 0){ stop("bag.fraction should be > 0, < 1")}
@@ -167,7 +169,7 @@ mvtb <- function(Y,X,n.trees=100,
     cv.mods <- mvtbCV(Y=Y,X=X, cv.folds=cv.folds, s=s, save.cv=save.cv, mc.cores=mc.cores,
                   n.trees=n.trees, shrinkage=shrinkage, interaction.depth=interaction.depth, 
                   distribution=distribution, bag.fraction=bag.fraction, verbose=verbose,
-                  seednum=seednum)
+                  keep.data=keep.data, seednum=seednum)
     best.iters.cv <- cv.mods$best.iters.cv
     cv.err <- cv.mods$cv.err
     out.fit <- cv.mods$models.k[[cv.folds+1]]
@@ -175,7 +177,7 @@ mvtb <- function(Y,X,n.trees=100,
     out.fit <- mvtb.fit(Y=Y,X=X,
                         n.trees=n.trees, shrinkage=shrinkage, interaction.depth=interaction.depth,
                         distribution=distribution, bag.fraction=bag.fraction, verbose=verbose,
-                        s=s,seednum=seednum,...)
+                        s=s, keep.data=keep.data, seednum=seednum,...)
     best.iters.cv <- NULL
     cv.err <- NULL
     cv.mods <- NULL
@@ -192,7 +194,7 @@ mvtb <- function(Y,X,n.trees=100,
   rownames(best.trees) <- colnames(Y)
 
   if(!save.cv){cv.mods <- NULL}
-  if(iter.details){train.err <- NULL; test.err <- NULL; cv.err = NULL}
+  if(!iter.details){train.err <- NULL; test.err <- NULL; cv.err = NULL}
   
   fl <- list(models=models, best.trees=best.trees, params=params,
              train.err=train.err, test.err=test.err, cv.err=cv.err,
@@ -316,7 +318,7 @@ predict.mvtb.array <- function(object, newdata, n.trees, drop=TRUE, ...) {
   if(any(unlist(lapply(object,function(li){is.raw(li)})))){
     object <- mvtb.uncomp(object)
   }
-  #if(is.null(n.trees)) { n.trees <- min(unlist(object$best.trees)) }
+
   K <- length(object$models)
   treedim <- ifelse(length(n.trees) > 1,max(n.trees),1)
   Pred <- array(0,dim=c(nrow(newdata),K,treedim))  
@@ -325,9 +327,7 @@ predict.mvtb.array <- function(object, newdata, n.trees, drop=TRUE, ...) {
     p <- predict.gbm(object$models[[k]],n.trees=n.trees,newdata=newdata)    
     Pred[,k,] <- p
   }
-  #if(length(n.trees) == 1) {
-  #  Pred <- drop(Pred)
-  #}
+
   if(drop){
     Pred <- drop(Pred)
   }

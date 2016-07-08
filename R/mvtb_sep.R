@@ -7,6 +7,7 @@ mvtb.sep <- function(Y,X,n.trees=100,
                  train.fraction=1,
                  bag.fraction=1,
                  cv.folds=1,
+                 keep.data=FALSE,
                  s=NULL,
                  seednum=NULL,
                  compress=FALSE,
@@ -14,27 +15,27 @@ mvtb.sep <- function(Y,X,n.trees=100,
                  iter.details=TRUE,
                  verbose=FALSE, 
                  mc.cores=1, ...) {
-  
-  Y <- as.data.frame(Y)
+  # Gives Y and X different automatic names. Y and X need to be data frames b/c loops over columns.
+  Y <- data.frame(Y)
   X <- as.data.frame(X)
-  n <- nTrain <- nrow(X)
+  n <- nrow(X)
+  
   params <- c(as.list(environment()),list(...)) # this won't copy y and x
+  ## Checks
+  if(shrinkage > 1 | shrinkage <= 0){ stop("shrinkage should be > 0, < 1")}
+  if(train.fraction > 1 | train.fraction <= 0){ stop("train.fraction should be > 0, < 1")}
+  if(bag.fraction > 1 | bag.fraction <= 0){ stop("bag.fraction should be > 0, < 1")}
+
   
   if(!is.null(seednum)) set.seed(seednum)
-  if(train.fraction < 1) nTrain <- ceiling(train.fraction*n) 
-  
   if(is.null(s)) { 
-    s <- 1:n 
-    snull <- TRUE
-  } else {
-    snull <- FALSE
-    nTrain <- NULL
+    s <- sample(1:n, floor(n*train.fraction), replace=F) #force round down if odd
   }
 
-  do.one <- function(y, x, s, ...){ gbm::gbm.fit(y=y[s], x=x[s,], ...) }
+  do.one <- function(y, x, s, ...){ gbm::gbm.fit(y=y[s], x=as.data.frame(x[s,]), ...) }
   
   get.pred.err <- function(o, y, x, n.trees){
-    yhat.iter <- predict(o, newdata=x, n.trees=1:n.trees) 
+    yhat.iter <- as.matrix(gbm::predict.gbm(o, newdata=x, n.trees=1:n.trees))
     apply(yhat.iter, 2, function(yhat, y){
       var(y - yhat)
     }, y=y)
@@ -43,7 +44,7 @@ mvtb.sep <- function(Y,X,n.trees=100,
     test.err <- vector(mode = "list", length=ncol(Y))
     names(test.err) <- colnames(Y)
     for(i in 1:ncol(Y)){
-      test.err[[i]] <- get.pred.err(o=oL[[i]], y=Y[-s, i], x=x[-s, ], n.trees=n.trees)
+      test.err[[i]] <- get.pred.err(o=oL[[i]], y=Y[-s, i], x=x[-s,], n.trees=n.trees)
     }
     return(test.err)
   }
@@ -57,16 +58,16 @@ mvtb.sep <- function(Y,X,n.trees=100,
       test <- s[folds == i]
       cv.mods[[i]] <- parallel::mclapply(Y, FUN=do.one, x=X, n.trees=n.trees, shrinkage=shrinkage, 
                              interaction.depth=interaction.depth, distribution=distribution,
-                             nTrain=nTrain, bag.fraction=bag.fraction, s=s, 
-                             keep.data=FALSE, verbose=verbose, mc.cores=mc.cores,...)
-      cv.mod.err[[i]] <- get.test.err(mods, Y=Y, x=X, n.trees=n.trees, s=test)
+                             bag.fraction=bag.fraction, s=s, 
+                             keep.data=keep.data, verbose=verbose, mc.cores=mc.cores,...)
+      cv.mod.err[[i]] <- get.test.err(cv.mods[[i]], Y=Y, x=X, n.trees=n.trees, s=test)
     }
   }
   
   models <- parallel::mclapply(Y, FUN=do.one, x=X, n.trees=n.trees, shrinkage=shrinkage, 
                  interaction.depth=interaction.depth, distribution=distribution,
-                 nTrain=nTrain, bag.fraction=bag.fraction, s=s, 
-                 keep.data=FALSE, verbose=verbose, mc.cores=mc.cores,...)
+                 bag.fraction=bag.fraction, s=s, 
+                 keep.data=keep.data, verbose=verbose, mc.cores=mc.cores,...)
   
   train.err <- lapply(models, function(o){ o$train.error})
   oob.err <- lapply(models, function(o){ -cumsum(o$oobag.improve)})
@@ -76,8 +77,8 @@ mvtb.sep <- function(Y,X,n.trees=100,
     cv.err <- lapply(1:ncol(Y), function(i){ rep(NaN, n.trees) })
   }
   names(cv.err) <- colnames(Y)
-  if(snull){
-    test.err <- lapply(models, function(o){ o$valid.error})
+  if(all(1:n %in% s)){
+    test.err <- lapply(models, function(m){ m$valid.error})
   } else {
     test.err <- get.test.err(models, Y=Y, x=X, s=s, n.trees=n.trees)
   }
@@ -98,7 +99,7 @@ mvtb.sep <- function(Y,X,n.trees=100,
   rownames(best.trees) <- colnames(Y)
   
   if(!save.cv){cv.mods <- NULL}
-  if(iter.details){train.err <- NULL; test.err <- NULL; cv.err = NULL}
+  if(!iter.details){train.err <- NULL; test.err <- NULL; cv.err = NULL}
 
   fl <- list(models=models, best.trees=best.trees, params=params,
              train.err=train.err, test.err=test.err, cv.err=cv.err,

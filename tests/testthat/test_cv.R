@@ -30,6 +30,7 @@ check.samp <- function(ocv,s=1:500,folds=cv.folds,n=1000) {
   }
 }
 
+
 test_that("mvtbCV", {
   ocv <- mvtboost:::mvtbCV(Y=Y, X=X, distribution="gaussian", n.trees=n.trees, cv.folds=3, s=s, save.cv=TRUE, mc.cores=1, verbose=F)
   # 1. check that each observation is left out once.
@@ -64,11 +65,6 @@ expect_true(all(!unlist(lapply(out$cv.mods$models.k,function(m){any(m$s > 500)})
 # 5. check that setting the seed obtains the same observations in each fold 
 out1 <- mvtb(X=X,Y=Y,s=1:500,n.trees=n.trees,shrinkage=.5,cv.folds=3,seednum=1)
 out2 <- mvtb(X=X,Y=Y,s=1:500,n.trees=n.trees,shrinkage=.5,cv.folds=3,seednum=1)
-
-expect_equal(out1,out2)
-
-out1 <- mvtb(X=X,Y=Y,train.fraction=.5,n.trees=n.trees,shrinkage=.5,cv.folds=3,seednum=1)
-out2 <- mvtb(X=X,Y=Y,train.fraction=.5,n.trees=n.trees,shrinkage=.5,cv.folds=3,seednum=1)
 
 expect_equal(out1,out2)
 
