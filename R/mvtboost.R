@@ -26,10 +26,10 @@
 #'   \item \code{best.trees} - A list containing  the number of trees that minimize the multivariate MSE in a test set or by CV, and \code{n.trees}.
 #'     Many of the functions in the package default to using the minimum value of the three. 
 #'   \item \code{params} - arguments to mvtb
-#'   \item \code{trainerr} - multivariate training error at each tree (If \code{iter.details = TRUE})
-#'   \item \code{testerr}  - multivariate test error at each tree (if \code{train.fraction < 1} and \code{iter.details = TRUE})
-#'   \item \code{cverr}    - multivariate cv error at each tree (if \code{cv.folds > 1} and \code{iter.details = TRUE})
-#'   \item \code{ocv} - the CV models if \code{save.cv=TRUE}
+#'   \item \code{train.err} - multivariate training error at each tree (If \code{iter.details = TRUE})
+#'   \item \code{test.err}  - multivariate test error at each tree (if \code{train.fraction < 1} and \code{iter.details = TRUE})
+#'   \item \code{cv.err}    - multivariate cv error at each tree (if \code{cv.folds > 1} and \code{iter.details = TRUE})
+#'   \item \code{cv.mods} - the CV models if \code{save.cv=TRUE}
 #'   \item \code{s} - indices of training sample
 #'   \item \code{n} - number of observations
 #'   \item \code{xnames}
@@ -195,16 +195,13 @@ mvtb <- function(Y,X,n.trees=100,
   rownames(best.trees) <- colnames(Y)
 
   if(!save.cv){ocv <- NULL}
-
-  if(iter.details==T){
-    fl <- list(models=models, best.trees=best.trees,params=params,
-             trainerr=trainerr,testerr=testerr,cv.err=cv.err,
-             ocv=ocv,
-             s=s,n=nrow(X),xnames=colnames(X),ynames=colnames(Y))
-  } else {
-    fl <- list(models=models, best.trees=best.trees,params=params,
-               s=s,ocv=ocv,n=nrow(X),xnames=colnames(X),ynames=colnames(Y))
-  }
+  if(iter.details){train.err <- NULL; test.err <- NULL; cv.err = NULL}
+  
+  fl <- list(models=models, best.trees=best.trees, params=params,
+             train.err=train.err, test.err=test.err, cv.err=cv.err,
+             cv.mods=ocv,
+             s=s,n=nrow(X), xnames=colnames(X), ynames=colnames(Y))
+  
   if(compress) {
     # compress each element using bzip2
     fl <- lapply(fl,comp)

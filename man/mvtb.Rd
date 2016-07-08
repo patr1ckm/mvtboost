@@ -72,10 +72,10 @@ Fitted model. This is a list containing the following elements:
   \item \code{best.trees} - A list containing  the number of trees that minimize the multivariate MSE in a test set or by CV, and \code{n.trees}.
     Many of the functions in the package default to using the minimum value of the three. 
   \item \code{params} - arguments to mvtb
-  \item \code{trainerr} - multivariate training error at each tree (If \code{iter.details = TRUE})
-  \item \code{testerr}  - multivariate test error at each tree (if \code{train.fraction < 1} and \code{iter.details = TRUE})
-  \item \code{cverr}    - multivariate cv error at each tree (if \code{cv.folds > 1} and \code{iter.details = TRUE})
-  \item \code{ocv} - the CV models if \code{save.cv=TRUE}
+  \item \code{train.err} - multivariate training error at each tree (If \code{iter.details = TRUE})
+  \item \code{test.err}  - multivariate test error at each tree (if \code{train.fraction < 1} and \code{iter.details = TRUE})
+  \item \code{cv.err}    - multivariate cv error at each tree (if \code{cv.folds > 1} and \code{iter.details = TRUE})
+  \item \code{cv.mods} - the CV models if \code{save.cv=TRUE}
   \item \code{s} - indices of training sample
   \item \code{n} - number of observations
   \item \code{xnames}

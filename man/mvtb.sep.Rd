@@ -7,7 +7,7 @@
 mvtb.sep(Y, X, n.trees = 100, shrinkage = 0.01, interaction.depth = 1,
   distribution = "gaussian", train.fraction = 1, bag.fraction = 1,
   cv.folds = 1, s = NULL, seednum = NULL, compress = FALSE,
-  mc.cores = 1, save.cv = FALSE, iter.details = TRUE, verbose = FALSE,
+  save.cv = FALSE, iter.details = TRUE, verbose = FALSE, mc.cores = 1,
   ...)
 }
 \description{

@@ -10,14 +10,15 @@ mvtb.sep <- function(Y,X,n.trees=100,
                  s=NULL,
                  seednum=NULL,
                  compress=FALSE,
-                 mc.cores=1,
                  save.cv=FALSE,
                  iter.details=TRUE,
-                 verbose=FALSE, ...) {
+                 verbose=FALSE, 
+                 mc.cores=1, ...) {
   
   Y <- as.data.frame(Y)
   X <- as.data.frame(X)
   n <- nTrain <- nrow(X)
+  params <- c(as.list(environment()),list(...)) # this won't copy y and x
   
   if(!is.null(seednum)) set.seed(seednum)
   if(train.fraction < 1) nTrain <- ceiling(train.fraction*n) 
@@ -95,11 +96,21 @@ mvtb.sep <- function(Y,X,n.trees=100,
                      oob = sapply(oob.err, which.min.na), 
                      cv = sapply(cv.err, which.min.na))
   rownames(best.trees) <- colnames(Y)
-  fl <- list(mods=mods, best.trees=best.trees, 
-              train.err=train.err, oob.err=oob.err, cv.err=cv.err, test.err=test.err,
-              s=s,n=nrow(X),xnames=colnames(X),ynames=colnames(Y))
+  
+  if(!save.cv){cv.mods <- NULL}
+  if(iter.details){train.err <- NULL; test.err <- NULL; cv.err = NULL}
+
+  fl <- list(models=mods, best.trees=best.trees, params=params,
+             train.err=train.err, test.err=test.err, cv.err=cv.err,
+             cv.mods=cv.mods,
+             s=s,n=nrow(X), xnames=colnames(X), ynames=colnames(Y))
+
+  if(compress) {
+    # compress each element using bzip2
+    fl <- lapply(fl,comp)
+  }
+
   class(fl) <- "mvtb"
   return(fl)
-   
 }
 

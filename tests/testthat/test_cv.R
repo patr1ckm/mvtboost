@@ -53,13 +53,13 @@ test_that("mvtb - CV param", {
 # 4. check an initial split of training and test, with CV only in the training set
 out <- mvtb(X=X,Y=Y,s=1:500,n.trees=n.trees,shrinkage=.5,cv.folds=3,save.cv=TRUE)
 out2 <- mvtb(X=X,Y=Y,n.trees=n.trees,train.fraction=.5,shrinkage=.5,cv.folds=3,s=NULL,save.cv=TRUE)
-check.samp(out$ocv,s=out$params$s,folds=3)
+check.samp(out$cv.mods,s=out$params$s,folds=3)
 s <- out2$s
-fold.obs <- lapply(out2$ocv$models.k[1:3],function(out){unique(out$s)})
+fold.obs <- lapply(out2$cv.mods$models.k[1:3],function(out){unique(out$s)})
 expect_true(all(unique(unlist(fold.obs)) %in% s))
 expect_true(all(s %in% unique(unlist(fold.obs))))
 
-expect_true(all(!unlist(lapply(out$ocv$models.k,function(m){any(m$s > 500)})))) # expect that not any observation numbers > 500 (s was 500)
+expect_true(all(!unlist(lapply(out$cv.mods$models.k,function(m){any(m$s > 500)})))) # expect that not any observation numbers > 500 (s was 500)
 
 # 5. check that setting the seed obtains the same observations in each fold 
 out1 <- mvtb(X=X,Y=Y,s=1:500,n.trees=n.trees,shrinkage=.5,cv.folds=3,seednum=1)
