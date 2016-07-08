@@ -100,7 +100,7 @@ If \code{s} is specified, \code{train.fraction} is ignored but cross-validation 
 
 Cross-validation models are usually discarded but can be saved by setting \code{save.cv = TRUE}. CV models can be accessed from \code{$ocv} of the 
 output object. Observations can be specifically set for inclusion in the training set by passing a vector of integers indexing the rows to include to \code{s}.
-Multivariate mean squared training, test, and cv error are available from \code{$trainerr, $testerr, $cverr} from the output object 
+Multivariate mean squared training, test, and cv error are available from \code{$train.error, $test.error, $cverr} from the output object 
 when \code{iter.details = TRUE}.
 
 Since the output objects can be large, automatic compression is available by setting \code{compress=TRUE}. 

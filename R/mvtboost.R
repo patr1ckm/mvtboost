@@ -69,7 +69,7 @@
 #' 
 #' Cross-validation models are usually discarded but can be saved by setting \code{save.cv = TRUE}. CV models can be accessed from \code{$ocv} of the 
 #' output object. Observations can be specifically set for inclusion in the training set by passing a vector of integers indexing the rows to include to \code{s}.
-#' Multivariate mean squared training, test, and cv error are available from \code{$trainerr, $testerr, $cverr} from the output object 
+#' Multivariate mean squared training, test, and cv error are available from \code{$train.error, $test.error, $cverr} from the output object 
 #' when \code{iter.details = TRUE}.
 #' 
 #' Since the output objects can be large, automatic compression is available by setting \code{compress=TRUE}. 
@@ -135,16 +135,13 @@ mvtb <- function(Y,X,n.trees=100,
 
   if(class(Y) != "matrix") { Y <- as.matrix(Y) }
   if(is.null(ncol(X))){ X <- as.matrix(X)}
-  #if(class(X) != "matrix") { X <- data.matrix(X) }
+
   params <- c(as.list(environment()),list(...)) # this won't copy y and x
-  ## seeds
-  if(!is.null(seednum)){
-    #print(c("mvtboost: seednum ",seednum));
-    set.seed(seednum)
-  }
+  
+  if(!is.null(seednum)) set.seed(seednum)
+
   stopifnot(nrow(X) == nrow(Y))
   
-  ## Data
   n <- nrow(X); k <- ncol(Y); p <- ncol(X);
   if(is.null(colnames(X))) { colnames(X) <- paste("X",1:p,sep="") }
   if(is.null(colnames(Y))) { colnames(Y) <- paste("Y",1:k,sep="") } 
@@ -153,7 +150,7 @@ mvtb <- function(Y,X,n.trees=100,
   
   ## sampling
   if(is.null(s)){
-    s <- sample(1:n,floor(n*train.fraction),replace=F) #force round down if odd
+    s <- sample(1:n, floor(n*train.fraction), replace=F) #force round down if odd
   } 
   
   ## Checks
@@ -163,17 +160,17 @@ mvtb <- function(Y,X,n.trees=100,
   if(bag.fraction > 1 | bag.fraction <= 0){ stop("bag.fraction should be > 0, < 1")}
   
   ## Iterations
-  trainerr <- testerr <- vector(length=n.trees)
+  train.error <- test.error <- vector(length=n.trees)
   
   ## 0. CV?
   if(cv.folds > 1) {
-    ocv <- mvtbCV(Y=Y,X=X, cv.folds=cv.folds, s=s, save.cv=save.cv, mc.cores=mc.cores,
+    cv.mods <- mvtbCV(Y=Y,X=X, cv.folds=cv.folds, s=s, save.cv=save.cv, mc.cores=mc.cores,
                   n.trees=n.trees, shrinkage=shrinkage, interaction.depth=interaction.depth, 
                   distribution=distribution, bag.fraction=bag.fraction, verbose=verbose,
                   seednum=seednum)
-    best.iters.cv <- ocv$best.iters.cv
-    cv.err <- ocv$cv.err
-    out.fit <- ocv$models.k[[cv.folds+1]]
+    best.iters.cv <- cv.mods$best.iters.cv
+    cv.err <- cv.mods$cv.err
+    out.fit <- cv.mods$models.k[[cv.folds+1]]
    } else {
     out.fit <- mvtb.fit(Y=Y,X=X,
                         n.trees=n.trees, shrinkage=shrinkage, interaction.depth=interaction.depth,
@@ -181,25 +178,25 @@ mvtb <- function(Y,X,n.trees=100,
                         s=s,seednum=seednum,...)
     best.iters.cv <- NULL
     cv.err <- NULL
-    ocv <- NULL
+    cv.mods <- NULL
   }
   models <-  out.fit$models
-  trainerr <- out.fit$trainerr
-  testerr <- out.fit$testerr
+  train.err <- out.fit$train.error
+  test.err <- out.fit$test.error
   cv <- ifelse(is.null(best.iters.cv), NA, best.iters.cv)
-  test <- ifelse(all(is.nan(testerr)), NA, which.min(testerr))
+  test <- ifelse(all(is.nan(test.error)), NA, which.min(test.err))
 
   # can't do oob
-  best.trees <- list(train=which.min(trainerr),test=test, oob=NA, cv=cv)
+  best.trees <- list(train=which.min(train.err), test=test, oob=NA, cv=cv)
   best.trees <- do.call(rbind, lapply(1:k, function(i){data.frame(best.trees)}))
   rownames(best.trees) <- colnames(Y)
 
-  if(!save.cv){ocv <- NULL}
+  if(!save.cv){cv.mods <- NULL}
   if(iter.details){train.err <- NULL; test.err <- NULL; cv.err = NULL}
   
   fl <- list(models=models, best.trees=best.trees, params=params,
              train.err=train.err, test.err=test.err, cv.err=cv.err,
-             cv.mods=ocv,
+             cv.mods=cv.mods,
              s=s,n=nrow(X), xnames=colnames(X), ynames=colnames(Y))
   
   if(compress) {
@@ -247,15 +244,15 @@ mvtb.fit <- function(Y,X,
                                   ...)
     }
     yhat <- predict.mvtb.array(list(models=models),n.trees=1:n.trees,newdata=X,drop=FALSE)
-    testerr <- trainerr <- rep(0,length=n.trees)
+    test.error <- train.error <- rep(0,length=n.trees)
     for(i in 1:n.trees){
       R <- Y-yhat[,,i]
-      trainerr[i] <- mean((as.matrix(R[s,]))^2,na.rm=TRUE)
-      testerr[i] <- mean((as.matrix(R[-s,]))^2,na.rm=TRUE)
+      train.error[i] <- mean((as.matrix(R[s,]))^2,na.rm=TRUE)
+      test.error[i] <- mean((as.matrix(R[-s,]))^2,na.rm=TRUE)
     }
     
     ## 3. Compute multivariate MSE
-    fl <- list(models=models,trainerr=trainerr,testerr=testerr,s=s)
+    fl <- list(models=models, train.error=train.error, test.error=test.error, s=s)
     return(fl)
 }
 
@@ -274,7 +271,7 @@ mvtbCV <- function(Y, X, n.trees, cv.folds, save.cv, s, mc.cores, ...) {
     
     cv.groups <- sample(rep(1:cv.folds,length=length(s)))
     
-    testerr.k <- matrix(NA,nrow=n.trees,ncol=cv.folds)
+    test.error.k <- matrix(NA,nrow=n.trees,ncol=cv.folds)
     out.k <- list()
 
     runone <- function(k,cv.groups,sorig, x, ...){
@@ -297,10 +294,10 @@ mvtbCV <- function(Y, X, n.trees, cv.folds, save.cv, s, mc.cores, ...) {
     }
         
     for(k in 1:cv.folds) {
-      testerr.k[,k] <- out.k[[k]]$testerr
+      test.error.k[,k] <- out.k[[k]]$test.error
     }
   
-    cv.err <- rowMeans(testerr.k,na.rm=TRUE)
+    cv.err <- rowMeans(test.error.k,na.rm=TRUE)
     best.iters.cv <- which.min(cv.err)
     
     if(save.cv) {

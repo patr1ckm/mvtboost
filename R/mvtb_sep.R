@@ -63,13 +63,13 @@ mvtb.sep <- function(Y,X,n.trees=100,
     }
   }
   
-  mods <- parallel::mclapply(Y, FUN=do.one, x=X, n.trees=n.trees, shrinkage=shrinkage, 
+  models <- parallel::mclapply(Y, FUN=do.one, x=X, n.trees=n.trees, shrinkage=shrinkage, 
                  interaction.depth=interaction.depth, distribution=distribution,
                  nTrain=nTrain, bag.fraction=bag.fraction, s=s, 
                  keep.data=FALSE, verbose=verbose, mc.cores=mc.cores,...)
   
-  train.err <- lapply(mods, function(o){ o$train.error})
-  oob.err <- lapply(mods, function(o){ -cumsum(o$oobag.improve)})
+  train.err <- lapply(models, function(o){ o$train.error})
+  oob.err <- lapply(models, function(o){ -cumsum(o$oobag.improve)})
   if(cv.folds > 1) {
     cv.err <- lapply(1:ncol(Y), function(i) { rowMeans(sapply(cv.mod.err, "[[", i)) })
   } else {
@@ -77,9 +77,9 @@ mvtb.sep <- function(Y,X,n.trees=100,
   }
   names(cv.err) <- colnames(Y)
   if(snull){
-    test.err <- lapply(mods, function(o){ o$valid.error})
+    test.err <- lapply(models, function(o){ o$valid.error})
   } else {
-    test.err <- get.test.err(mods, Y=Y, x=X, s=s, n.trees=n.trees)
+    test.err <- get.test.err(models, Y=Y, x=X, s=s, n.trees=n.trees)
   }
   
   # which.min can return length 0, return NA instead
@@ -100,7 +100,7 @@ mvtb.sep <- function(Y,X,n.trees=100,
   if(!save.cv){cv.mods <- NULL}
   if(iter.details){train.err <- NULL; test.err <- NULL; cv.err = NULL}
 
-  fl <- list(models=mods, best.trees=best.trees, params=params,
+  fl <- list(models=models, best.trees=best.trees, params=params,
              train.err=train.err, test.err=test.err, cv.err=cv.err,
              cv.mods=cv.mods,
              s=s,n=nrow(X), xnames=colnames(X), ynames=colnames(Y))
