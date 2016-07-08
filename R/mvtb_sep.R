@@ -1,4 +1,5 @@
-#' Separate tuning of multivariate tree boosting models. 
+#' mvtb tuning each outcome separately.
+#' @inheritParams  mvtb 
 #' @export
 mvtb.sep <- function(Y,X,n.trees=100,
                  shrinkage=.01,

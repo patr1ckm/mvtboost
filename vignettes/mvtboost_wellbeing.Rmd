@@ -90,7 +90,7 @@ Most procedures in the `mvtboost` package will by default automatically select t
 Below we show the importance of choosing the model complexity to minimize the CV rather than training error.
 
 ```{r,echo=FALSE,fig.height=7,fig.width=7}
-plot(x=1:1000,y=res5$trainerr,type="l",ylab="Error",xlab="Number of trees")
+plot(x=1:1000,y=res5$train.err,type="l",ylab="Error",xlab="Number of trees")
 abline(v=res5$best.trees$best.cv)
 lines(x=1:1000,y=res5$cv.err,type="l",col="red")
 legend("topright",legend=c("Training Error","Cross-Validation Error"),lty=c(1,1),col=c("black","red"),bty="n")

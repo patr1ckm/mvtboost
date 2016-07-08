@@ -353,7 +353,7 @@ predict.mvtb <- function(object, newdata, n.trees=NULL, ...) {
   Pred <- matrix(0,nrow(newdata),K)
   for(k in 1:K) {                                     
     p <- rep(0,nrow(newdata))        
-    p <- predict.gbm(object$models[[k]],n.trees=n.trees,newdata=newdata)    
+    p <- predict.gbm(object$models[[k]],n.trees=n.trees[k],newdata=newdata)    
     Pred[,k] <- p
   }
   return(drop(Pred))
