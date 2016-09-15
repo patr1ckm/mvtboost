@@ -136,6 +136,10 @@ mvtb <- function(Y,X,n.trees=100,
                  verbose=FALSE,
                  mc.cores=1,...) {
 
+  if(!is.data.frame(Y)) Y <- data.frame(Y)  
+  if(!is.data.frame(X)) X <- as.data.frame(X)
+  n <- nrow(X)
+  
   if(class(Y) != "matrix") { Y <- as.matrix(Y) }
   if(is.null(ncol(X))){ X <- as.matrix(X)}
 
@@ -166,7 +170,7 @@ mvtb <- function(Y,X,n.trees=100,
   
   ## 0. CV?
   if(cv.folds > 1) {
-    cv.mods <- mvtbCV(Y=Y,X=X, cv.folds=cv.folds, s=s, save.cv=save.cv, mc.cores=mc.cores,
+    cv.mods <- mvtbCV(Y=Y, X=X, cv.folds=cv.folds, s=s, save.cv=save.cv, mc.cores=mc.cores,
                   n.trees=n.trees, shrinkage=shrinkage, interaction.depth=interaction.depth, 
                   distribution=distribution, bag.fraction=bag.fraction, verbose=verbose,
                   keep.data=keep.data, seednum=seednum)
@@ -174,7 +178,7 @@ mvtb <- function(Y,X,n.trees=100,
     cv.err <- cv.mods$cv.err
     out.fit <- cv.mods$models.k[[cv.folds+1]]
    } else {
-    out.fit <- mvtb.fit(Y=Y,X=X,
+    out.fit <- mvtb.fit(Y=Y, X=X,
                         n.trees=n.trees, shrinkage=shrinkage, interaction.depth=interaction.depth,
                         distribution=distribution, bag.fraction=bag.fraction, verbose=verbose,
                         s=s, keep.data=keep.data, seednum=seednum,...)

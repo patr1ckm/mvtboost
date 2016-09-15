@@ -20,7 +20,7 @@ out <- mvtb(Y=Y,X=X,n.trees=100,shrinkage = .5)
 x <- rnorm(1000)
 y <- x*5 + rnorm(1000)
 o1 <- mvtb(Y=y, X=x)
-o2 <- mvtb.sep(Y=y, X=x)
+o2 <- mvtb_sep(Y=y, X=x)
 
 
 test_that("mvtb.plot", {

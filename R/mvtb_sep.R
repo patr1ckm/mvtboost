@@ -1,7 +1,7 @@
 #' mvtb tuning each outcome separately.
 #' @inheritParams  mvtb 
 #' @export
-mvtb.sep <- function(Y,X,n.trees=100,
+mvtb_sep <- function(Y,X,n.trees=100,
                  shrinkage=.01,
                  interaction.depth=1,
                  distribution="gaussian",
@@ -17,8 +17,8 @@ mvtb.sep <- function(Y,X,n.trees=100,
                  verbose=FALSE, 
                  mc.cores=1, ...) {
   # Gives Y and X different automatic names. Y and X need to be data frames b/c loops over columns.
-  Y <- data.frame(Y)
-  X <- as.data.frame(X)
+  if(!is.data.frame(Y)) Y <- data.frame(Y)  
+  if(!is.data.frame(X)) X <- as.data.frame(X)
   n <- nrow(X)
   
   params <- c(as.list(environment()),list(...)) # this won't copy y and x

@@ -18,7 +18,7 @@ ncovs <- 10
 q <- 4
 
 out <- mvtb(Y=Y,X=X,shrinkage=.1,n.trees=100)
-out2 <- mvtb.sep(Y=Y, X=X, shrinkage=.1, n.trees=100)
+out2 <- mvtb_sep(Y=Y, X=X, shrinkage=.1, n.trees=100)
 
 test_that("summary",{ 
   ## Again, tests just to make sure that they run

@@ -10,9 +10,10 @@ E <- MASS::mvrnorm(n, rep(0,4), Sigma=diag(4))
 Y <- X %*% B + E
 
 test_that("n.trees", {
-  r <- mvtb(X=X,Y=Y,n.trees=50)
+  r <- mvtb(X=X, Y=Y, n.trees=50)
   expect_equal(r$best.trees$train, rep(50, 4))
-  r <- mvtb.sep(X=X, Y=Y, n.trees=50)
+  
+  r <- mvtb_sep(X=X, Y=Y, n.trees=50)
   expect_equal(r$best.trees$train, rep(50, 4))
 })
 
@@ -20,7 +21,7 @@ test_that("train.fraction", {
 for(i in seq(.1, .9, by=.1)) {
     r <- mvtb(X=X, Y=Y, n.trees=1, train.fraction=i)
     expect_equal(r$models[[1]]$nTrain, floor(n*i))
-    r <- mvtb.sep(X=X, Y=Y, n.trees=1, train.fraction=i)
+    r <- mvtb_sep(X=X, Y=Y, n.trees=1, train.fraction=i)
     expect_equal(r$models[[1]]$nTrain, floor(n*i))
 }
 })
@@ -28,20 +29,20 @@ for(i in seq(.1, .9, by=.1)) {
 test_that("bag.fraction", {
   r <- mvtb(X=X, Y=Y, n.trees=10, train.fraction=1, bag.fraction=.5)
   for(i in 1:4) { expect_equal(r$models[[i]]$bag.fraction, .5) }
-  r <- mvtb.sep(X=X, Y=Y, n.trees=10, train.fraction=1, bag.fraction=.5)
+  r <- mvtb_sep(X=X, Y=Y, n.trees=10, train.fraction=1, bag.fraction=.5)
   for(i in 1:4) { expect_equal(r$models[[i]]$bag.fraction, .5) }
 })
 
 test_that("subsetting", {
   r <- mvtb(X=X,Y=Y,n.trees=5, train.fraction=.5,bag.fraction=.5,s=1:500,save.cv=TRUE)
   expect_equal(r$s, 1:500) # should be in this order correct order
-  r <- mvtb.sep(X=X,Y=Y,n.trees=5, train.fraction=.5,bag.fraction=.5,s=1:500,save.cv=TRUE)
+  r <- mvtb_sep(X=X,Y=Y,n.trees=5, train.fraction=.5,bag.fraction=.5,s=1:500,save.cv=TRUE)
   expect_equal(r$s, 1:500) # should be in this order correct order
   
 })
 
 test_that("seednum", {
-  for(f in c(mvtb, mvtb.sep)){
+  for(f in c(mvtb, mvtb_sep)){
     r <- f(X=X,Y=Y,n.trees=5, train.fraction=.5, bag.fraction=.5,s=1:500,seednum=8)
     expect_equal(r$params$seednum,8)
     r2 <- f(X=X,Y=Y,n.trees=5, train.fraction=.5, bag.fraction=.5,s=1:500,seednum=8)
@@ -52,7 +53,7 @@ test_that("seednum", {
 })
 
 test_that("compress", {
-  for(f in c(mvtb, mvtb.sep)){
+  for(f in c(mvtb, mvtb_sep)){
     r <- f(X=X,Y=Y,n.trees=5, train.fraction=.5, bag.fraction=.5,s=1:500,seednum=8, compress=FALSE)
     expect_true(all(!(sapply(r,class) %in% "raw"))) # none of the objects are raw
     
@@ -71,7 +72,7 @@ test_that("compress", {
 })
 
 test_that("mvtb.uncomp", {
-  for(f in c(mvtb, mvtb.sep)){
+  for(f in c(mvtb, mvtb_sep)){
     rc <- f(X=X,Y=Y,n.trees=5, seednum=8, compress=TRUE)
     r  <- f(X=X,Y=Y,n.trees=5, seednum=8, compress=FALSE)
     r2 <- mvtb.uncomp(rc)
@@ -87,13 +88,13 @@ test_that("iter.details", {
     expect_length(r$train.err, r$best.trees$train[1])
     expect_length(r$cv.err, r$best.trees$train[1])
     
-    r <- mvtb.sep(X=X,Y=Y,n.trees=5, seednum=8, compress=FALSE, cv.folds=3, save.cv=T, iter.details = T)
+    r <- mvtb_sep(X=X,Y=Y,n.trees=5, seednum=8, compress=FALSE, cv.folds=3, save.cv=T, iter.details = T)
     expect_true(all(c("train.err", "test.err", "cv.err", "cv.mods") %in% names(r)))
     expect_length(r$test.err[[1]], r$best.trees$train[1])
     expect_length(r$train.err[[1]], r$best.trees$train[1])
     expect_length(r$cv.err[[1]], r$best.trees$train[1])
     
-    for(f in c(mvtb, mvtb.sep)){
+    for(f in c(mvtb, mvtb_sep)){
       r <- f(X=X,Y=Y,n.trees=5, seednum=8, compress=FALSE, cv.folds=3, save.cv=F, iter.details = F)
       expect_null(r$cv.mods)
       r <- f(X=X,Y=Y,n.trees=5, seednum=8, compress=FALSE, cv.folds=3, save.cv=T, iter.details = F)
@@ -103,7 +104,7 @@ test_that("iter.details", {
 })
 
 test_that("verbose", {
-  for(f in c(mvtb, mvtb.sep)){
+  for(f in c(mvtb, mvtb_sep)){
     expect_silent(f(X=X,Y=Y,n.trees=5, train.fraction=.5, bag.fraction=.5,s=1:500,seednum=8, compress=FALSE, cv.folds=3, save.cv=T, verbose = F))
     expect_output(f(X=X,Y=Y,n.trees=5, train.fraction=.5, bag.fraction=.5,s=1:500,seednum=8, compress=FALSE, cv.folds=3, save.cv=T, verbose = T))
   }
@@ -114,7 +115,7 @@ test_that("verbose", {
 # r <- mvtb(X=X,Y=Y,n.trees=500, train.fraction=.5, bag.fraction=.5,s=1:500,seednum=8, compress=FALSE, cv.folds=3, save.cv=T, mc.cores=3)
 
 test_that("keep.data", {
-  for(f in c(mvtb, mvtb.sep)){
+  for(f in c(mvtb, mvtb_sep)){
     r <- f(X=X,Y=Y,n.trees=50, keep.data=FALSE)
     expect_null(r$models[[1]]$data)
     r <- f(X=X,Y=Y,n.trees=50, keep.data=TRUE)
@@ -123,7 +124,7 @@ test_that("keep.data", {
 })
 
 test_that("distribution", {
-  for(f in c(mvtb, mvtb.sep)){
+  for(f in c(mvtb, mvtb_sep)){
     r <- f(X=X,Y=Y,n.trees=50)
     expect_equal(r$models[[1]]$distribution$name,"gaussian") # default is gaussian
     r <- f(X=X,Y=Y,n.trees=50, distribution="gaussian")   
@@ -134,7 +135,7 @@ test_that("distribution", {
 
 test_that("train.fraction and s", {
 ## Test 
-  for(f in c(mvtb, mvtb.sep)){
+  for(f in c(mvtb, mvtb_sep)){
     for(i in seq(.1,.9,by=.1)) {    
         r <- f(X=X,Y=Y,n.trees=10,train.fraction=i,s=1:floor(n*i),save.cv=TRUE)
         expect_true(all(r$s %in% 1:floor(n*i)))
@@ -143,7 +144,7 @@ test_that("train.fraction and s", {
 })
 
 test_that("interaction depth", {
-  for(f in c(mvtb, mvtb.sep)){
+  for(f in c(mvtb, mvtb_sep)){
     r <- f(X=X,Y=Y,n.trees=50, interaction.depth=1)
     r2 <- f(X=X,Y=Y,n.trees=50, interaction.depth=2)
     r3 <- f(X=X,Y=Y,n.trees=50, interaction.depth=2)
@@ -162,7 +163,7 @@ test_that("interaction depth", {
 })
 
 test_that("checks", {
-  for(f in c(mvtb, mvtb.sep)){
+  for(f in c(mvtb, mvtb_sep)){
     # test errors
     expect_error(f(X=X,Y=Y,n.trees=50, shrinkage=2))
     expect_error(f(X=X,Y=Y,n.trees=50, shrinkage=0))
@@ -179,7 +180,7 @@ test_that("checks", {
 })
 
 test_that("input", {
-  for(f in c(mvtb, mvtb.sep)){
+  for(f in c(mvtb, mvtb_sep)){
     # test data frame
     Y <- X %*% B + E
     Xf <- as.data.frame(X)

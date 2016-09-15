@@ -17,9 +17,9 @@ pcb <- function(Y,X,n.trees=100,
                     verbose=FALSE, 
                     mc.cores=1, ...){
   
-  ev <- eigen(cov(Y))$values
+  ev <- eigen(cov(Y))
   Ystar <- Y %*% ev$vectors
-  out <- mvtb.sep(Y=Ystar, X=X, n.trees=n.trees,
+  out <- mvtb_sep(Y=Ystar, X=X, n.trees=n.trees,
            shrinkage=shrinkage,
            interaction.depth = interaction.depth,
            train.fraction = train.fraction,
@@ -34,7 +34,7 @@ pcb <- function(Y,X,n.trees=100,
            verbose = verbose,
            mc.cores = mc.cores)
   out$ev <- ev
-  class(out) <- c(class(out), "pcb")
+  class(out) <- c("pcb", class(out))
   return(out)
 }
 
@@ -52,12 +52,16 @@ predict.pcb <- function(object, n.trees = NULL, newdata, drop=TRUE, ...){
 #' @export
 influence.pcb <- function(object, n.trees = NULL, relative = "col", ...){
   ri <- influence.mvtb(object = object, n.trees=n.trees, relative = FALSE) 
-  ri %*% t(object$ev$vectors)
+  ri <- data.frame(ri %*% t(object$ev$vectors))
+
   if(relative == "col"){
     ri <- matrix(apply(ri,2,function(col){col/sum(col)})*100,nrow=nrow(ri),ncol=ncol(ri))
   } else if (relative=="tot") {
     ri <- ri/sum(ri)*100
   } # else do nothing
+  
+  rownames(ri) <- object$xnames
+  colnames(ri) <- object$ynames
   return(ri)
 }
 

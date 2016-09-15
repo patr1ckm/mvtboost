@@ -33,7 +33,7 @@ mvtb.ri <- function(object,n.trees=NULL,relative="col",...){
 }
 
 #' Compute influence scores from mvtb, pcb, or fnlb
-#' @exportMethod 
+#' @export
 influence <- function(x, ...){
   UseMethod("influence")
 }
@@ -72,7 +72,7 @@ print.mvtb <- function(x,...) {
 #' @return Returns the best number of trees, the univariate relative influence of each predictor for each outcome, and covariance explained in pairs of outcomes by each predictor
 #' @seealso \code{mvtb.ri}, \code{gbm.ri}, \code{mvtb.cluster}
 #' @export
-summary.mvtb <- function(object,print=TRUE,n.trees=NULL,relative="col",...) {
+summary.mvtb <- function(object, print = TRUE, n.trees = NULL, relative = "col", ...) {
   
   if(any(unlist(lapply(object,function(li){is.raw(li)})))){
     object <- mvtb.uncomp(object)
@@ -124,7 +124,7 @@ summary.mvtb <- function(object,print=TRUE,n.trees=NULL,relative="col",...) {
 #' due to sampling fluctuation. These can be truncated or ignored. 
 #'
 #' @importFrom stats hclust dist as.dendrogram order.dendrogram
-mvtb.cluster <- function(x,clust.method="complete",dist.method="euclidean",plot=FALSE,...) {
+mvtb.cluster <- function(x, clust.method = "complete", dist.method = "euclidean", plot=FALSE, ...) {
     if(nrow(x) > 1) { 
       hcr <- hclust(dist(x,method=dist.method),method=clust.method)
       ddr <- as.dendrogram(hcr)
