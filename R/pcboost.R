@@ -1,7 +1,7 @@
 #' boost principal components of outcomes
 #' @inheritParams  mvtb 
 #' @export
-pcboost <- function(Y,X,n.trees=100,
+pcb <- function(Y,X,n.trees=100,
                     shrinkage=.01,
                     interaction.depth=1,
                     distribution="gaussian",
@@ -18,7 +18,7 @@ pcboost <- function(Y,X,n.trees=100,
                     mc.cores=1, ...){
   
   ev <- eigen(cov(Y))$values
-  Ystar <- Y %*% ev
+  Ystar <- Y %*% ev$vectors
   out <- mvtb.sep(Y=Ystar, X=X, n.trees=n.trees,
            shrinkage=shrinkage,
            interaction.depth = interaction.depth,
@@ -34,15 +34,31 @@ pcboost <- function(Y,X,n.trees=100,
            verbose = verbose,
            mc.cores = mc.cores)
   out$ev <- ev
-  class(out) <- c(class(out), "pcboost")
+  class(out) <- c(class(out), "pcb")
   return(out)
 }
 
 #' Predicted values from principal components boosting
 #' @inheritParams  predict.mvtb 
 #' @export
-predict.pcboost <- function(object, n.trees=NULL, newdata, drop=TRUE, ...){
+predict.pcb <- function(object, n.trees = NULL, newdata, drop=TRUE, ...){
   Yhat <- predict(object, n.trees = n.trees, newdata = newdata, drop = drop) 
   Pred  <- Pred %*% t(object$ev$vectors)
   return(Pred)
 }
+
+
+#' Compute the influnce from pcb
+#' @export
+influence.pcb <- function(object, n.trees = NULL, relative = "col", ...){
+  ri <- influence.mvtb(object = object, n.trees=n.trees, relative = FALSE) 
+  ri %*% t(object$ev$vectors)
+  if(relative == "col"){
+    ri <- matrix(apply(ri,2,function(col){col/sum(col)})*100,nrow=nrow(ri),ncol=ncol(ri))
+  } else if (relative=="tot") {
+    ri <- ri/sum(ri)*100
+  } # else do nothing
+  return(ri)
+}
+
+

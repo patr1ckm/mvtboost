@@ -32,6 +32,14 @@ mvtb.ri <- function(object,n.trees=NULL,relative="col",...){
   return(ri)  
 }
 
+#' Compute influence scores from mvtb, pcb, or fnlb
+#' @exportMethod 
+influence <- function(x, ...){
+  UseMethod("influence")
+}
+
+influence.mvtb <- mvtb.ri
+
 
 #' @importFrom stats var
 mvtb.r2 <- function(object,Y,X,n.trees=NULL){
@@ -71,9 +79,13 @@ summary.mvtb <- function(object,print=TRUE,n.trees=NULL,relative="col",...) {
   }
   k <- length(object$models)
   if(is.null(n.trees)) { n.trees <- apply(object$best.trees, 1, min, na.rm=T) }
+  
   if(length(n.trees) == 1){ n.trees <- rep(n.trees, k)}
-  ri <- mvtb.ri(object,n.trees=n.trees,relative=relative)
-  sum <- list(best.trees=n.trees,relative.influence=ri)
+  
+  ri <- influence(object, n.trees = n.trees, relative = relative)
+  
+  sum <- list(best.trees = n.trees, relative.influence = ri)
+  
   if(print){ print(lapply(sum,function(o){round(o,2)})) }
   invisible(sum)
 }
