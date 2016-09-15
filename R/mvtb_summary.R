@@ -38,6 +38,9 @@ influence <- function(x, ...){
   UseMethod("influence")
 }
 
+#' Compute influence scores from mvtb
+#' @inheritParams mvtb.ri
+#' @export
 influence.mvtb <- mvtb.ri
 
 

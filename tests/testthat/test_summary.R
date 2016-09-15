@@ -17,39 +17,61 @@ p <- 3
 ncovs <- 10
 q <- 4
 
-out <- mvtb(Y=Y,X=X,shrinkage=.1,n.trees=100)
+out <- mvtb(Y=Y, X=X, shrinkage=.1, n.trees=100)
 out2 <- mvtb_sep(Y=Y, X=X, shrinkage=.1, n.trees=100)
+outpc <- pcb(Y=Y, X=X, shrinkage=.1, n.trees=100)
+out.comp <- mvtb(Y=Y, X=X, shrinkage=.1, n.trees=100, compress=TRUE)
+out2.comp <- mvtb_sep(Y=Y, X=X, shrinkage=.1, n.trees=100, compress=TRUE)
+outpc.comp <- mvtb_sep(Y=Y, X=X, shrinkage=.1, n.trees=100, compress=TRUE)
+mods <- list(out, out2, outpc, out.comp, out2.comp, outpc.comp)
 
 test_that("summary",{ 
-  ## Again, tests just to make sure that they run
-  expect_output(print(summary(out)),"trees")
-  expect_output(summary(out),"influence")
-  expect_equal(sum(summary(out,print=FALSE,relative="tot")$relative.influence),100)
+  ## Tests just to make sure that they run
+  for(i in seq_along(mods)){
+    expect_output(print(summary(mods[[i]])),"trees")
+    expect_output(summary(mods[[i]]),"influence")
+    suminf <- sum(summary(mods[[i]], print=FALSE, relative="tot")$relative.influence)
+    expect_equal(suminf, 100)
+  }
 })
 
 test_that("mvtb.cluster",{
   covex <- mvtb.covex(out, Y=Y,X=X)
   expect_output(print(mvtb.cluster(covex)))
+  
+  # test dimensions
   expect_equal(dim(mvtb.cluster(covex)),c(ncovs,p))
+  
+  # run plot
   mvtb.cluster(covex,plot=TRUE)
-  expect_output(print(mvtb.cluster(covex,dist.method="manhattan",clust.method="complete")))
+  
+  cluster.covex <- mvtb.cluster(covex,dist.method="manhattan",clust.method="complete")
+  expect_output(print(cluster.covex))
+  
+  # test clustering influences
+  for(i in seq_along(mods)){
+    expect_output(print(mvtb.cluster(influence(mods[[i]]))))
+  }
 })
 
-test_that("mvtb.ri",{
-  expect_output(print(mvtb.ri(out)))
-  expect_equal(dim(mvtb.ri(out)),c(p,q))
-  expect_output(print(mvtb.ri(out)))
-  expect_equivalent(sum(mvtb.ri(out,relative = "tot")),100)
-  expect_equal(sum(colSums(mvtb.ri(out,relative = "col")))-q*100,0,tolerance=1E-12)
-  expect_output(print(mvtb.ri(out,relative = "n")))
-  expect_output(print(out), "List of ") # verifies that print.mvtb is being called
+test_that("influence",{
+  for(i in seq_along(mods)){
+    expect_output(print(influence(mods[[i]])))
+    
+    # dimensions
+    expect_equal(dim(influence(mods[[i]])),c(p,q))
+    
+    # testthat sums of influence correctly equal 100 
+    expect_equivalent(sum(influence(mods[[i]],relative = "tot")),100)
+    
+    # testthat sum of each column is 100
+    expect_equal(sum(colSums(influence(mods[[i]],relative = "col")))-q*100,0,tolerance=1E-12)
+    
+    # should produce raw
+    expect_output(print(influence(mods[[i]],relative = "n")))
+    
+    # verifies that print.mvtb is being called
+    expect_output(print(mods[[i]]), "List of ")
+  }
 })
   
-test_that("test_summary_compression",{
-  out <- mvtb(Y=Y,X=X,compress = T)
-  expect_output(summary(out))
-  expect_output(print(out), "List of")
-  covex <- mvtb.covex(out, Y=Y, X=X)
-  expect_output(print(mvtb.cluster(covex)))
-  expect_output(print(mvtb.ri(out)))
-})
