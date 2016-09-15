@@ -136,10 +136,7 @@ mvtb <- function(Y,X,n.trees=100,
                  verbose=FALSE,
                  mc.cores=1,...) {
 
-  if(!is.data.frame(Y)) Y <- data.frame(Y)  
-  if(!is.data.frame(X)) X <- as.data.frame(X)
   n <- nrow(X)
-  
   if(class(Y) != "matrix") { Y <- as.matrix(Y) }
   if(is.null(ncol(X))){ X <- as.matrix(X)}
 
