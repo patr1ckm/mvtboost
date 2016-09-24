@@ -178,7 +178,8 @@ test_that("lmerboost.fit subset", {
 
   set.seed(104)
   M <- 10
-  zuhat <- fixed <- yhat <- matrix(0, n, 10)
+  zuhat <- fixed <- yhat <- matrix(0, n, M)
+  train_err <- oob_err <- test_err <- rep(0, M)
   init <- mean(y)
   r <- y - mean(y)
   for(i in 1:M){
@@ -186,7 +187,7 @@ test_that("lmerboost.fit subset", {
     # the only change is to subsample from train rather than 1:n, and to subset on id
     # note that s is always an index to observations in the  original data
     s <- mvtboost:::get_subsample(train, id = id[train], bag.fraction = bag.fraction)
-
+    s.oob <- setdiff(train, s)
     expect_true(all(unique(id) %in% unique(id[s])))
 
     o.gbm <- gbm::gbm.fit(y = r[s], x = X[s, , drop = F], n.trees = 1, shrinkage = 1, bag.fraction = 1,
@@ -211,6 +212,10 @@ test_that("lmerboost.fit subset", {
       yhat[,i] <- yhat[,i-1] + yhatm * lambda
     }
     r <- r - yhatm * lambda
+    train_err[i] <- var(y[s, ] - yhat[s, i])
+    oob_err[i]   <- var(y[s.oob, ] - yhat[s.oob, i])
+    test_err[i]  <- var(y[-train, ] - yhat[-train, i])
+    
   }
   yhat <- yhat + init
 
@@ -220,7 +225,12 @@ test_that("lmerboost.fit subset", {
   expect_equal(yhat[-train, ], o$yhatt)
   expect_equal(zuhat[-train, ], o$raneft)
   expect_equal(fixed[-train, ], o$fixedt)
+  expect_equal(train_err, o$train.err)  
+  expect_equal(oob_err, o$oob.err)  
+  expect_equal(test_err, o$test.err)  
 })
+
+## TODO: lmerboost.fit logical subset
 
 test_that("lmerboost.fit get_zuhat", {
   o <- lme4::lmer(y ~ x + (1 + x|id))
@@ -230,7 +240,12 @@ test_that("lmerboost.fit get_zuhat", {
   expect_equal(unname(zuhat), zuhat_lmer)
 })
 
+## TODO: lmerboost.fit train.fraction, stop.threshold, depth, indep
 
+test_that("lmerboost assign_fold", {
+  
+  
+})
 
 
 
