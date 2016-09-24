@@ -22,7 +22,7 @@ lmerboost <- function(y, X, id,
                       train.fraction=NULL, subset=NULL, bag.fraction=.5, cv.folds=1,
                       indep=TRUE, M=100, lambda=.01, nt=1, depth=5, 
                       tune=FALSE, stop.threshold = .001,
-                      mc.cores=1, ...){
+                      mc.cores=1, verbose = TRUE, ...){
 
   n <- length(y)
   X <- as.data.frame(X)
@@ -58,7 +58,7 @@ lmerboost <- function(y, X, id,
     
     cv.mods <- mclapply(conds.ls, function(args, ...){ 
       do.call(cv.tune, append(args, list(...)))
-    }, y=y, x=X, id=id, ss=ss, folds = folds, stop.threshold = stop.threshold, mc.cores = mc.cores)
+    }, y=y, x=X, id=id, ss=ss, folds = folds, stop.threshold = stop.threshold, verbose = FALSE, mc.cores = mc.cores)
 
     # average over cv folds for each condition
     fold.err <- lapply(cv.mods, function(o){o$test.err})
@@ -76,7 +76,7 @@ lmerboost <- function(y, X, id,
     
     o <- lmerboost.fit(y = y, X = X, id = id, 
           train.fraction = train.fraction, subset = subset, 
-          bag.fraction = bag.fraction, stop.threshold = stop.threshold,
+          bag.fraction = bag.fraction, stop.threshold = stop.threshold, verbose = verbose,
           M = best.params$M, lambda = best.params$lambda, depth=best.params$depth, indep = best.params$indep,
           nt = nt,  tune=FALSE)
     
@@ -88,8 +88,8 @@ lmerboost <- function(y, X, id,
     o <- lmerboost.fit(y = y, X = X, id = id, 
          train.fraction = train.fraction, subset = subset, 
          bag.fraction = bag.fraction, stop.threshold = stop.threshold,
-         M = M, lambda = lambda, depth=depth, indep = indep,
-         nt = nt,  tune=FALSE)
+         M = M, lambda = lambda, depth=depth, indep = indep, 
+         nt = nt,  tune=FALSE, verbose = verbose)
   }
   
   cat("", fill=T)
@@ -105,7 +105,7 @@ lmerboost <- function(y, X, id,
 #' @export
 lmerboost.fit <- function(y, X, id, train.fraction=NULL, subset=NULL, indep=TRUE, M=100, 
                           lambda=.01, nt=1, depth=5, tune=FALSE, bag.fraction=.5, 
-                          calc.derivs=FALSE, stop.threshold = .001, ...){
+                          calc.derivs=FALSE, stop.threshold = .001, verbose = TRUE, ...){
   
   init <- mean(y)
   r <- y - init
@@ -147,7 +147,7 @@ lmerboost.fit <- function(y, X, id, train.fraction=NULL, subset=NULL, indep=TRUE
     }
     
     # Get model matrix or train, oob and test
-    mm <- gbm.mm(tree, n.trees = tr, newdata = X)
+    mm <- gbm_mm(tree, n.trees = tr, newdata = X)
     
     nodes <- ncol(mm)
     colnames(mm) <- paste0("X", 1:ncol(mm))
@@ -169,7 +169,7 @@ lmerboost.fit <- function(y, X, id, train.fraction=NULL, subset=NULL, indep=TRUE
     zucoefs <- as.matrix(lme4::ranef(out.lmer)[[1]]) # 
     
     # Get random, fixed, and total for train, oob, and test at iteration m
-    zuhat <- get.zuhat(zucoefs, x = mm, id = dat.mm$id)
+    zuhat <- get_zuhat(zucoefs, x = mm, id = dat.mm$id)
     fixedm <- cbind(1, mm) %*% as.matrix(lme4::fixef(out.lmer))
     yhatm <- fixedm + zuhat 
 
@@ -187,7 +187,7 @@ lmerboost.fit <- function(y, X, id, train.fraction=NULL, subset=NULL, indep=TRUE
     
     r <- r - yhatm * lambda
     
-    cat(i, "")
+    if(verbose && (i %% 10 == 0)) cat(i, "")
     if(i==1){ 
       # for the first iteration, compute the training, oob, and test error from only
       # the means
@@ -216,14 +216,14 @@ lmerboost.fit <- function(y, X, id, train.fraction=NULL, subset=NULL, indep=TRUE
 # re = ranef(mod)$id
 # x = design matrix without intercept
 # id = grouping variable factor
-get.zuhat <- function(re, x, id){
+get_zuhat <- function(re, x, id){
   Z <- model.matrix(~id + id:x - 1)
   b <- c(re)
   drop(Z %*% b)
 }
 
 
-gbm.mm <- function(o, n.trees=1, ...){
+gbm_mm <- function(o, n.trees=1, ...){
   yhat <- predict(o, n.trees=n.trees, ...)
   node <- factor(yhat)
   model.matrix(~node)[,-1,drop=F]
@@ -256,13 +256,13 @@ predict.lmerboost <- function(object, newdata, M=NULL){
   
   for(m in 1:M){
   
-    mm <- gbm.mm(object$trees[[m]], newdata=newdata, n.trees = 1)
+    mm <- gbm_mm(object$trees[[m]], newdata=newdata, n.trees = 1)
     nodes <- ncol(mm)
     out.lmer <- object$mods[[m]] 
     new.mm <- data.frame(id=id, mm)
     
     zucoefs <- as.matrix(ranef(out.lmer)[[1]])
-    zuhat <- get.zuhat(zucoefs, mm, id)
+    zuhat <- get_zuhat(zucoefs, mm, id)
     
     yhatm <- predict(out.lmer, newdata=newdata)
     
