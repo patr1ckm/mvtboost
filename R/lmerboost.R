@@ -130,8 +130,11 @@ lmerboost.fit <- function(y, X, id, train.fraction=NULL, subset=NULL, indep=TRUE
     # s = training, s.oob = oob, -ss = test
     # make sure one observation from each group is present, where the subset has to cover all groups
     #  note that just using sample(x, 1) will fail if x has length 1
-    sid <- tapply(ss, droplevels(id[ss]), function(x){ x[sample(1:length(x), size=1)]})
-    s <- c(sid, sample(ss[!(ss %in% sid)], size=ceiling(length(ss)*bag.fraction) - length(sid), replace=F)) # sub-sample, not with replacement.
+    if(bag.fraction < 1){
+      s <- get_subsample(ss = ss, id = id, bag.fraction = bag.fraction)
+    } else {
+      s <- ss
+    }
     s.oob <- setdiff(ss, s) # the oob observations are the observations in training but not in subset
     datx <- data.frame(r=r[s], X[s, ])
     colnames(datx) <- c("r", colnames(X))
@@ -286,6 +289,18 @@ best_iter <- function(x, threshold, lag, smooth = FALSE){
   } else {
     best.iter <- min(best.iter)
   }
+}
+
+get_subsample <- function(ss, id, bag.fraction){
+  # Get one obs from each group
+  sid <- tapply(ss, droplevels(id[ss]), function(x){ 
+    x[sample(1:length(x), size=1)]
+  })
+  # compute the number of samples
+  size <- ceiling(length(ss) * bag.fraction) - length(sid)
+  
+  # sample randomly from the rest
+  c(sid, sample(ss[!(ss %in% sid)], size = size, replace=F)) 
 }
 
 plot.lmerboost <- function(x, threshold = .001, lag = 1, ...){
