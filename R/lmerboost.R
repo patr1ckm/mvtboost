@@ -188,20 +188,20 @@ lmerboost.fit <- function(y, X, id, train.fraction=NULL, subset=NULL, indep=TRUE
     r <- r - yhatm * lambda
     
     cat(i, "")
-    if(i==2){ 
+    if(i==1){ 
       # for the first iteration, compute the training, oob, and test error from only
       # the means
-      train.err[i-1] <- var(y[s])
-      oob.err[i-1] <- var(y[s.oob])
-      test.err[i-1] <- var(y[-ss])
+      train.err[i] <- var(y[s])
+      oob.err[i] <- var(y[s.oob])
+      test.err[i] <- var(y[-ss])
     }
     train.err[i] <- var(yhat[s,i] - y[s])
     oob.err[i] <- var(yhat[s.oob,i] - y[s.oob])
     test.err[i] <- var(yhat[-ss,i] - y[-ss])
     
-    if(i %% lag == 0 & abs(test.err[i] - test.err[i - (lag - 1)]) < stop.threshold){
-      break;
-    }
+    #if((i %% lag == 0) && (abs(test.err[i] - test.err[i - (lag - 1)]) < stop.threshold)){
+    #  break;
+    #}
   }
   yhat <- yhat + init
   
