@@ -5,6 +5,9 @@ group_size <- 10
 n <- ngroups * group_size
 id <- factor(rep(1:ngroups, each = group_size))
 
+train <- unlist(tapply(1:n, id, function(x){
+  x[sample(1:length(x), size = group_size * .5, replace = F)]}))
+
 x <- rnorm(n)
 Z <- model.matrix(~id + x:id - 1)
 u <- rnorm(ncol(Z), 0, 1)
@@ -165,9 +168,7 @@ test_that("lmerboost.fit bag.fraction = .5", {
 test_that("lmerboost.fit subset, train/oob/test err", {
   bag.fraction = .5
   # get a training sample from each group of group_size * .5
-  train <- unlist(tapply(1:n, id, function(x){
-    x[sample(1:length(x), size = group_size * .5, replace = F)]}))
-
+  
   expect_true(all(unique(id) %in% unique(id[train])))
 
   set.seed(104)
@@ -267,6 +268,25 @@ test_that("lmerboost assign_fold", {
     }
   }
   
+})
+
+test_that("lmerboost_cv", {
+  # now we can use lmerboost.fit
+  
+  cv.folds <- 3
+  folds <- mvtboost:::assign_fold(train, id = id, cv.folds = cv.folds)
+  
+  set.seed(104)
+  ocv <- lapply(1:cv.folds, function(k, folds){
+    ss <- (1:n)[folds != k]
+    lmerboost.fit(y = y, X = X, id = id, subset = ss, M = 5, verbose = F, lambda = .5)
+  }, folds = folds)
+  
+  set.seed(104)
+  o <- lapply(1:cv.folds, mvtboost:::lmerboost_cv, 
+           folds = folds, ss = 1:n, y = y, x = X, id = id, M = 5, lambda = .5)
+  
+  expect_equivalent(o, ocv)
 })
 
 

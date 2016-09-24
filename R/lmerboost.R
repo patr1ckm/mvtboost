@@ -42,19 +42,13 @@ lmerboost <- function(y, X, id,
     
     folds <- assign_fold(ss, id = id, cv.folds = cv.folds)
     
-    cv.tune <- function(k, folds, y, x, id, ss, ...){
-      train <- ss[folds != k]
-      test <- ss[folds == k]
-      o <- lmerboost.fit(y = y, X = x, id = id, subset = train, ...)
-    }
-    
     params <- expand.grid(M = M, lambda = lambda, depth = depth, indep = indep)
     conds <- expand.grid(k = 1:(cv.folds), M = M, lambda = lambda, depth = depth, indep = indep)
     conds.ls <- split(conds, 1:nrow(conds))
     conds$id <- rep(1:nrow(params), each = cv.folds)
     
     cv.mods <- mclapply(conds.ls, function(args, ...){ 
-      do.call(cv.tune, append(args, list(...)))
+      do.call(lmerboost_cv, append(args, list(...)))
     }, y=y, x=X, id=id, ss=ss, folds = folds, stop.threshold = stop.threshold, verbose = FALSE, mc.cores = mc.cores)
 
     # average over cv folds for each condition
@@ -98,6 +92,12 @@ lmerboost <- function(y, X, id,
   class(out) <- "lmerboost"
   return(out)
 }
+
+lmerboost_cv <- function(k, folds, y, x, id, ss, ...){
+  train <- ss[folds != k]
+  o <- lmerboost.fit(y = y, X = x, id = id, subset = train, ...)
+}
+
 
 #' @export
 lmerboost.fit <- function(y, X, id, train.fraction=NULL, subset=NULL, indep=TRUE, M=100, 
@@ -235,8 +235,8 @@ assign_fold <- function(x, id, cv.folds){
     if(n == 1){
       in_fold <- 0 # observation will always be in training set
     } else {
-      # If 1 < n_i <= cv.folds, at least one observation from group is in training set
-      # If n_i > cv.folds, then randomly assign fold ids as usual
+      # If 1 < n_i <= cv.folds, force one observation from group to be in training set
+      #  then randomly assign fold ids as usual for the other observations
       in_fold <- c(sample(1:folds, size=min(n, folds), replace = F),
                    sample(1:folds, size=max(0, (n - folds)), replace = T))
     }
@@ -331,7 +331,4 @@ plot.lmerboost <- function(x, threshold = .001, lag = 1, ...){
   paramstring <- paste0(names(x$best.params), " = ", x$best.params, collapse = ", ")
   title(sub = paramstring)
 }
-
-## Testing code based on evaluation
-#put.args(lmerboost)
 
