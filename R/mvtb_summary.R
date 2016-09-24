@@ -32,11 +32,6 @@ mvtb.ri <- function(object,n.trees=NULL,relative="col",...){
   return(ri)  
 }
 
-#' Compute influence scores from mvtb, pcb, or fnlb
-#' @export
-influence <- function(x, ...){
-  UseMethod("influence")
-}
 
 #' Compute influence scores from mvtb
 #' @inheritParams mvtb.ri
