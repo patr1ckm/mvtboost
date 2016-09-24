@@ -131,7 +131,7 @@ lmerboost.fit <- function(y, X, id, train.fraction=NULL, subset=NULL, indep=TRUE
     # make sure one observation from each group is present, where the subset has to cover all groups
     #  note that just using sample(x, 1) will fail if x has length 1
     if(bag.fraction < 1){
-      s <- get_subsample(ss = ss, id = id, bag.fraction = bag.fraction)
+      s <- get_subsample(ss = ss, id = droplevels(id[ss]), bag.fraction = bag.fraction)
     } else {
       s <- ss
     }
@@ -146,7 +146,7 @@ lmerboost.fit <- function(y, X, id, train.fraction=NULL, subset=NULL, indep=TRUE
       tr <- nt
     }
     
-    # Get model matrix or train, oob and test
+    # Get model matrix for train, oob and test
     mm <- gbm_mm(tree, n.trees = tr, newdata = X)
     
     nodes <- ncol(mm)
@@ -291,9 +291,10 @@ best_iter <- function(x, threshold, lag, smooth = FALSE){
   }
 }
 
+
 get_subsample <- function(ss, id, bag.fraction){
   # Get one obs from each group
-  sid <- tapply(ss, droplevels(id[ss]), function(x){ 
+  sid <- tapply(ss, id, function(x){ 
     x[sample(1:length(x), size=1)]
   })
   # compute the number of samples
