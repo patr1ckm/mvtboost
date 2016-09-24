@@ -222,6 +222,16 @@ test_that("lmerboost.fit subset", {
   expect_equal(fixed[-train, ], o$fixedt)
 })
 
+test_that("lmerboost.fit get_zuhat", {
+  o <- lme4::lmer(y ~ x + (1 + x|id))
+  re <- as.matrix(ranef(o)$id)
+  zuhat <- mvtboost:::get_zuhat(re = re, x = x, id = id)
+  zuhat_lmer <- c(predict(o) - cbind(1, x) %*% fixef(o))
+  expect_equal(unname(zuhat), zuhat_lmer)
+})
+
+
+
 
 
 
