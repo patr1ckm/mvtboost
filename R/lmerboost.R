@@ -107,7 +107,8 @@ lmerboost.fit <- function(y, X, id, train.fraction=NULL, subset=NULL, indep=TRUE
                           lambda=.01, nt=1, depth=5, tune=FALSE, bag.fraction=.5, 
                           calc.derivs=FALSE, stop.threshold = .001, ...){
   
-  r <- y
+  init <- mean(y)
+  r <- y - init
   lag <- 5
   
   n <- length(y)
@@ -199,6 +200,7 @@ lmerboost.fit <- function(y, X, id, train.fraction=NULL, subset=NULL, indep=TRUE
       break;
     }
   }
+  yhat <- yhat + init
   
   
   out <- list(yhat=yhat[ss, ], ranef=ranef[ss, ], fixed=fixed[ss,], lambda=lambda, 
