@@ -171,7 +171,7 @@ lmerboost.fit <- function(y, X, id, train.fraction=NULL, subset=NULL, indep=TRUE
     # Get random, fixed, and total for train, oob, and test at iteration m
     zuhat <- get.zuhat(zucoefs, x = mm, id = dat.mm$id)
     fixedm <- cbind(1, mm) %*% as.matrix(lme4::fixef(out.lmer))
-    yhatm <- fixed[,i] + zuhat 
+    yhatm <- fixedm + zuhat 
 
     # update totals at each iteration
     if(i == 1){
