@@ -118,7 +118,7 @@ test_that("lmerboost.fit get_subsample", {
   expect_true(all(unique(id) %in% unique(id[s]))) # at least one from each group occurs
 })
 
-test_that("lmerboost.fit bag.fraction", {
+test_that("lmerboost.fit bag.fraction = .5", {
   bag.fraction = .5
   set.seed(104)
   o <- lmerboost.fit(y = y, X = X, id = id, 
@@ -162,7 +162,7 @@ test_that("lmerboost.fit bag.fraction", {
   expect_equal(fixed, o$fixed)
 })
 
-test_that("lmerboost.fit subset", {
+test_that("lmerboost.fit subset, train/oob/test err", {
   bag.fraction = .5
   # get a training sample from each group of group_size * .5
   train <- unlist(tapply(1:n, id, function(x){
@@ -242,8 +242,30 @@ test_that("lmerboost.fit get_zuhat", {
 
 ## TODO: lmerboost.fit train.fraction, stop.threshold, depth, indep
 
+context("lmerboost")
+
 test_that("lmerboost assign_fold", {
+  train <- 1:n
+  for(cv.folds in c(3, 5, 10)){
+    folds <- mvtboost:::assign_fold(train, id = id, cv.folds = cv.folds)
+    expect_equal(length(folds), n)
+    for(k in 1:cv.folds){
+      expect_true(all(unique(id) %in% unique(id[train[folds != k]])))
+      expect_true(all(unique(id) %in% unique(id[train[folds == k]]))) 
+    }
+  }
   
+  # Have observations within group = 1, 2, ..., cv.folds, ... 
+  id_short <- factor(unlist(lapply(1:10, function(x){rep(x,x)})))
+  n_short <- length(id_short)
+  train <- seq_along(id_short)
+  for(cv.folds in c(3, 5, 10)){
+    folds <- mvtboost:::assign_fold(train, id = id_short, cv.folds = cv.folds)
+    expect_equal(length(folds), n_short)
+    for(k in 1:cv.folds){
+      expect_true(all(unique(id_short) %in% unique(id_short[train[folds != k]])))
+    }
+  }
   
 })
 

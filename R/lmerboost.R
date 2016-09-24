@@ -40,15 +40,12 @@ lmerboost <- function(y, X, id,
     }
     if(is.logical(subset)){ss <- which(subset)}
     
-    folds <- list()
-    idg <- split(1:length(ss), id[ss]) #ids by group
-    
-    folds <- unlist(sapply(idg, assign_fold, folds = cv.folds))
+    folds <- assign_fold(ss, id = id, cv.folds = cv.folds)
     
     cv.tune <- function(k, folds, y, x, id, ss, ...){
       train <- ss[folds != k]
       test <- ss[folds == k]
-      o <- lmerboost.fit(y=y, X=x, id=id, subset = train, ...)
+      o <- lmerboost.fit(y = y, X = x, id = id, subset = train, ...)
     }
     
     params <- expand.grid(M = M, lambda = lambda, depth = depth, indep = indep)
@@ -229,17 +226,26 @@ gbm_mm <- function(o, n.trees=1, ...){
   model.matrix(~node)[,-1,drop=F]
 }
 
-# x can be an index or value
-assign_fold <- function(x, folds){
-  n <- length(x)
-  in_fold <- 0 # if n_i = 1, that observation will always be in training set
-  if(n > 1){ 
-    # If 1 < n_i < cv.folds, randomly assign a fold id to each i w/o replacement
-    # then randomly assign fold ids to the rest w/ replacement
-    in_fold <- c(sample(1:folds, size=min(n, folds), replace = F),
-                 sample(1:folds, size=max(0, (n - folds)), replace = T))
+assign_fold <- function(x, id, cv.folds){
+  folds <- list()
+  ids_by_group <- split(1:length(x), id[x])
+  
+  assign_fold_1group <- function(x, folds){
+    n <- length(x)
+    if(n == 1){
+      in_fold <- 0 # observation will always be in training set
+    } else {
+      # If 1 < n_i <= cv.folds, at least one observation from group is in training set
+      # If n_i > cv.folds, then randomly assign fold ids as usual
+      in_fold <- c(sample(1:folds, size=min(n, folds), replace = F),
+                   sample(1:folds, size=max(0, (n - folds)), replace = T))
+    }
+    return(in_fold)
   }
-  return(in_fold)
+  
+  folds <- unlist(lapply(ids_by_group, assign_fold_1group, folds = cv.folds), use.names = F)
+
+  return(folds)
 }
 
 
