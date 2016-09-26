@@ -28,18 +28,21 @@ lmerboost <- function(y, X, id,
   n <- length(y)
   X <- as.data.frame(X)
   params <- c(as.list(environment()),list(...)) # this won't copy y and x
+  
+  if(is.null(subset)) {
+    ss <- 1:n
+  } else {
+    ss <- subset
+  }
+  if(!is.null(train.fraction)){
+    ss <- sample(ss, ceiling(train.fraction*length(ss)), replace = F)
+  }
+  if(is.logical(subset)){ss <- which(subset)}
+  
+  new.levels <- any(!(id %in% id[train]))
+  
   if(cv.folds > 1){
     #cat("cv:", fill = T)
-    
-    if(is.null(subset)) {
-      ss <- 1:n
-    } else {
-      ss <- subset
-    }
-    if(!is.null(train.fraction)){
-      ss <- sample(ss, ceiling(train.fraction*length(ss)), replace = F)
-    }
-    if(is.logical(subset)){ss <- which(subset)}
     
     folds <- assign_fold(ss, id = id, cv.folds = cv.folds)
     
@@ -51,7 +54,7 @@ lmerboost <- function(y, X, id,
     cv.mods <- parallel::mclapply(conds.ls, function(args, ...){ 
       do.call(lmerboost_cv, append(args, list(...)))
     }, y=y, x=X, id=id, ss=ss, folds = folds, 
-      bag.fraction = bag.fraction, stop.threshold = stop.threshold, 
+      bag.fraction = bag.fraction, stop.threshold = stop.threshold, new.levels = new.levels,
       verbose = FALSE, mc.cores = mc.cores)
 
     # average over cv folds for each condition
@@ -67,36 +70,51 @@ lmerboost <- function(y, X, id,
     best.params <- params[best.cond, ]
     
     cv.err <- cv.err[[best.cond]]
+    best_cv_err <- which.min(cv.err)
     
     o <- lmerboost.fit(y = y, X = X, id = id, 
-          train.fraction = train.fraction, subset = subset, 
+          train.fraction = train.fraction, subset = subset, new.levels = new.levels,
           bag.fraction = bag.fraction, stop.threshold = stop.threshold, verbose = verbose,
           M = best.params$M, lambda = best.params$lambda, depth=best.params$depth, indep = best.params$indep,
           nt = nt,  tune=FALSE)
     
   } else { # cv.folds = 1
     cv.err <- rep(NA, M)
-    params = NULL
+    best_cv_err <- NA
+    params <- best.params <- NULL
+
     if(length(M) > 1 | length(lambda) > 1 | length(depth) > 1 | length(indep) > 1){ stop("can't specify vector params without cv.folds > 1")}
     
     o <- lmerboost.fit(y = y, X = X, id = id, 
-         train.fraction = train.fraction, subset = subset, 
+         train.fraction = train.fraction, subset = subset, new.levels = new.levels,
          bag.fraction = bag.fraction, stop.threshold = stop.threshold,
          M = M, lambda = lambda, depth=depth, indep = indep, 
          nt = nt,  tune=FALSE, verbose = verbose)
   }
+  if(all(is.na(o$test.err))){ 
+    best_test_err <- NA
+  } else {
+    best_test_err <- which.min(o$test.err)
+  }
+  if(all(is.na(o$oob.err))){ 
+    best_oob_err <- NA
+  } else {
+    best_oob_err <- which.min(o$oob.err)
+  }
+  best.trees <- c(train = which.min(o$train.err), test = best_test_err, oob = best_oob_err, cv = best_cv_err)
   
-  cat("", fill=T)
-  out <- list(yhat=o$yhat, ranef=o$ranef, fixed=o$fixed, lambda=o$lambda, subset=subset, 
-              yhatt=o$yhatt, raneft=o$raneft, fixedt=o$fixedt,
+  out <- list(yhat = o$yhat, ranef = o$ranef, fixed = o$fixed, lambda = o$lambda, subset = subset, 
+              yhatt = o$yhatt, raneft = o$raneft, fixedt = o$fixedt,
+              best.trees = best.trees,
               cond.cv.err = params, best.params = best.params, params = params,
+              trees = o$trees, xnames = colnames(X),
               train.err=o$train.err, oob.err=o$oob.err, test.err=o$test.err, cv.err=cv.err, 
               s = ss)
   class(out) <- "lmerboost"
   return(out)
 }
 
-lmerboost_cv <- function(k, folds, y, x, id, ss, ...){
+lmerboost_cv <- function(k, folds, y, x, id, ss, new.levels, ...){
   train <- ss[folds != k]
   o <- lmerboost.fit(y = y, X = x, id = id, subset = train, ...)
 }
@@ -105,7 +123,7 @@ lmerboost_cv <- function(k, folds, y, x, id, ss, ...){
 #' @export
 lmerboost.fit <- function(y, X, id, train.fraction=NULL, subset=NULL, indep=TRUE, M=100, 
                           lambda=.01, nt=1, depth=5, tune=FALSE, bag.fraction=.5, 
-                          calc.derivs=FALSE, stop.threshold = .001, verbose = TRUE, ...){
+                          calc.derivs=FALSE, stop.threshold = .001, new.levels = TRUE, verbose = TRUE, ...){
   
   init <- mean(y)
   r <- y - init
@@ -125,6 +143,8 @@ lmerboost.fit <- function(y, X, id, train.fraction=NULL, subset=NULL, indep=TRUE
   
   yhat <- ranef <- fixed <- matrix(0, n, M)
   train.err <- oob.err <- test.err <- rep(NA, M)
+  trees <- list()
+  
   
   for(i in 1:M){
     # s = training, s.oob = oob, -ss = test
@@ -138,8 +158,12 @@ lmerboost.fit <- function(y, X, id, train.fraction=NULL, subset=NULL, indep=TRUE
     s.oob <- setdiff(ss, s) # the oob observations are the observations in training but not in subset
     datx <- data.frame(r=r[s], X[s, ])
     colnames(datx) <- c("r", colnames(X))
+    
     tree <- gbm::gbm(r ~ ., data=datx, n.trees=nt, shrinkage=1, distribution="gaussian", 
-                     bag.fraction=1, interaction.depth=depth, ...)
+                            bag.fraction=1, interaction.depth=depth, ...)
+    
+    trees[[i]] <- tree$trees[[1]]
+    
     if(tune & (nt > 2)){ # errors with nt = 1:2
       tr <- suppressWarnings(gbm.perf(tree, method="OOB", plot.it=F))
     } else {
@@ -166,10 +190,19 @@ lmerboost.fit <- function(y, X, id, train.fraction=NULL, subset=NULL, indep=TRUE
                           control = lme4::lmerControl(calc.derivs = calc.derivs))
     dat.mm$r <- NULL
     
-    zucoefs <- as.matrix(lme4::ranef(out.lmer)[[1]]) # 
+    ## for the ids in the test but not in training, augment re with 0
+    re <- as.matrix(lme4::ranef(out.lmer)[[1]]) #
+    if(new.levels){
+      # Note that this step might be able to be optimized...? 
+      new_re <- as.data.frame(matrix(0, nrow = length(unique(id)), ncol = ncol(re)))
+      new_re[rownames(re), ] <- re
+      new_re <- as.matrix(new_re)
+    } else {
+      new_re <- re
+    }
     
     # Get random, fixed, and total for train, oob, and test at iteration m
-    zuhat <- get_zuhat(zucoefs, x = mm, id = dat.mm$id)
+    zuhat <- get_zuhat(new_re, x = mm, id = id)
     fixedm <- cbind(1, mm) %*% as.matrix(lme4::fixef(out.lmer))
     yhatm <- fixedm + zuhat 
 
@@ -205,9 +238,9 @@ lmerboost.fit <- function(y, X, id, train.fraction=NULL, subset=NULL, indep=TRUE
   }
   yhat <- yhat + init
   
-  
   out <- list(yhat=yhat[ss, ], ranef=ranef[ss, ], fixed=fixed[ss,], lambda=lambda, 
               yhatt=yhat[-ss, ], raneft=ranef[-ss, ], fixedt=fixed[-ss, ],
+              trees = trees,
               train.err=train.err, oob.err=oob.err, test.err=test.err)
   return(out)  
 }
@@ -313,6 +346,7 @@ get_subsample <- function(ss, id, bag.fraction){
   c(sid, sample(ss[!(ss %in% sid)], size = size, replace=F)) 
 }
 
+#' @export
 plot.lmerboost <- function(x, threshold = .001, lag = 1, ...){
   M <- length(x$train.err)
   ymax <- c(max(x$test.err, x$train.err, x$oob.err, na.rm = T))
@@ -335,3 +369,13 @@ plot.lmerboost <- function(x, threshold = .001, lag = 1, ...){
   title(sub = paramstring)
 }
 
+#' @export
+influence.lmerboost <- function(x, n.trees = NULL, relative = TRUE, sort = FALSE){
+  if(is.null(n.trees)){ 
+    n.trees <- min(o$best.trees, na.rm = TRUE)
+  }
+  inf <- mvtboost:::influence_from_tree_list(x$trees, n.trees = n.trees, var.names = x$xnames)
+  if(relative) { inf <- (inf / sum(inf)) * 100 }
+  if(sort) { inf <- sort(inf, decreasing = TRUE) }
+  inf
+}

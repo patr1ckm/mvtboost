@@ -15,9 +15,13 @@ u <- rnorm(ncol(Z), 0, 1)
 y <- x * .5 + Z %*% u + rnorm(n)
 X <- as.data.frame(x)
 
-# summary(lme4::lmer(y ~ x + (1 + x|id)))
-
 context("lmerboost.fit")
+
+test_that("lmerboost runs", {
+  o <- lmerboost(y = y, X = X, id = id, M = 5, cv.folds = 1, lambda = .1)
+  o <- lmerboost(y = y, X = X, id = id, M = 5, cv.folds = 3)
+  expect_is(o, "lmerboost")
+})
 
 test_that("lmerboost.fit m = 1, lambda = 1, bag.fraction = 1", {
   set.seed(104)
@@ -328,5 +332,13 @@ test_that("lmerboost cv params", {
   
 })
 
+## TODO: checks of train.fraction, logical subset, etc
 
+## TODO: combinations of params
 
+test_that("lmerboost influence", {
+  X <- data.frame(X1 = x, X2 = rnorm(n))
+  o <- lmerboost(y = y, X = X, id = id, M = 5, cv.folds = 3, lambda = .5)
+  inf <- influence(o)
+  expect_gt(inf[1], 0)
+})

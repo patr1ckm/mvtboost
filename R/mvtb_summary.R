@@ -175,7 +175,7 @@ mvtb.uncomp <- function(object) {
 
 #}
 
-ri.one <- function(object,n.trees=1,var.names) {
+influence_from_tree_list <- function(object, n.trees=1, var.names) {
   get.rel.inf <- function(obj) {
     lapply(split(obj[[6]], obj[[1]]), sum)
   }
@@ -187,5 +187,7 @@ ri.one <- function(object,n.trees=1,var.names) {
   rel.inf <- rep(0, length(var.names))
   i <- as.numeric(names(rel.inf.compact)) + 1
   rel.inf[i] <- rel.inf.compact
+  names(rel.inf) <- var.names 
+  
   return(rel.inf = rel.inf)
 }
