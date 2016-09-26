@@ -338,7 +338,7 @@ test_that("lmerboost cv params", {
 
 test_that("lmerboost influence", {
   X <- data.frame(X1 = x, X2 = rnorm(n))
-  o <- lmerboost(y = y, X = X, id = id, M = 5, cv.folds = 3, lambda = .5)
+  o <- lmerboost(y = y, X = X, id = id, M = 3, cv.folds = 1, lambda = .5)
   inf <- influence(o)
   expect_gt(inf[1], 0)
 })
