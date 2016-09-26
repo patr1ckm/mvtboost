@@ -5,6 +5,7 @@ group_size <- 10
 n <- ngroups * group_size
 id <- factor(rep(1:ngroups, each = group_size))
 
+# get a training sample from each group of group_size * .5
 train <- unlist(tapply(1:n, id, function(x){
   x[sample(1:length(x), size = group_size * .5, replace = F)]}))
 
@@ -35,8 +36,8 @@ test_that("lmerboost.fit m = 1, lambda = 1, bag.fraction = 1", {
                        control = lme4::lmerControl(calc.derivs = FALSE), data = d)
   
   Zm <- model.matrix(~id + mm:id - 1)
-  zuhat <- drop(Zm %*% c(as.matrix(ranef(o.lmer)[[1]])))
-  fixed <- drop(cbind(1, mm) %*% fixef(o.lmer))
+  zuhat <- drop(Zm %*% c(as.matrix(lme4::ranef(o.lmer)[[1]])))
+  fixed <- drop(cbind(1, mm) %*% lme4::fixef(o.lmer))
   yhat <- fixed + zuhat + init
   
   expect_equal(unname(zuhat), o$ranef)
@@ -62,8 +63,8 @@ test_that("lmerboost.fit m = 1, lambda = .5, bag.fraction = 1", {
                        control = lme4::lmerControl(calc.derivs = FALSE), data = d)
   
   Zm <- model.matrix(~id + mm:id - 1)
-  zuhat <- drop(Zm %*% c(as.matrix(ranef(o.lmer)[[1]]))) * lambda
-  fixed <- drop(cbind(1, mm) %*% fixef(o.lmer)) * lambda
+  zuhat <- drop(Zm %*% c(as.matrix(lme4::ranef(o.lmer)[[1]]))) * lambda
+  fixed <- drop(cbind(1, mm) %*% lme4::fixef(o.lmer)) * lambda
   yhat <- fixed + zuhat + init
   
   expect_equal(unname(zuhat), o$ranef)
@@ -73,6 +74,7 @@ test_that("lmerboost.fit m = 1, lambda = .5, bag.fraction = 1", {
 })
 
 test_that("lmerboost.fit m = 10, lambda = .5, bag.fraction = 1", {
+  lambda <- .5
   o <- lmerboost.fit(y = y, X = X, id = id, 
                      bag.fraction = 1,  indep = TRUE, verbose = FALSE,
                      M = 10, lambda = lambda, depth = 5, stop.threshold = 0, n.minobsinnode = 10)
@@ -92,8 +94,8 @@ test_that("lmerboost.fit m = 10, lambda = .5, bag.fraction = 1", {
                          control = lme4::lmerControl(calc.derivs = FALSE), data = d)
     
     Zm <- model.matrix(~id + mm:id - 1)
-    zuhatm <- drop(Zm %*% c(as.matrix(ranef(o.lmer)[[1]])))
-    fixedm <- drop(cbind(1, mm) %*% fixef(o.lmer))
+    zuhatm <- drop(Zm %*% c(as.matrix(lme4::ranef(o.lmer)[[1]])))
+    fixedm <- drop(cbind(1, mm) %*% lme4::fixef(o.lmer))
     yhatm <- zuhatm + fixedm 
     if(i == 1){
       zuhat[,i] <- zuhatm * lambda
@@ -123,6 +125,7 @@ test_that("lmerboost.fit get_subsample", {
 
 test_that("lmerboost.fit bag.fraction = .5", {
   bag.fraction = .5
+  lambda <- .5
   set.seed(104)
   o <- lmerboost.fit(y = y, X = X, id = id, 
                      bag.fraction = bag.fraction,  indep = TRUE, verbose = FALSE,
@@ -144,8 +147,8 @@ test_that("lmerboost.fit bag.fraction = .5", {
                          control = lme4::lmerControl(calc.derivs = FALSE), data = d, subset = s)
     
     Zm <- model.matrix(~id + mm:id - 1)
-    zuhatm <- drop(Zm %*% c(as.matrix(ranef(o.lmer)[[1]])))
-    fixedm <- drop(cbind(1, mm) %*% fixef(o.lmer))
+    zuhatm <- drop(Zm %*% c(as.matrix(lme4::ranef(o.lmer)[[1]])))
+    fixedm <- drop(cbind(1, mm) %*% lme4::fixef(o.lmer))
     yhatm <- zuhatm + fixedm 
     if(i == 1){
       zuhat[,i] <- zuhatm * lambda
@@ -167,7 +170,7 @@ test_that("lmerboost.fit bag.fraction = .5", {
 
 test_that("lmerboost.fit subset, train/oob/test err", {
   bag.fraction = .5
-  # get a training sample from each group of group_size * .5
+  lambda <- .5
   
   expect_true(all(unique(id) %in% unique(id[train])))
 
@@ -200,8 +203,8 @@ test_that("lmerboost.fit subset, train/oob/test err", {
                          control = lme4::lmerControl(calc.derivs = FALSE), data = d, subset = s)
 
     Zm <- model.matrix(~id + mm:id - 1)
-    zuhatm <- drop(Zm %*% c(as.matrix(ranef(o.lmer)[[1]])))
-    fixedm <- drop(cbind(1, mm) %*% fixef(o.lmer))
+    zuhatm <- drop(Zm %*% c(as.matrix(lme4::ranef(o.lmer)[[1]])))
+    fixedm <- drop(cbind(1, mm) %*% lme4::fixef(o.lmer))
     yhatm <- zuhatm + fixedm
     if(i == 1){
       zuhat[,i] <- zuhatm * lambda
@@ -235,9 +238,9 @@ test_that("lmerboost.fit subset, train/oob/test err", {
 
 test_that("lmerboost.fit get_zuhat", {
   o <- lme4::lmer(y ~ x + (1 + x|id))
-  re <- as.matrix(ranef(o)$id)
+  re <- as.matrix(lme4::ranef(o)$id)
   zuhat <- mvtboost:::get_zuhat(re = re, x = x, id = id)
-  zuhat_lmer <- c(predict(o) - cbind(1, x) %*% fixef(o))
+  zuhat_lmer <- c(predict(o) - cbind(1, x) %*% lme4::fixef(o))
   expect_equal(unname(zuhat), zuhat_lmer)
 })
 
@@ -289,7 +292,41 @@ test_that("lmerboost_cv", {
   expect_equivalent(o, ocv)
 })
 
+test_that("lmerboost cv params", {
+  
+  set.seed(104)
+  cv.folds = 3
+  folds <- mvtboost:::assign_fold(1:n, id = id, cv.folds = cv.folds)
+  paramscv <- expand.grid(M = 5, k = 1:cv.folds, lambda = c(.2, .5), depth = c(3, 5), indep = TRUE)
+  params <- expand.grid(M = 5, lambda = c(.2, .5), depth = c(3, 5), indep = TRUE)
+  paramscv$id <- factor(rep(1:nrow(params), each = cv.folds))
+  paramscv.ls <- split(paramscv, 1:nrow(paramscv))
+  do_one <- function(args, folds, y, x, id, ss, ...){ 
+    mvtboost:::lmerboost_cv(k = args$k, depth = args$depth, lambda = args$lambda,
+                 folds = folds, y = y, x = x, id = id, ss = ss , ...)}
+  
+  #do_one(paramscv.ls[[1]], folds = folds, y = y, X = X, id = id, ss = 1:n, M = 5)
+  
+  ocv <- lapply(X = paramscv.ls, FUN = do_one, folds = folds, ss = 1:n, y = y, x = X, id = id, 
+                M = 5, bag.fraction = 1)
 
+  cv.err <- tapply(ocv, paramscv$id, function(x){
+    lapply(x, function(el){el$test.err}) %>% dplyr::bind_rows(.) %>% rowMeans
+  }) %>% dplyr::bind_rows(.)
+  
+  min.cv.err <- lapply(cv.err, min)
+  params$err <- min.cv.err
+  cond <- which(cv.err == min(cv.err), arr.ind = T)[2]
+  bc <- params[cond, ]
+  
+  set.seed(104)
+  o <- lmerboost(y = y, X = X, id = id, cv.folds = 3, bag.fraction = 1, subset = 1:n,
+                lambda = c(.2, .5), depth = c(3, 5), M = 5, mc.cores = 1)
+  
+  expect_identical(bc, o$best.params)
+  expect_identical(params, o$params)
+  
+})
 
 
 

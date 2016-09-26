@@ -18,6 +18,7 @@
 # vectors can be passed to M, lambda, indep, and depth for cross validation
 
 #' @export
+#' @importFrom parallel mclapply
 lmerboost <- function(y, X, id, 
                       train.fraction=NULL, subset=NULL, bag.fraction=.5, cv.folds=1,
                       indep=TRUE, M=100, lambda=.01, nt=1, depth=5, 
@@ -47,9 +48,11 @@ lmerboost <- function(y, X, id,
     conds.ls <- split(conds, 1:nrow(conds))
     conds$id <- rep(1:nrow(params), each = cv.folds)
     
-    cv.mods <- mclapply(conds.ls, function(args, ...){ 
+    cv.mods <- parallel::mclapply(conds.ls, function(args, ...){ 
       do.call(lmerboost_cv, append(args, list(...)))
-    }, y=y, x=X, id=id, ss=ss, folds = folds, stop.threshold = stop.threshold, verbose = FALSE, mc.cores = mc.cores)
+    }, y=y, x=X, id=id, ss=ss, folds = folds, 
+      bag.fraction = bag.fraction, stop.threshold = stop.threshold, 
+      verbose = FALSE, mc.cores = mc.cores)
 
     # average over cv folds for each condition
     fold.err <- lapply(cv.mods, function(o){o$test.err})
