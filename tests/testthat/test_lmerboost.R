@@ -5,9 +5,7 @@ group_size <- 10
 n <- ngroups * group_size
 id <- factor(rep(1:ngroups, each = group_size))
 
-# get a training sample from each group of group_size * .5
-train <- unlist(tapply(1:n, id, function(x){
-  x[sample(1:length(x), size = group_size * .5, replace = F)]}))
+train <- sample(1:800, size = 500, replace = FALSE)
 
 x <- rnorm(n)
 Z <- model.matrix(~id + x:id - 1)
@@ -19,7 +17,8 @@ context("lmerboost.fit")
 
 test_that("lmerboost runs", {
   o <- lmerboost(y = y, X = X, id = id, M = 5, cv.folds = 1, lambda = .1)
-  o <- lmerboost(y = y, X = X, id = id, M = 5, cv.folds = 3)
+  o <- lmerboost(y = y, X = X, id = id, M = 5, cv.folds = 1, lambda = .1, subset = train)
+  o <- lmerboost(y = y, X = X, id = id, M = 3, cv.folds = 3)
   expect_is(o, "lmerboost")
 })
 
@@ -123,8 +122,16 @@ test_that("lmerboost.fit get_subsample", {
   bag.fraction <- .5
   s <- mvtboost:::get_subsample(1:n, id, bag.fraction = bag.fraction)
   expect_equal(length(s), ceiling(n * bag.fraction))
-  expect_equal(length(unique(s)), length(s))
+  expect_equal(length(unique(s)), length(s)) # obs only appear once
   expect_true(all(unique(id) %in% unique(id[s]))) # at least one from each group occurs
+  
+  
+  s <- mvtboost:::get_subsample(train, id[train], bag.fraction = bag.fraction)
+  expect_true(all(!is.na(s)))
+  expect_equal(length(s), ceiling(length(train) * bag.fraction))
+  expect_equal(length(unique(s)), length(s)) # obs only appear once
+  expect_true(all(unique(id[train]) %in% unique(id[s]))) # all training ids appear in s
+  
 })
 
 test_that("lmerboost.fit bag.fraction = .5", {
@@ -175,8 +182,6 @@ test_that("lmerboost.fit bag.fraction = .5", {
 test_that("lmerboost.fit subset, train/oob/test err", {
   bag.fraction = .5
   lambda <- .5
-  
-  expect_true(all(unique(id) %in% unique(id[train])))
 
   set.seed(104)
   o <- lmerboost.fit(y = y, X = X, id = id, subset = train,
@@ -196,7 +201,6 @@ test_that("lmerboost.fit subset, train/oob/test err", {
     # note that s is always an index to observations in the  original data
     s <- mvtboost:::get_subsample(train, id = id[train], bag.fraction = bag.fraction)
     s.oob <- setdiff(train, s)
-    expect_true(all(unique(id) %in% unique(id[s])))
 
     o.gbm <- gbm::gbm.fit(y = r[s], x = X[s, , drop = F], n.trees = 1, shrinkage = 1, bag.fraction = 1,
                           distribution = "gaussian", interaction.depth = 5, verbose = F)
@@ -207,7 +211,13 @@ test_that("lmerboost.fit subset, train/oob/test err", {
                          control = lme4::lmerControl(calc.derivs = FALSE), data = d, subset = s)
 
     Zm <- model.matrix(~id + mm:id - 1)
-    zuhatm <- drop(Zm %*% c(as.matrix(lme4::ranef(o.lmer)[[1]])))
+    
+    re <- as.matrix(lme4::ranef(o.lmer)[[1]]) #
+    new_re <- as.data.frame(matrix(0, nrow = length(unique(id)), ncol = ncol(re)))
+    new_re[rownames(re), ] <- re
+    new_re <- as.matrix(new_re)
+
+    zuhatm <- drop(Zm %*% c(new_re))
     fixedm <- drop(cbind(1, mm) %*% lme4::fixef(o.lmer))
     yhatm <- zuhatm + fixedm
     if(i == 1){

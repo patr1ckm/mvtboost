@@ -335,6 +335,8 @@ best_iter <- function(x, threshold, lag, smooth = FALSE){
 
 
 get_subsample <- function(ss, id, bag.fraction){
+  id <- droplevels(id)
+  
   # Get one obs from each group
   sid <- tapply(ss, id, function(x){ 
     x[sample(1:length(x), size=1)]
