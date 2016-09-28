@@ -14,9 +14,12 @@ u <- rnorm(ncol(Z), 0, 1)
 y <- x * .5 + Z %*% u + rnorm(n)
 X <- as.data.frame(x)
 
-o <- twostage(y=y, x=data.frame(xfull), id=id, n.trees=1000, shrinkage=.005)
+o <- twostage(y=y, x=X, id=id, n.trees=1000, shrinkage=.005)
 d <- data.frame(y, x, id)
 yhat <- predict(o, newdata=d)
-mse <- mean((yt - yhat)^2)
+mse <- mean((y - yhat)^2)
 
 ri <- influence(o)
+
+o <- twostage(y=y[train], x=X[train, ], id=id[train], n.trees=1000, shrinkage=.005)
+yhat <- predict(o, newdata = d)

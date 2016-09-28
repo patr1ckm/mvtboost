@@ -38,7 +38,7 @@ influence.twostage <- function(object, n.trees = NULL, sort = FALSE, relative = 
 
 #' @export
 predict.twostage <- function(object, newdata){
-  yhat <- predict(object$o.lmer, newdata=newdata) + 
+  yhat <- predict(object$o.lmer, newdata=newdata, allow.new.levels = TRUE) + 
     predict(object$o.gbm, newdata=newdata, n.trees=object$tr)
   return(yhat)
 }

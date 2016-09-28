@@ -39,7 +39,7 @@ lmerboost <- function(y, X, id,
   }
   if(is.logical(subset)){ss <- which(subset)}
   
-  new.levels <- any(!(id %in% id[train]))
+  new.levels <- any(!(id %in% id[ss]))
   
   if(cv.folds > 1){
     #cat("cv:", fill = T)
@@ -374,7 +374,7 @@ plot.lmerboost <- function(x, threshold = .001, lag = 1, ...){
 #' @export
 influence.lmerboost <- function(x, n.trees = NULL, relative = TRUE, sort = FALSE){
   if(is.null(n.trees)){ 
-    n.trees <- min(o$best.trees, na.rm = TRUE)
+    n.trees <- min(x$best.trees, na.rm = TRUE)
   }
   inf <- mvtboost:::influence_from_tree_list(x$trees, n.trees = n.trees, var.names = x$xnames)
   if(relative) { inf <- (inf / sum(inf)) * 100 }
