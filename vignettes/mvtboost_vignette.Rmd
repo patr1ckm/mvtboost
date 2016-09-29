@@ -29,17 +29,17 @@ Fitting the model is very similar to `gbm.fit`. Standardizing the outcomes is re
 
 ```{r}
 library(mvtboost)
-data("mpg",package="ggplot2")
-Y <- mpg[,c("cty","hwy")]      # use both city and highway mileage as dvs
+data("mpg", package="ggplot2")
+Y <- mpg[, c("cty","hwy")]      # use both city and highway mileage as dvs
 Ys <- scale(Y)                 # recommended that outcomes are on same scale
-X <- mpg[,-c(2,8:9)]           # manufacturer, displacement, year, cylinder, transmission,drive, class
+X <- mpg[, -c(2,8:9)]           # manufacturer, displacement, year, cylinder, transmission,drive, class
 char.ids <- unlist(lapply(X,is.character))
-X[,char.ids] <- lapply(X[,char.ids],as.factor)
+X[,char.ids] <- lapply(X[,char.ids], as.factor)
 
-out <- mvtb(Y=Ys,X=X,          # data
-        n.trees=1000,          # number of trees
-        shrinkage=.01,         # shrinkage or learning rate
-        interaction.depth=3)   # tree or interaction depth
+out <- mvtb(Y = Ys, X = X,          # data
+        n.trees = 1000,          # number of trees
+        shrinkage = .01,         # shrinkage or learning rate
+        interaction.depth = 3)   # tree or interaction depth
 ```
 
 ### 1.1 Tuning the model
@@ -47,16 +47,16 @@ out <- mvtb(Y=Ys,X=X,          # data
 The model can be tuned using either (or both) a test set or cross-validation. Cross-validation can be easily parallelized by specifying `mc.cores`. Here `bag.fraction` is set to .5, so that each tree is fit to a different random sub-sample of half the data.
 
 ```{r}
-out2 <- mvtb(Y=Ys,X=X,
-            n.trees=1000, 
-            shrinkage=.01,
-            interaction.depth=3,
+out2 <- mvtb(Y = Ys, X = X,
+            n.trees = 1000, 
+            shrinkage = .01,
+            interaction.depth = 3,
             
-            bag.fraction=.5,      # fit each tree to a sub sample of this fraction
-            train.fraction=.5,    # only fit the model to this fraction of the data set
-            cv.folds=3,           # number of cross-validation folds
-            mc.cores=1,           # run the cross-validation in parallel
-            seednum=103)          # set the seed number for reproducibility
+            bag.fraction = .5,      # fit each tree to a sub sample of this fraction
+            train.fraction = .5,    # only fit the model to this fraction of the data set
+            cv.folds = 3,           # number of cross-validation folds
+            mc.cores = 1,           # run the cross-validation in parallel
+            seednum = 103)          # set the seed number for reproducibility
 out2$best.trees
 ```
 
@@ -76,7 +76,7 @@ summary(out2)
 The predicted values of the model can be easily computed using the standard `predict` function. The variance explained ($R^2$) is shown below. By default, the number of trees used is the minimum of the best trees given by CV, test, or training error. 
 
 ```{r}
-yhat <- predict(out2,newdata=X)
+yhat <- predict(out2, newdata=X)
 (r2 <- var(yhat)/var(Ys))
 ```
 
@@ -86,14 +86,14 @@ Univariate and multivariate partial-dependence plots can highlight non-linear ef
 
 ```{r,fig.width=8,fig.height=3.5}
 par(mfcol=c(1,2))              # model implied effects for predictor 2 for cty and hwy
-plot(out2,response.no=1,predictor.no=2,ylim=c(-1,1))
-plot(out2,response.no=2,predictor.no=2,ylim=c(-1,1))
+plot(out2, response.no=1, predictor.no=2, ylim=c(-1,1))
+plot(out2, response.no=2, predictor.no=2, ylim=c(-1,1))
 ```
 
 We can also obtain the model implied effects as a function of two predictors:
 
 ```{r,fig.height=6,fig.width=6}
-mvtb.perspec(out2,response.no = 1,predictor.no = c(2,8),xlab="displacement",ylab="class",theta=45,zlab="cty")
+mvtb.perspec(out2, response.no = 1, predictor.no = c(2,8),xlab="displacement",ylab="class",theta=45,zlab="cty")
 ```
 
 
@@ -105,7 +105,7 @@ Decision tree ensembles can approximate multi-way interactions, but multi-way in
 Below, we show an example of computing departures from additivity. Pairs of predictors with significant non-linear effects might be plotted (as above) to investigate whether 2-way interactions exist. Below, we show that the most important non-linear effects all involve displacement, which has a very large non-linear effect.
 
 ```{r}
-nonlin.out <- mvtb.nonlin(out2,X=X,Y=Y)
+nonlin.out <- mvtb.nonlin(out2, X=X, Y=Y)
 nonlin.out$hwy$rank.list
 nonlin.out$cty$rank.list
 

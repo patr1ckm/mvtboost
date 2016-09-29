@@ -48,21 +48,6 @@ predict.pcb <- function(object, n.trees = NULL, newdata, drop=TRUE, ...){
 }
 
 
-#' Compute the influnce from pcb
-#' @export
-influence.pcb <- function(object, n.trees = NULL, relative = "col", ...){
-  ri <- influence.mvtb(object = object, n.trees=n.trees, relative = FALSE) 
-  ri <- data.frame(ri %*% t(object$ev$vectors))
 
-  if(relative == "col"){
-    ri <- matrix(apply(ri,2,function(col){col/sum(col)})*100,nrow=nrow(ri),ncol=ncol(ri))
-  } else if (relative=="tot") {
-    ri <- ri/sum(ri)*100
-  } # else do nothing
-  
-  rownames(ri) <- object$xnames
-  colnames(ri) <- object$ynames
-  return(ri)
-}
 
 

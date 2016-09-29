@@ -22,7 +22,7 @@
 #' controlling for the other predictors. In addition to the model-implied effect, the relative influence
 #' of the predictor is included in the x-axis label. If this is not desired, a custom label can be provided via \code{xlab}.
 #' 
-plot.mvtb <- function(x,predictor.no=1,response.no=1,n.trees=NULL,X=NULL,xlab=NULL,ylab=NULL,return.grid=FALSE,...){
+plot.mvtb <- function(x, predictor.no=1, response.no=1, n.trees=NULL, X=NULL, xlab=NULL, ylab=NULL, return.grid=FALSE, ...){
   if(any(unlist(lapply(x,function(li){is.raw(li)})))){
     x <- mvtb.uncomp(x)
   }

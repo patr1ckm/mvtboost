@@ -41,7 +41,7 @@ mvtb.covex <- function(object,Y,X,n.trees=NULL,iter.details=FALSE) {
   Res.cov <- array(0,dim=c(k,k,k, n.trees))
   covex <- array(0,dim=c(p,k*(k+1)/2))
   rownames(covex) <- colnames(X)
-  names <- outer(1:k,1:k,function(x,y){paste0(object$ynames[x],"-",object$ynames[y])})
+  names <- outer(1:k,1:k,function(x,y){paste0(object$ynames[x], "-", object$ynames[y])})
   colnames(covex) <- names[lower.tri(names,diag=TRUE)]
   
   ## Loss function evaluations
@@ -69,7 +69,7 @@ mvtb.covex <- function(object,Y,X,n.trees=NULL,iter.details=FALSE) {
     for(m in 1:k) {            
       ## For each model compute predicted values and influence
       tree.i <- finaltree[[m]][i]
-      rel.infl[,m,i] <- ri.one(tree.i,n.trees=1,object$xnames)
+      rel.infl[,m,i] <- influence_from_tree_list(tree.i, n.trees=1, object$xnames)
       
       ## Replace mth outcome with its residual, compute covariance           
       Rm <- D

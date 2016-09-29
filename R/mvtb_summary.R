@@ -1,42 +1,4 @@
-#' Computes the relative influence of each predictor for each outcome
-#' 
-#' The relative influence of a predictor is the reduction in sums of squares attributable to splits on individual predictors.
-#' It is often expressed as a percent (sums to 100).
-#' @param object \code{mvtb} output object
-#' @param n.trees number of trees to use. Defaults to the minimum number of trees by CV, test, or training error for each outcome.
-#' @param relative How to scale the multivariate influences. If \code{"col"}, each column sums to 100. If \code{"tot"}, the whole matrix sums to 100 (a percent). Otherwise, the raw reductions in SSE are returned.
-#' @param ... Additional arguments passed to \code{gbm::relative.influence}
-#' @return Matrix of (relative) influences.
-#' @export 
-mvtb.ri <- function(object,n.trees=NULL,relative="col",...){
-  
-  if(any(unlist(lapply(object,function(li){is.raw(li)})))){
-    object <- mvtb.uncomp(object)
-  }
-  k <- length(object$models)
-  if(is.null(n.trees)) { n.trees <- apply(object$best.trees, 1, min, na.rm=T) }
-  if(length(n.trees) == 1){ n.trees <- rep(n.trees, k)}
-  
-  ri <- matrix(0,nrow=length(object$xnames),ncol=k)
-  for(i in 1:k) {
-    gbm.obj <- object$models[[i]]
-    ri[,i] <- gbm::relative.influence(gbm.obj,n.trees=n.trees[i],...)
-  }
-  if(relative == "col"){
-    ri <- matrix(apply(ri,2,function(col){col/sum(col)})*100,nrow=nrow(ri),ncol=ncol(ri))
-  } else if (relative=="tot") {
-    ri <- ri/sum(ri)*100
-  }
-  colnames(ri) <- object$ynames
-  rownames(ri) <- object$xnames
-  return(ri)  
-}
 
-
-#' Compute influence scores from mvtb
-#' @inheritParams mvtb.ri
-#' @export
-influence.mvtb <- mvtb.ri
 
 
 #' @importFrom stats var
@@ -80,7 +42,7 @@ summary.mvtb <- function(object, print = TRUE, n.trees = NULL, relative = "col",
   
   if(length(n.trees) == 1){ n.trees <- rep(n.trees, k)}
   
-  ri <- influence(object, n.trees = n.trees, relative = relative)
+  ri <- influence.mvtb(object, n.trees = n.trees, relative = relative)
   
   sum <- list(best.trees = n.trees, relative.influence = ri)
   
@@ -175,19 +137,3 @@ mvtb.uncomp <- function(object) {
 
 #}
 
-influence_from_tree_list <- function(object, n.trees=1, var.names) {
-  get.rel.inf <- function(obj) {
-    lapply(split(obj[[6]], obj[[1]]), sum)
-  }
-  temp <- unlist(lapply(object[1:n.trees], get.rel.inf))
-  rel.inf.compact <- unlist(lapply(split(temp, names(temp)), 
-                                   sum))
-  rel.inf.compact <- rel.inf.compact[names(rel.inf.compact) != 
-                                       "-1"]
-  rel.inf <- rep(0, length(var.names))
-  i <- as.numeric(names(rel.inf.compact)) + 1
-  rel.inf[i] <- rel.inf.compact
-  names(rel.inf) <- var.names 
-  
-  return(rel.inf = rel.inf)
-}

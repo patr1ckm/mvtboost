@@ -21,5 +21,7 @@ mse <- mean((y - yhat)^2)
 
 ri <- influence(o)
 
-o <- twostage(y=y[train], x=X[train, ], id=id[train], n.trees=1000, shrinkage=.005)
+o <- twostage(y = y, x = X, id = id, subset = train,  n.trees=1000, shrinkage=.005)
 yhat <- predict(o, newdata = d)
+
+

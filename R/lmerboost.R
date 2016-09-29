@@ -371,13 +371,3 @@ plot.lmerboost <- function(x, threshold = .001, lag = 1, ...){
   title(sub = paramstring)
 }
 
-#' @export
-influence.lmerboost <- function(x, n.trees = NULL, relative = TRUE, sort = FALSE){
-  if(is.null(n.trees)){ 
-    n.trees <- min(x$best.trees, na.rm = TRUE)
-  }
-  inf <- mvtboost:::influence_from_tree_list(x$trees, n.trees = n.trees, var.names = x$xnames)
-  if(relative) { inf <- (inf / sum(inf)) * 100 }
-  if(sort) { inf <- sort(inf, decreasing = TRUE) }
-  inf
-}
