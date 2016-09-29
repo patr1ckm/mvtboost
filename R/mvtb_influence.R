@@ -53,7 +53,7 @@ influence.lmerboost <- function(model, n.trees = NULL, relative = TRUE, sort = F
   if(is.null(n.trees)){ 
     n.trees <- min(model$best.trees, na.rm = TRUE)
   }
-  inf <- mvtboost:::influence_from_tree_list(model$trees, n.trees = n.trees, var.names = modl$xnames)
+  inf <- mvtboost:::influence_from_tree_list(model$trees, n.trees = n.trees, var.names = model$xnames)
   if(relative) { inf <- (inf / sum(inf)) * 100 }
   if(sort) { inf <- sort(inf, decreasing = TRUE) }
   inf
