@@ -195,6 +195,7 @@ lmerboost.fit <- function(y, X, id, train.fraction=NULL, subset=NULL, indep=TRUE
     if(new.levels){
       # Note that this step might be able to be optimized...? 
       new_re <- as.data.frame(matrix(0, nrow = length(unique(id)), ncol = ncol(re)))
+      rownames(new_re) <- unique(as.character(id))
       new_re[rownames(re), ] <- re
       new_re <- as.matrix(new_re)
     } else {
