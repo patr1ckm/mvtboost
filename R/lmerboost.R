@@ -205,16 +205,16 @@ lmerboost.fit <- function(y, X, id, train.fraction=NULL, subset=NULL, indep=TRUE
     # Get random, fixed, and total for train, oob, and test at iteration m
     zuhat <- get_zuhat(new_re, x = mm, id = id)
     fixedm <- cbind(1, mm) %*% as.matrix(lme4::fixef(out.lmer))
-    yhatm <- fixedm + zuhat 
+    yhatm <- fixedm + zuhat
 
     # update totals at each iteration
     if(i == 1){
-      fixed[,i]  <- fixedm * lambda
+      fixed[,i]  <- fixedm * lambda 
       ranef[,i]  <- zuhat * lambda
-      yhat[,i]   <- yhatm * lambda
+      yhat[,i]   <- yhatm * lambda 
       
     } else {
-      fixed[,i]  <- fixed[,i-1] + fixedm * lambda
+      fixed[,i]  <- fixed[,i-1] + fixedm * lambda 
       ranef[,i]  <- ranef[,i-1] + zuhat * lambda
       yhat[,i]   <- yhat[,i-1] + yhatm * lambda
     }
@@ -223,13 +223,13 @@ lmerboost.fit <- function(y, X, id, train.fraction=NULL, subset=NULL, indep=TRUE
     
     if(verbose && (i %% 10 == 0)) cat(i, "")
     if(i==1){ 
-      train.err[i] <- mean(y[s]^2)
-      oob.err[i] <- mean(y[s.oob]^2)
-      test.err[i] <- mean(y[-ss]^2)
+      train.err[i] <- mean((y[s] - init)^2)
+      oob.err[i] <- mean((y[s.oob] - init)^2)
+      test.err[i] <- mean((y[-ss] - init)^2)
     }
-    train.err[i] <- mean((yhat[s,i] - y[s])^2)
-    oob.err[i] <- mean((yhat[s.oob,i] - y[s.oob])^2)
-    test.err[i] <- mean((yhat[-ss,i] - y[-ss])^2)
+    train.err[i] <- mean((yhat[s,i] - (y[s] - init))^2)
+    oob.err[i] <- mean((yhat[s.oob,i] - (y[s.oob] - init))^2)
+    test.err[i] <- mean((yhat[-ss,i] - (y[-ss] - init))^2)
     
     #if((i %% lag == 0) && (abs(test.err[i] - test.err[i - (lag - 1)]) < stop.threshold)){
     #  break;

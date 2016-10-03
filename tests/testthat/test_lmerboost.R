@@ -40,13 +40,13 @@ test_that("lmerboost.fit m = 1, lambda = 1, bag.fraction = 1", {
   
   Zm <- model.matrix(~id + mm:id - 1)
   zuhat <- drop(Zm %*% c(as.matrix(lme4::ranef(o.lmer)[[1]])))
-  fixed <- drop(cbind(1, mm) %*% lme4::fixef(o.lmer))
-  yhat <- fixed + zuhat + init
+  fixed <- drop(cbind(1, mm) %*% lme4::fixef(o.lmer)) + init
+  yhat <- fixed + zuhat
   
   expect_equal(unname(zuhat), o$ranef)
   expect_equal(unname(fixed), o$fixed)
   expect_equal(unname(yhat), o$yhat)
-  expect_equal(o$yhat, unname(predict(o.lmer)) + init)
+  expect_equal(unname(predict(o.lmer)) + init, o$yhat)
 })
 
 test_that("lmerboost.fit m = 1, lambda = .5, bag.fraction = 1", {
@@ -67,13 +67,13 @@ test_that("lmerboost.fit m = 1, lambda = .5, bag.fraction = 1", {
   
   Zm <- model.matrix(~id + mm:id - 1)
   zuhat <- drop(Zm %*% c(as.matrix(lme4::ranef(o.lmer)[[1]]))) * lambda
-  fixed <- drop(cbind(1, mm) %*% lme4::fixef(o.lmer)) * lambda
-  yhat <- fixed + zuhat + init
+  fixed <- drop(cbind(1, mm) %*% lme4::fixef(o.lmer)) * lambda + init
+  yhat <- fixed + zuhat 
   
   expect_equal(unname(zuhat), o$ranef)
   expect_equal(unname(fixed), o$fixed)
-  expect_equal(unname(fixed + zuhat + init), o$yhat)
-  expect_equal(o$yhat, unname(predict(o.lmer) * lambda + init))
+  expect_equal(unname(fixed + zuhat), o$yhat)
+  expect_equal(unname(predict(o.lmer))*lambda + init, o$yhat)
 })
 
 test_that("lmerboost.fit m = 10, lambda = .5, bag.fraction = 1", {
@@ -112,6 +112,7 @@ test_that("lmerboost.fit m = 10, lambda = .5, bag.fraction = 1", {
     r <- r - yhatm * lambda
   }
   yhat <- yhat + init
+  fixed <- fixed + init
   
   expect_equal(yhat, o$yhat)
   expect_equal(zuhat, o$ranef)
@@ -173,6 +174,7 @@ test_that("lmerboost.fit bag.fraction = .5", {
     r <- r - yhatm * lambda
   }
   yhat <- yhat + init
+  fixed <- fixed + init
   
   expect_equal(yhat, o$yhat)
   expect_equal(zuhat, o$ranef)
@@ -230,12 +232,13 @@ test_that("lmerboost.fit subset, traiN/oob/test err", {
       yhat[,i] <- yhat[,i-1] + yhatm * lambda
     }
     r <- r - yhatm * lambda
-    traiN_err[i] <- mean((y[s, ] - yhat[s, i])^2)
-    oob_err[i]   <- mean((y[s.oob, ] - yhat[s.oob, i])^2)
-    test_err[i]  <- mean((y[-traiN, ] - yhat[-traiN, i])^2)
+    traiN_err[i] <- mean(((y[s, ] - init) - yhat[s, i])^2)
+    oob_err[i]   <- mean(((y[s.oob, ] - init) - yhat[s.oob, i])^2)
+    test_err[i]  <- mean(((y[-traiN, ] - init) - yhat[-traiN, i])^2)
     
   }
   yhat <- yhat + init
+  fixed <- fixed + init
 
   expect_equal(yhat[traiN, ], o$yhat)
   expect_equal(zuhat[traiN, ], o$ranef)
