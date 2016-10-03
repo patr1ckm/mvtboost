@@ -236,6 +236,7 @@ lmerboost.fit <- function(y, X, id, train.fraction=NULL, subset=NULL, indep=TRUE
     #}
   }
   yhat <- yhat + init
+  fixed <- fixed + init
   
   out <- list(yhat=yhat[ss, ], ranef=ranef[ss, ], fixed=fixed[ss,], lambda=lambda, 
               yhatt=yhat[-ss, ], raneft=ranef[-ss, ], fixedt=fixed[-ss, ],
