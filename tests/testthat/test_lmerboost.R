@@ -230,9 +230,9 @@ test_that("lmerboost.fit subset, traiN/oob/test err", {
       yhat[,i] <- yhat[,i-1] + yhatm * lambda
     }
     r <- r - yhatm * lambda
-    traiN_err[i] <- var(y[s, ] - yhat[s, i])
-    oob_err[i]   <- var(y[s.oob, ] - yhat[s.oob, i])
-    test_err[i]  <- var(y[-traiN, ] - yhat[-traiN, i])
+    traiN_err[i] <- mean((y[s, ] - yhat[s, i])^2)
+    oob_err[i]   <- mean((y[s.oob, ] - yhat[s.oob, i])^2)
+    test_err[i]  <- mean((y[-traiN, ] - yhat[-traiN, i])^2)
     
   }
   yhat <- yhat + init

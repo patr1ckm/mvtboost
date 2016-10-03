@@ -223,15 +223,13 @@ lmerboost.fit <- function(y, X, id, train.fraction=NULL, subset=NULL, indep=TRUE
     
     if(verbose && (i %% 10 == 0)) cat(i, "")
     if(i==1){ 
-      # for the first iteration, compute the training, oob, and test error from only
-      # the means
-      train.err[i] <- var(y[s])
-      oob.err[i] <- var(y[s.oob])
-      test.err[i] <- var(y[-ss])
+      train.err[i] <- mean(y[s]^2)
+      oob.err[i] <- mean(y[s.oob]^2)
+      test.err[i] <- mean(y[-ss]^2)
     }
-    train.err[i] <- var(yhat[s,i] - y[s])
-    oob.err[i] <- var(yhat[s.oob,i] - y[s.oob])
-    test.err[i] <- var(yhat[-ss,i] - y[-ss])
+    train.err[i] <- mean((yhat[s,i] - y[s])^2)
+    oob.err[i] <- mean((yhat[s.oob,i] - y[s.oob])^2)
+    test.err[i] <- mean((yhat[-ss,i] - y[-ss])^2)
     
     #if((i %% lag == 0) && (abs(test.err[i] - test.err[i - (lag - 1)]) < stop.threshold)){
     #  break;
