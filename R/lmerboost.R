@@ -39,6 +39,7 @@ lmerboost <- function(y, X, id,
   }
   if(is.logical(subset)){ss <- which(subset)}
   
+  
   new.levels <- any(!(id %in% id[ss]))
   
   if(cv.folds > 1){
@@ -172,31 +173,38 @@ lmerboost.fit <- function(y, X, id, train.fraction=NULL, subset=NULL, indep=TRUE
     }
     
     # Get model matrix for train, oob and test
+    # In this formulation, surrogate splits are separate nodes.
     yhat_gbm <- predict(o, n.trees=nt)
     node <- factor(yhat_gbm)
-    mm <- model.matrix(~node)[,-1,drop=F]
     
-    # drop columns with no observations in the training set. Only occurs with NAs in X.
-    #
-    # dropping columns effectively prunes the tree of some surrogate splits.
-    # if columns are not dropped, the model matrix is rank deficient 
-    #   and lmer drops the column with only a warning, breaking predictions
+    # mm <- model.matrix(~node)[,-1,drop=F] default coding adding intercept in lmer
+    # cell means coding. works if tree doesn't split and allows easy rank check
+    mm <- model.matrix(~node - 1) 
+    
+    # Quick rank check with missing data:
+    #  drop nodes with no observations in the training set. Only occurs with NAs in X,
+    #   not gauranteed to have the same patterns of missing values in training and test.
+    #  if columns are not dropped, the model matrix is rank deficient 
+    #   and lmer drops the column with only a warning, breaking predictions.
+    # otherwise, node assignment is assumed to be a full rank operation.
     dropped_cols <- apply(mm[s,], 2, function(col){length(unique(col))}) == 1
     
     # These are the observations in the training + test affected by dropped columns
-    dropped_obs <- which(apply(mm[,dropped_cols], 1, function(row){ row > 0}))
+    # The predictions for these observations will be replaced with predictions from gbm.
+    # This side-steps th issue by treating surrogate nodes not in training as fixed.
+    dropped_obs <- which(apply(mm[,dropped_cols, drop=F], 1, function(row){ row > 0}))
     mm <- mm[,!dropped_cols, drop = FALSE]
     
     nodes <- ncol(mm)
     colnames(mm) <- paste0("X", 1:ncol(mm))
     dat.mm <- data.frame(r=r, id=id, mm)
     
-  
+    # note that in cell means, intercept is dropped for fixed but not random
     if(indep){
-      form <- as.formula(paste0("r ~ ", paste0("X", 1:nodes, collapse = " + "),  " + (",
+      form <- as.formula(paste0("r ~ 0 + ", paste0("X", 1:nodes, collapse = " + "),  " + (",
                                 paste0("X", 1:nodes, collapse=" + "), " + 1 || id)"))
     } else {
-      form <- as.formula(paste0("r ~ ", paste0("X", 1:nodes, collapse = " + "),  " + (",
+      form <- as.formula(paste0("r ~ 0 + ", paste0("X", 1:nodes, collapse = " + "),  " + (",
                                 paste0("X", 1:nodes, collapse=" + "), " + 1 | id)"))
     }
     
@@ -222,7 +230,8 @@ lmerboost.fit <- function(y, X, id, train.fraction=NULL, subset=NULL, indep=TRUE
     
     # Get random, fixed, and total for train, oob, and test at iteration m
     zuhat <- get_zuhat(new_re, x = mm, id = id)
-    fixedm <- cbind(1, mm) %*% as.matrix(lme4::fixef(out.lmer))
+    #fixedm <- cbind(1, mm) %*% as.matrix(lme4::fixef(out.lmer))
+    fixedm <- mm %*% as.matrix(lme4::fixef(out.lmer))
     fixedm[dropped_obs, ] <- yhat_gbm[dropped_obs]
     yhatm <- fixedm + zuhat
 
@@ -250,6 +259,7 @@ lmerboost.fit <- function(y, X, id, train.fraction=NULL, subset=NULL, indep=TRUE
     oob.err[i] <- mean((yhat[s.oob,i] - (y[s.oob] - init))^2)
     test.err[i] <- mean((yhat[-ss,i] - (y[-ss] - init))^2)
     
+    # This was removed because it can stop too early.
     #if((i %% lag == 0) && (abs(test.err[i] - test.err[i - (lag - 1)]) < stop.threshold)){
     #  break;
     #}
