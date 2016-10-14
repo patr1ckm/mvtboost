@@ -174,7 +174,7 @@ lmerboost.fit <- function(y, X, id, train.fraction=NULL, subset=NULL, indep=TRUE
     
     # Get model matrix for train, oob and test
     # In this formulation, surrogate splits are separate nodes.
-    yhat_gbm <- predict(o, n.trees=nt)
+    yhat_gbm <- predict(tree, n.trees=nt, newdata=X)
     node <- factor(yhat_gbm)
     
     # mm <- model.matrix(~node)[,-1,drop=F] default coding adding intercept in lmer
