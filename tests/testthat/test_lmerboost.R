@@ -19,6 +19,9 @@ test_that("lmerboost runs", {
   o <- lmerboost(y = y, X = X, id = id, M = 5, cv.folds = 1, lambda = .1)
   o <- lmerboost(y = y, X = X, id = id, M = 5, cv.folds = 1, lambda = .1, subset = traiN)
   o <- lmerboost(y = y, X = X, id = id, M = 3, cv.folds = 3)
+  Xmis <- X
+  Xmis[sample(1:n, size = n/2, replace = FALSE),] <- NA
+  o <- lmerboost(y = y, X = Xmis, id = id, M = 3, cv.folds = 3)
   expect_is(o, "lmerboost")
 })
 
@@ -181,7 +184,7 @@ test_that("lmerboost.fit bag.fraction = .5", {
   expect_equal(fixed, o$fixed)
 })
 
-test_that("lmerboost.fit subset, traiN/oob/test err", {
+test_that("lmerboost.fit subset, train/oob/test err", {
   bag.fraction = .5
   lambda <- .5
 
@@ -249,6 +252,41 @@ test_that("lmerboost.fit subset, traiN/oob/test err", {
   expect_equal(traiN_err, o$train.err)  
   expect_equal(oob_err, o$oob.err)  
   expect_equal(test_err, o$test.err)  
+})
+
+test_that("lmerboost.fit drops rank deficient cols", {
+  # Rank deficiency in training can occur with missing data due to surrogate splitting.
+  # gbm always defines a surrogate, and in the full data the surrogate
+  #  might be used to make a prediction. 
+  
+  # Since the design matrix is created for unique predictions, the full
+  # data (training + test) might have more unique predictions than the training.
+  # The training data might have a column where no observations fall (all 0s)
+   
+  # Since lmer is fit to training data, the design matrix is rank deficient.
+  # lmer drops the column with a warning.
+  
+  # However, this means that the model matrix of the full data and of training
+  # don't have the same dimensions; which breaks predictions.
+  
+  # To avoid this, I drop columns myself. This amounts to pruning surrogate splits.
+  # Dropping the colum assigns the observation that is missing to the left node.
+  
+  
+  # Test case that demonstrates missing nodes
+  x <- rep(0:1, each = 10)
+  x2 <- sample(x)
+  y <- x + rnorm(20)   # will split on x1, not x2
+  x[c(10, 20)] <- NA   # will use x2 for a surrogate for these obs
+  s <- c(1:9, 11:19)   # training set does not have missing values
+  d <- data.frame(y, x, x2)
+  o <- gbm(y ~ ., data=d[s,], n.minobsinnode=1, shrinkage=1, n.trees=1, 
+           distribution="gaussian")
+  mm <- mvtboost:::gbm_mm(o, newdata = d)
+  
+  todrop <- apply(mm[s,], 2, function(col){length(unique(col))}) == 1
+  mm <- mm[,!todrop, drop = FALSE]
+  
 })
 
 ## TODO: lmerboost.fit logical subset
@@ -344,6 +382,8 @@ test_that("lmerboost cv params", {
   expect_identical(params, o$params)
   
 })
+
+
 
 ## TODO: checks of train.fraction, logical subset, etc
 

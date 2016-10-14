@@ -155,6 +155,7 @@ lmerboost.fit <- function(y, X, id, train.fraction=NULL, subset=NULL, indep=TRUE
     } else {
       s <- ss
     }
+    
     s.oob <- setdiff(ss, s) # the oob observations are the observations in training but not in subset
     datx <- data.frame(r=r[s], X[s, ])
     colnames(datx) <- c("r", colnames(X))
@@ -171,11 +172,25 @@ lmerboost.fit <- function(y, X, id, train.fraction=NULL, subset=NULL, indep=TRUE
     }
     
     # Get model matrix for train, oob and test
-    mm <- gbm_mm(tree, n.trees = tr, newdata = X)
+    yhat_gbm <- predict(o, n.trees=nt)
+    node <- factor(yhat_gbm)
+    mm <- model.matrix(~node)[,-1,drop=F]
+    
+    # drop columns with no observations in the training set. Only occurs with NAs in X.
+    #
+    # dropping columns effectively prunes the tree of some surrogate splits.
+    # if columns are not dropped, the model matrix is rank deficient 
+    #   and lmer drops the column with only a warning, breaking predictions
+    dropped_cols <- apply(mm[s,], 2, function(col){length(unique(col))}) == 1
+    
+    # These are the observations in the training + test affected by dropped columns
+    dropped_obs <- which(apply(mm[,dropped_cols], 1, function(row){ row > 0}))
+    mm <- mm[,!dropped_cols, drop = FALSE]
     
     nodes <- ncol(mm)
     colnames(mm) <- paste0("X", 1:ncol(mm))
     dat.mm <- data.frame(r=r, id=id, mm)
+    
   
     if(indep){
       form <- as.formula(paste0("r ~ ", paste0("X", 1:nodes, collapse = " + "),  " + (",
@@ -185,10 +200,13 @@ lmerboost.fit <- function(y, X, id, train.fraction=NULL, subset=NULL, indep=TRUE
                                 paste0("X", 1:nodes, collapse=" + "), " + 1 | id)"))
     }
     
+    
+    
     # Fit lmer model to training set only, not oob or test
     out.lmer <- lme4::lmer(form, data=dat.mm, REML=T, subset = s, 
                           control = lme4::lmerControl(calc.derivs = calc.derivs))
     dat.mm$r <- NULL
+    
     
     ## for the ids in the test but not in training, augment re with 0
     re <- as.matrix(lme4::ranef(out.lmer)[[1]]) #
@@ -205,6 +223,7 @@ lmerboost.fit <- function(y, X, id, train.fraction=NULL, subset=NULL, indep=TRUE
     # Get random, fixed, and total for train, oob, and test at iteration m
     zuhat <- get_zuhat(new_re, x = mm, id = id)
     fixedm <- cbind(1, mm) %*% as.matrix(lme4::fixef(out.lmer))
+    fixedm[dropped_obs, ] <- yhat_gbm[dropped_obs]
     yhatm <- fixedm + zuhat
 
     # update totals at each iteration
