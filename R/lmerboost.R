@@ -151,88 +151,51 @@ lmerboost.fit <- function(y, X, id, train.fraction=NULL, subset=NULL, indep=TRUE
     # s = training, s.oob = oob, -ss = test
     # make sure one observation from each group is present, where the subset has to cover all groups
     #  note that just using sample(x, 1) will fail if x has length 1
-    if(bag.fraction < 1){
-      s <- get_subsample(ss = ss, id = droplevels(id[ss]), bag.fraction = bag.fraction)
-    } else {
-      s <- ss
-    }
+    # get a sub sample
+    s <- sample(train, size = length(train)*bag.fraction, replace = FALSE)
+    s.oob <- setdiff(train, s)
     
-    s.oob <- setdiff(ss, s) # the oob observations are the observations in training but not in subset
-    datx <- data.frame(r=r[s], X[s, ])
-    colnames(datx) <- c("r", colnames(X))
+    # fit a tree
+    tree <- gbm.fit(y = r[s], x=X[s, ,drop=F], interaction.depth = depth,
+                    bag.fraction = 1, distribution="gaussian", verbose=FALSE, n.trees = 1)
     
-    tree <- gbm::gbm(r ~ ., data=datx, n.trees=nt, shrinkage=1, distribution="gaussian", 
-                            bag.fraction=1, interaction.depth=depth, ...)
+    # get gbm predictions for whole sample
+    gbm_pred <- predict(tree, newdata = data.frame(X), n.trees = 1) 
     
-    trees[[i]] <- tree$trees[[1]]
+    # design matrix
+    mm <- model.matrix(~factor(gbm_pred) - 1)
+    nnodes <- ncol(mm)
+    colnames(mm) <- paste0("X", 1:nnodes)
     
-    if(tune & (nt > 2)){ # errors with nt = 1:2
-      tr <- suppressWarnings(gbm.perf(tree, method="OOB", plot.it=F))
-    } else {
-      tr <- nt
-    }
+    d <- data.frame(r=r, mm, id)
+    # formula
+    addx <- paste0(colnames(mm), collapse = " + ")
+    bars <- "||"
+    if(!indep) bars <- "|"
+    form <- as.formula(paste0("r ~ 0 + ", addx, " + (0 + ",addx, " ", bars," id)"))
     
-    # Get model matrix for train, oob and test
-    # In this formulation, surrogate splits are separate nodes.
-    yhat_gbm <- predict(tree, n.trees=nt, newdata=X)
-    node <- factor(yhat_gbm)
-    
-    # mm <- model.matrix(~node)[,-1,drop=F] default coding adding intercept in lmer
-    # cell means coding. works if tree doesn't split and allows easy rank check
-    mm <- model.matrix(~node - 1) 
-    
-    # Quick rank check with missing data:
-    #  drop nodes with no observations in the training set. Only occurs with NAs in X,
-    #   not gauranteed to have the same patterns of missing values in training and test.
-    #  if columns are not dropped, the model matrix is rank deficient 
-    #   and lmer drops the column with only a warning, breaking predictions.
-    # otherwise, node assignment is assumed to be a full rank operation.
+    # check rank; missing values may cause not full rank
     dropped_cols <- apply(mm[s,], 2, function(col){length(unique(col))}) == 1
+    dropped_obs <- unique(which(mm > 0, arr.ind = T)[,1])
     
-    # These are the observations in the training + test affected by dropped columns
-    # The predictions for these observations will be replaced with predictions from gbm.
-    # This side-steps th issue by treating surrogate nodes not in training as fixed.
-    dropped_obs <- which(apply(mm[,dropped_cols, drop=F], 1, function(row){ row > 0}))
     mm <- mm[,!dropped_cols, drop = FALSE]
     
-    nodes <- ncol(mm)
-    colnames(mm) <- paste0("X", 1:ncol(mm))
-    dat.mm <- data.frame(r=r, id=id, mm)
+    # lmer on training
+    o <- lme4::lmer(form, data=d, REML=T, subset = s, 
+                    control = lme4::lmerControl(calc.derivs = FALSE))
     
-    # note that in cell means, intercept is dropped for fixed but not random
-    if(indep){
-      form <- as.formula(paste0("r ~ 0 + ", paste0("X", 1:nodes, collapse = " + "),  " + (",
-                                paste0("X", 1:nodes, collapse=" + "), " + 1 || id)"))
-    } else {
-      form <- as.formula(paste0("r ~ 0 + ", paste0("X", 1:nodes, collapse = " + "),  " + (",
-                                paste0("X", 1:nodes, collapse=" + "), " + 1 | id)"))
-    }
+    # get ranefs; ids not in s get 0
     
+    b <- rep(0, nlevels * nnodes)
+    levels_in_s <- as.numeric(sort(unique(id[s])))
+    bidx <- unlist(lapply(0:(nnodes-1), function(i){levels_in_s + i*nlevels}))
+    b[bidx] <- crossprod(o@pp$Lambdat, o@u)
     
-    
-    # Fit lmer model to training set only, not oob or test
-    out.lmer <- lme4::lmer(form, data=dat.mm, REML=T, subset = s, 
-                          control = lme4::lmerControl(calc.derivs = calc.derivs))
-    dat.mm$r <- NULL
-    
-    
-    ## for the ids in the test but not in training, augment re with 0
-    re <- as.matrix(lme4::ranef(out.lmer)[[1]]) #
-    if(new.levels){
-      # Note that this step might be able to be optimized...? 
-      new_re <- as.data.frame(matrix(0, nrow = length(unique(id)), ncol = ncol(re)))
-      rownames(new_re) <- unique(as.character(id))
-      new_re[rownames(re), ] <- re
-      new_re <- as.matrix(new_re)
-    } else {
-      new_re <- re
-    }
-    
-    # Get random, fixed, and total for train, oob, and test at iteration m
-    zuhat <- get_zuhat(new_re, x = mm, id = id)
-    #fixedm <- cbind(1, mm) %*% as.matrix(lme4::fixef(out.lmer))
-    fixedm <- mm %*% as.matrix(lme4::fixef(out.lmer))
-    fixedm[dropped_obs, ] <- yhat_gbm[dropped_obs]
+    # get Z matrix for all data
+    Zt <- KhatriRao(Ji, t(mm))
+    zuhat <- as.vector(crossprod(Zt, b))
+    fixedm <- mm %*% o@beta
+    fixedm[dropped_obs, ] <- gbm_pred[dropped_obs]
     yhatm <- fixedm + zuhat
 
     # update totals at each iteration
@@ -283,6 +246,8 @@ get_zuhat <- function(re, x, id){
   b <- c(re)
   drop(Z %*% b)
 }
+
+
 
 
 gbm_mm <- function(o, n.trees=1, ...){
