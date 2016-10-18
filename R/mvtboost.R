@@ -324,7 +324,6 @@ mvtbCV <- function(Y, X, n.trees, cv.folds, save.cv, s, mc.cores, ...) {
 #' @return Returns an (array, matrix, vector) of predictions for all outcomes. The third dimension corresponds to the 
 #' predictions at a given number of trees, the second dimension corresponds to the number of outcomes.
 #' @export
-#' @importFrom gbm predict.gbm
 #' 
 predict.mvtb <- function(object, n.trees=NULL, newdata, drop=TRUE, ...) {
   out <- object
@@ -337,7 +336,7 @@ predict.mvtb <- function(object, n.trees=NULL, newdata, drop=TRUE, ...) {
   Pred <- array(0,dim=c(nrow(newdata),K,treedim))  
   for(k in 1:K) {                                     
     p <- rep(0,nrow(newdata))        
-    p <- predict.gbm(out$models[[k]],n.trees=n.trees,newdata=newdata)    
+    p <- predict(out$models[[k]],n.trees=n.trees,newdata=newdata)    
     Pred[,k,] <- p
   }
   #if(length(n.trees) == 1) {
