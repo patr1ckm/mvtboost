@@ -193,7 +193,7 @@ lmerboost.fit <- function(y, X, id, train.fraction=NULL, subset=NULL, indep=TRUE
     # lmer on training
     o <- lme4::lmer(form, data=d, REML=T, subset = s, 
                     control = lme4::lmerControl(calc.derivs = FALSE))
-    sigma[i] <- sigma(o) * lambda
+    sigma[i] <- stats::sigma(o) * lambda
     
     # 2016-10-19: Timed to show that this was fastest with large n and large ngrps
     yhatm <- predict(o, newdata=d, allow.new.levels = TRUE)
