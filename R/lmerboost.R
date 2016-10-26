@@ -51,7 +51,7 @@ lmerboost <- function(y, X, id,
   if(cv.folds > 1){
     #cat("cv:", fill = T)
     
-    folds <- sample(1:cv.folds, size=n, replace = TRUE)
+    folds <- sample(1:cv.folds, size=length(train), replace = TRUE)
     
     params <- expand.grid(M = M, lambda = lambda, depth = depth, indep = indep)
     conds <- expand.grid(k = 1:(cv.folds), M = M, lambda = lambda, depth = depth, indep = indep)

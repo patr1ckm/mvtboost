@@ -243,6 +243,8 @@ test_that("lmerboost.fit subset, train/oob/test err", {
   expect_equal(test_err, o$test.err)  
 })
 
+## TODO:
+
 test_that("lmerboost.fit drops rank deficient cols", {
   # Rank deficiency in training can occur with missing data due to surrogate splitting.
   # gbm always defines a surrogate, and in the full data the surrogate
@@ -350,6 +352,12 @@ test_that("lmerboost cv params", {
 
 
 ## TODO: checks of train.fraction, logical subset, etc
+
+test_that("lmerboost_cv train", {
+  # for now, just test that they run
+  o <- lmerboost(y=y, X=X, id=id, cv.folds=3, bag.fraction=1, subset=1:(n/2), M=3)
+  o <- lmerboost(y=y, X=X, id=id, cv.folds=3, bag.fraction=.5, subset=1:(n/2), M=3)
+})
 
 ## TODO: combinations of params
 
