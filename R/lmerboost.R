@@ -20,32 +20,38 @@
 #' @export
 #' @importFrom parallel mclapply
 lmerboost <- function(y, X, id, 
-                      train.fraction=NULL, subset=NULL, bag.fraction=.5, cv.folds=1,
-                      indep=TRUE, M=100, lambda=.01, nt=1, depth=5, 
-                      tune=FALSE, stop.threshold = .001,
-                      mc.cores=1, verbose = TRUE, ...){
+                      train.fraction=NULL, 
+                      subset=NULL, 
+                      bag.fraction=.5, 
+                      cv.folds=1,
+                      indep=TRUE, 
+                      M=100, 
+                      lambda=.01, 
+                      nt=1, 
+                      depth=5, 
+                      tune=FALSE, 
+                      stop.threshold = .001,
+                      mc.cores=1, 
+                      verbose = TRUE, ...){
 
   n <- length(y)
   X <- as.data.frame(X)
   params <- c(as.list(environment()),list(...)) # this won't copy y and x
   
   if(is.null(subset)) {
-    ss <- 1:n
+    train <- 1:n
   } else {
-    ss <- subset
+    train <- subset
   }
   if(!is.null(train.fraction)){
-    ss <- sample(ss, ceiling(train.fraction*length(ss)), replace = F)
+    train <- sample(train, ceiling(train.fraction*length(ss)), replace = F)
   }
-  if(is.logical(subset)){ss <- which(subset)}
-  
-  
-  new.levels <- any(!(id %in% id[ss]))
+  if(is.logical(subset)){train <- which(subset)}
   
   if(cv.folds > 1){
     #cat("cv:", fill = T)
     
-    folds <- assign_fold(ss, id = id, cv.folds = cv.folds)
+    folds <- sample(1:cv.folds, size=n, replace = TRUE)
     
     params <- expand.grid(M = M, lambda = lambda, depth = depth, indep = indep)
     conds <- expand.grid(k = 1:(cv.folds), M = M, lambda = lambda, depth = depth, indep = indep)
@@ -54,8 +60,8 @@ lmerboost <- function(y, X, id,
     
     cv.mods <- parallel::mclapply(conds.ls, function(args, ...){ 
       do.call(lmerboost_cv, append(args, list(...)))
-    }, y=y, x=X, id=id, ss=ss, folds = folds, 
-      bag.fraction = bag.fraction, stop.threshold = stop.threshold, new.levels = new.levels,
+    }, y=y, x=X, id=id, train=train, folds = folds, 
+      bag.fraction = bag.fraction, stop.threshold = stop.threshold,
       verbose = FALSE, mc.cores = mc.cores)
 
     # average over cv folds for each condition
@@ -74,7 +80,7 @@ lmerboost <- function(y, X, id,
     best_cv_err <- which.min(cv.err)
     
     o <- lmerboost.fit(y = y, X = X, id = id, 
-          train.fraction = train.fraction, subset = subset, new.levels = new.levels,
+          train.fraction = train.fraction, subset = subset, 
           bag.fraction = bag.fraction, stop.threshold = stop.threshold, verbose = verbose,
           M = best.params$M, lambda = best.params$lambda, depth=best.params$depth, indep = best.params$indep,
           nt = nt,  tune=FALSE)
@@ -87,7 +93,7 @@ lmerboost <- function(y, X, id,
     if(length(M) > 1 | length(lambda) > 1 | length(depth) > 1 | length(indep) > 1){ stop("can't specify vector params without cv.folds > 1")}
     
     o <- lmerboost.fit(y = y, X = X, id = id, 
-         train.fraction = train.fraction, subset = subset, new.levels = new.levels,
+         train.fraction = train.fraction, subset = subset,
          bag.fraction = bag.fraction, stop.threshold = stop.threshold,
          M = M, lambda = lambda, depth=depth, indep = indep, 
          nt = nt,  tune=FALSE, verbose = verbose)
@@ -108,106 +114,103 @@ lmerboost <- function(y, X, id,
               yhatt = o$yhatt, raneft = o$raneft, fixedt = o$fixedt,
               best.trees = best.trees,
               cond.cv.err = params, best.params = best.params, params = params,
-              trees = o$trees, xnames = colnames(X),
+              trees = o$trees, sigma=o$sigma, xnames = colnames(X),
               train.err=o$train.err, oob.err=o$oob.err, test.err=o$test.err, cv.err=cv.err, 
-              s = ss)
+              s = train)
   class(out) <- "lmerboost"
   return(out)
 }
 
-lmerboost_cv <- function(k, folds, y, x, id, ss, new.levels, ...){
-  train <- ss[folds != k]
-  o <- lmerboost.fit(y = y, X = x, id = id, subset = train, ...)
+lmerboost_cv <- function(k, folds, y, x, id, train, ...){
+  cv_train <- train[folds != k]
+  o <- lmerboost.fit(y = y, X = x, id = id, subset = cv_train, ...)
 }
 
 
 #' @export
+#' @importFrom gbm gbm.fit
 lmerboost.fit <- function(y, X, id, train.fraction=NULL, subset=NULL, indep=TRUE, M=100, 
                           lambda=.01, nt=1, depth=5, tune=FALSE, bag.fraction=.5, 
-                          calc.derivs=FALSE, stop.threshold = .001, new.levels = TRUE, verbose = TRUE, ...){
+                          calc.derivs=FALSE, stop.threshold = .001, verbose = TRUE, ...){
   
   init <- mean(y)
   r <- y - init
-  lag <- 5
-  
   n <- length(y)
   
   if(is.null(subset)) {
-    ss <- 1:n
+    train <- 1:n
   } else {
-    ss <- subset
+    train <- subset
   }
   if(!is.null(train.fraction)){
-    ss <- sample(ss, ceiling(train.fraction*length(ss)), replace = F)
+    train <- sample(train, ceiling(train.fraction*length(ss)), replace = F)
   }
-  if(is.logical(subset)){ss <- which(subset)}
+  if(is.logical(subset)){train <- which(subset)}
   
   yhat <- ranef <- fixed <- matrix(0, n, M)
+  sigma <- rep(0, M)
   train.err <- oob.err <- test.err <- rep(NA, M)
   trees <- list()
   
-  
   for(i in 1:M){
-    # s = training, s.oob = oob, -ss = test
-    # make sure one observation from each group is present, where the subset has to cover all groups
-    #  note that just using sample(x, 1) will fail if x has length 1
-    # get a sub sample
-    s <- sample(train, size = length(train)*bag.fraction, replace = FALSE)
+    # s = training, s.oob = oob, -train = test
+    # 2016-10-19: DO NOT STRATIFY SUBSAMPLES BY GROUPS.
+    # note that just using sample(x, 1) will fail if x has length 1
+    
+    s <- sample(train, size = ceiling(length(train)*bag.fraction), replace = FALSE)
     s.oob <- setdiff(train, s)
     
     # fit a tree
-    tree <- gbm.fit(y = r[s], x=X[s, ,drop=F], interaction.depth = depth,
-                    bag.fraction = 1, distribution="gaussian", verbose=FALSE, n.trees = 1)
-    
+    tree <- gbm.fit(y = r[s], x=X[s, ,drop=F], interaction.depth=depth,
+                                  shrinkage=1, bag.fraction=1, distribution="gaussian",
+                                  verbose=FALSE, n.trees = 1, ...)
+    trees[[i]] <- tree$trees[[1]]
     # get gbm predictions for whole sample
-    gbm_pred <- predict(tree, newdata = data.frame(X), n.trees = 1) 
+    gbm_pred <- predict(tree, newdata = X, n.trees = 1) 
     
-    # design matrix
-    mm <- model.matrix(~factor(gbm_pred) - 1)
+    # design matrix - add intercept via lmer. 
+    # 2016-10-19: BE VERY CAREFUL IF YOU CHANGE THIS
+    mm <- model.matrix(~factor(gbm_pred))[,-1]
     nnodes <- ncol(mm)
     colnames(mm) <- paste0("X", 1:nnodes)
     
-    d <- data.frame(r=r, mm, id)
     # formula
     addx <- paste0(colnames(mm), collapse = " + ")
     bars <- "||"
     if(!indep) bars <- "|"
-    form <- as.formula(paste0("r ~ 0 + ", addx, " + (0 + ",addx, " ", bars," id)"))
     
-    # check rank; missing values may cause not full rank
-    dropped_cols <- apply(mm[s,], 2, function(col){length(unique(col))}) == 1
-    dropped_obs <- unique(which(mm > 0, arr.ind = T)[,1])
+    form <- as.formula(paste0("r ~ ", addx, " + (",addx, " ", bars," id)"))
     
-    mm <- mm[,!dropped_cols, drop = FALSE]
+    # check rank. problem is if columns are included for obs not in s via surrogates
+    # dropping non-full-rank column assigns these obs to default node.
+    # solved by: drop columns myself, replace dropped obs with gbm predictions
+    keep_cols <- colSums(mm[s, ]) > 0
+    dropped_obs  <- rowSums(mm[,!keep_cols, drop=FALSE]) > 0
+    
+    mm <- mm[,keep_cols, drop = FALSE]
+    d <- data.frame(r=r, mm, id)
     
     # lmer on training
     o <- lme4::lmer(form, data=d, REML=T, subset = s, 
                     control = lme4::lmerControl(calc.derivs = FALSE))
+    sigma[i] <- sigma(o) * lambda
     
-    # get ranefs; ids not in s get 0
-    
-    b <- rep(0, nlevels * nnodes)
-    levels_in_s <- as.numeric(sort(unique(id[s])))
-    bidx <- unlist(lapply(0:(nnodes-1), function(i){levels_in_s + i*nlevels}))
-    b[bidx] <- crossprod(o@pp$Lambdat, o@u)
-    
-    # get Z matrix for all data
-    Zt <- KhatriRao(Ji, t(mm))
-    zuhat <- as.vector(crossprod(Zt, b))
-    fixedm <- mm %*% o@beta
+    # 2016-10-19: Timed to show that this was fastest with large n and large ngrps
+    yhatm <- predict(o, newdata=d, allow.new.levels = TRUE)
+    fixedm <- cbind(1, mm) %*% o@beta
+    zuhat <- yhatm - fixedm
     fixedm[dropped_obs, ] <- gbm_pred[dropped_obs]
-    yhatm <- fixedm + zuhat
 
     # update totals at each iteration
     if(i == 1){
       fixed[,i]  <- fixedm * lambda 
-      ranef[,i]  <- zuhat * lambda
-      yhat[,i]   <- yhatm * lambda 
+      ranef[,i]  <- zuhat  * lambda
+      yhat[,i]   <- yhatm  * lambda 
       
     } else {
       fixed[,i]  <- fixed[,i-1] + fixedm * lambda 
-      ranef[,i]  <- ranef[,i-1] + zuhat * lambda
-      yhat[,i]   <- yhat[,i-1] + yhatm * lambda
+      ranef[,i]  <- ranef[,i-1] + zuhat  * lambda
+      yhat[,i]   <- yhat[,i-1]  + yhatm  * lambda
     }
     
     r <- r - yhatm * lambda
@@ -215,14 +218,14 @@ lmerboost.fit <- function(y, X, id, train.fraction=NULL, subset=NULL, indep=TRUE
     if(verbose && (i %% 10 == 0)) cat(i, "")
     if(i==1){ 
       train.err[i] <- mean((y[s] - init)^2)
-      oob.err[i] <- mean((y[s.oob] - init)^2)
-      test.err[i] <- mean((y[-ss] - init)^2)
+      oob.err[i]   <- mean((y[s.oob] - init)^2)
+      test.err[i]  <- mean((y[-train] - init)^2)
     }
     train.err[i] <- mean((yhat[s,i] - (y[s] - init))^2)
-    oob.err[i] <- mean((yhat[s.oob,i] - (y[s.oob] - init))^2)
-    test.err[i] <- mean((yhat[-ss,i] - (y[-ss] - init))^2)
+    oob.err[i]   <- mean((yhat[s.oob,i] - (y[s.oob] - init))^2)
+    test.err[i]  <- mean((yhat[-train,i] - (y[-train] - init))^2)
     
-    # This was removed because it can stop too early.
+    # 2016-10-19: This was removed because it can stop too early.
     #if((i %% lag == 0) && (abs(test.err[i] - test.err[i - (lag - 1)]) < stop.threshold)){
     #  break;
     #}
@@ -230,9 +233,9 @@ lmerboost.fit <- function(y, X, id, train.fraction=NULL, subset=NULL, indep=TRUE
   yhat <- yhat + init
   fixed <- fixed + init
   
-  out <- list(yhat=yhat[ss, ], ranef=ranef[ss, ], fixed=fixed[ss,], lambda=lambda, 
-              yhatt=yhat[-ss, ], raneft=ranef[-ss, ], fixedt=fixed[-ss, ],
-              trees = trees,
+  out <- list(yhat=yhat[train, ], ranef=ranef[train, ], fixed=fixed[train,], lambda=lambda, 
+              yhatt=yhat[-train, ], raneft=ranef[-train, ], fixedt=fixed[-train, ],
+              trees = trees, sigma=sigma, init=init,
               train.err=train.err, oob.err=oob.err, test.err=test.err)
   return(out)  
 }

@@ -12,6 +12,7 @@ Z <- model.matrix(~id + x:id - 1)
 u <- rnorm(ncol(Z), 0, 1)
 y <- x * .5 + Z %*% u + rnorm(n)
 X <- as.data.frame(x)
+tol = 5E-7
 
 context("lmerboost.fit")
 
@@ -37,19 +38,21 @@ test_that("lmerboost.fit m = 1, lambda = 1, bag.fraction = 1", {
                distribution = "gaussian", interaction.depth = 5, verbose = F)
   mm <- mvtboost:::gbm_mm(o.gbm, n.trees = 1, newdata = X)
   colnames(mm) <- paste0("X", 1:ncol(mm))
-  d <- data.frame(r, mm, id)
+  dr <- data.frame(r, mm, id)
   o.lmer <- lme4::lmer(r ~ X1 + X2 + X3 + X4 + X5 + (1 + X1 + X2 + X3 + X4 + X5 || id), REML = T, 
-                       control = lme4::lmerControl(calc.derivs = FALSE), data = d)
+                       control = lme4::lmerControl(calc.derivs = FALSE), data = dr)
   
   Zm <- model.matrix(~id + mm:id - 1)
   zuhat <- drop(Zm %*% c(as.matrix(lme4::ranef(o.lmer)[[1]])))
   fixed <- drop(cbind(1, mm) %*% lme4::fixef(o.lmer)) + init
   yhat <- fixed + zuhat
   
-  expect_equal(unname(zuhat), o$ranef)
-  expect_equal(unname(fixed), o$fixed)
-  expect_equal(unname(yhat), o$yhat)
-  expect_equal(unname(predict(o.lmer)) + init, o$yhat)
+  expect_equal(init, o$init)
+  expect_equal(o.gbm$trees[[1]], o$trees[[1]])
+  expect_equal(unname(zuhat), o$ranef, tolerance = tol)
+  expect_equal(unname(fixed), o$fixed, tolerance = tol)
+  expect_equal(unname(yhat), o$yhat, tolerance = tol)
+  expect_equal(unname(predict(o.lmer)) + init, o$yhat, tolerance = tol)
 })
 
 test_that("lmerboost.fit m = 1, lambda = .5, bag.fraction = 1", {
@@ -73,10 +76,10 @@ test_that("lmerboost.fit m = 1, lambda = .5, bag.fraction = 1", {
   fixed <- drop(cbind(1, mm) %*% lme4::fixef(o.lmer)) * lambda + init
   yhat <- fixed + zuhat 
   
-  expect_equal(unname(zuhat), o$ranef)
-  expect_equal(unname(fixed), o$fixed)
-  expect_equal(unname(fixed + zuhat), o$yhat)
-  expect_equal(unname(predict(o.lmer))*lambda + init, o$yhat)
+  expect_equal(unname(zuhat), o$ranef, tolerance = tol)
+  expect_equal(unname(fixed), o$fixed, tolerance = tol)
+  expect_equal(unname(fixed + zuhat), o$yhat, tolerance = tol)
+  expect_equal(unname(predict(o.lmer))*lambda + init, o$yhat, tolerance = tol)
 })
 
 test_that("lmerboost.fit m = 10, lambda = .5, bag.fraction = 1", {
@@ -117,25 +120,9 @@ test_that("lmerboost.fit m = 10, lambda = .5, bag.fraction = 1", {
   yhat <- yhat + init
   fixed <- fixed + init
   
-  expect_equal(yhat, o$yhat)
-  expect_equal(zuhat, o$ranef)
-  expect_equal(fixed, o$fixed)
-})
-
-test_that("lmerboost.fit get_subsample", {
-  bag.fraction <- .5
-  s <- mvtboost:::get_subsample(1:n, id, bag.fraction = bag.fraction)
-  expect_equal(length(s), ceiling(n * bag.fraction))
-  expect_equal(length(unique(s)), length(s)) # obs only appear once
-  expect_true(all(unique(id) %in% unique(id[s]))) # at least one from each group occurs
-  
-  
-  s <- mvtboost:::get_subsample(traiN, id[traiN], bag.fraction = bag.fraction)
-  expect_true(all(!is.na(s)))
-  expect_equal(length(s), ceiling(length(traiN) * bag.fraction))
-  expect_equal(length(unique(s)), length(s)) # obs only appear once
-  expect_true(all(unique(id[traiN]) %in% unique(id[s]))) # all traiNing ids appear in s
-  
+  expect_equal(yhat, o$yhat, tolerance = tol)
+  expect_equal(zuhat, o$ranef,  tolerance = tol)
+  expect_equal(fixed, o$fixed,  tolerance = tol)
 })
 
 test_that("lmerboost.fit bag.fraction = .5", {
@@ -147,12 +134,13 @@ test_that("lmerboost.fit bag.fraction = .5", {
                      M = 10, lambda = lambda, depth = 5, stop.threshold = 0, n.minobsinnode = 10)
   set.seed(104)
   M <- 10
+  n <- length(y)
   zuhat <- fixed <- yhat <- matrix(0, n, 10)
   init <- mean(y)
   r <- y - mean(y)
   for(i in 1:M){
     
-    s <- mvtboost:::get_subsample(1:n, id = id, bag.fraction = bag.fraction)
+    s <- sample(1:n, size=ceiling(bag.fraction*n), replace=FALSE)
     o.gbm <- gbm::gbm.fit(y = r[s], x = X[s, , drop = F], n.trees = 1, shrinkage = 1, bag.fraction = 1, 
                           distribution = "gaussian", interaction.depth = 5, verbose = F)
     mm <- mvtboost:::gbm_mm(o.gbm, n.trees = 1, newdata = X)
@@ -179,14 +167,15 @@ test_that("lmerboost.fit bag.fraction = .5", {
   yhat <- yhat + init
   fixed <- fixed + init
   
-  expect_equal(yhat, o$yhat)
-  expect_equal(zuhat, o$ranef)
-  expect_equal(fixed, o$fixed)
+  expect_equal(yhat, o$yhat,  tolerance = tol)
+  expect_equal(zuhat, o$ranef, tolerance = tol)
+  expect_equal(fixed, o$fixed, tolerance = tol)
 })
 
 test_that("lmerboost.fit subset, train/oob/test err", {
   bag.fraction = .5
   lambda <- .5
+  n <- length(y)
 
   set.seed(104)
   o <- lmerboost.fit(y = y, X = X, id = id, subset = traiN,
@@ -197,14 +186,14 @@ test_that("lmerboost.fit subset, train/oob/test err", {
   set.seed(104)
   M <- 10
   zuhat <- fixed <- yhat <- matrix(0, n, M)
-  traiN_err <- oob_err <- test_err <- rep(0, M)
+  train_err <- oob_err <- test_err <- rep(0, M)
   init <- mean(y)
   r <- y - mean(y)
   for(i in 1:M){
 
     # the only change is to subsample from traiN rather than 1:n, and to subset on id
     # note that s is always an index to observations in the  original data
-    s <- mvtboost:::get_subsample(traiN, id = id[traiN], bag.fraction = bag.fraction)
+    s <- sample(traiN, size=ceiling(length(traiN)*bag.fraction), replace=FALSE)
     s.oob <- setdiff(traiN, s)
 
     o.gbm <- gbm::gbm.fit(y = r[s], x = X[s, , drop = F], n.trees = 1, shrinkage = 1, bag.fraction = 1,
@@ -235,7 +224,7 @@ test_that("lmerboost.fit subset, train/oob/test err", {
       yhat[,i] <- yhat[,i-1] + yhatm * lambda
     }
     r <- r - yhatm * lambda
-    traiN_err[i] <- mean(((y[s, ] - init) - yhat[s, i])^2)
+    train_err[i] <- mean(((y[s, ] - init) - yhat[s, i])^2)
     oob_err[i]   <- mean(((y[s.oob, ] - init) - yhat[s.oob, i])^2)
     test_err[i]  <- mean(((y[-traiN, ] - init) - yhat[-traiN, i])^2)
     
@@ -249,7 +238,7 @@ test_that("lmerboost.fit subset, train/oob/test err", {
   expect_equal(yhat[-traiN, ], o$yhatt)
   expect_equal(zuhat[-traiN, ], o$raneft)
   expect_equal(fixed[-traiN, ], o$fixedt)
-  expect_equal(traiN_err, o$train.err)  
+  expect_equal(train_err, o$train.err)  
   expect_equal(oob_err, o$oob.err)  
   expect_equal(test_err, o$test.err)  
 })
@@ -269,8 +258,7 @@ test_that("lmerboost.fit drops rank deficient cols", {
   # However, this means that the model matrix of the full data and of training
   # don't have the same dimensions; which breaks predictions.
   
-  # To avoid this, I drop columns myself. This amounts to pruning surrogate splits.
-  # Dropping the colum assigns the observation that is missing to the left node.
+
   
   
   # Test case that demonstrates missing nodes
@@ -280,12 +268,12 @@ test_that("lmerboost.fit drops rank deficient cols", {
   x[c(10, 20)] <- NA   # will use x2 for a surrogate for these obs
   s <- c(1:9, 11:19)   # training set does not have missing values
   d <- data.frame(y, x, x2)
-  o <- gbm(y ~ ., data=d[s,], n.minobsinnode=1, shrinkage=1, n.trees=1, 
+  o <- gbm::gbm(y ~ ., data=d[s,], n.minobsinnode=1, shrinkage=1, n.trees=1, 
            distribution="gaussian")
   mm <- mvtboost:::gbm_mm(o, newdata = d)
   
-  todrop <- apply(mm[s,], 2, function(col){length(unique(col))}) == 1
-  mm <- mm[,!todrop, drop = FALSE]
+  keep_cols <- colSums(mm[s, ]) > 0
+  mm <- mm[,keep_cols, drop = FALSE]
   
 })
 
@@ -303,46 +291,22 @@ test_that("lmerboost.fit get_zuhat", {
 
 context("lmerboost")
 
-test_that("lmerboost assign_fold", {
-  traiN <- 1:n
-  for(cv.folds in c(3, 5, 10)){
-    folds <- mvtboost:::assign_fold(traiN, id = id, cv.folds = cv.folds)
-    expect_equal(length(folds), n)
-    for(k in 1:cv.folds){
-      expect_true(all(unique(id) %in% unique(id[traiN[folds != k]])))
-      expect_true(all(unique(id) %in% unique(id[traiN[folds == k]]))) 
-    }
-  }
-  
-  # Have observations within group = 1, 2, ..., cv.folds, ... 
-  id_short <- factor(unlist(lapply(1:10, function(x){rep(x,x)})))
-  n_short <- length(id_short)
-  traiN <- seq_along(id_short)
-  for(cv.folds in c(3, 5, 10)){
-    folds <- mvtboost:::assign_fold(traiN, id = id_short, cv.folds = cv.folds)
-    expect_equal(length(folds), n_short)
-    for(k in 1:cv.folds){
-      expect_true(all(unique(id_short) %in% unique(id_short[traiN[folds != k]])))
-    }
-  }
-  
-})
-
 test_that("lmerboost_cv", {
   # now we can use lmerboost.fit
   
+  
   cv.folds <- 3
-  folds <- mvtboost:::assign_fold(traiN, id = id, cv.folds = cv.folds)
+  folds <- sample(1:cv.folds, size=n, replace=TRUE)
   
   set.seed(104)
-  ocv <- lapply(1:cv.folds, function(k, folds){
-    ss <- (1:n)[folds != k]
+  ocv <- lapply(1:cv.folds, function(k, folds, train){
+    ss <- train[folds != k]
     lmerboost.fit(y = y, X = X, id = id, subset = ss, M = 5, verbose = F, lambda = .5)
-  }, folds = folds)
+  }, folds = folds, train=1:n)
   
   set.seed(104)
   o <- lapply(1:cv.folds, mvtboost:::lmerboost_cv, 
-           folds = folds, ss = 1:n, y = y, x = X, id = id, M = 5, lambda = .5)
+           folds = folds, train = 1:n, y = y, x = X, id = id, M = 5, lambda = .5)
   
   expect_equivalent(o, ocv)
 })
@@ -351,28 +315,28 @@ test_that("lmerboost cv params", {
   
   set.seed(104)
   cv.folds = 3
-  folds <- mvtboost:::assign_fold(1:n, id = id, cv.folds = cv.folds)
+  folds <- sample(1:cv.folds, size=n, replace=TRUE)
   paramscv <- expand.grid(M = 5, k = 1:cv.folds, lambda = c(.2, .5), depth = c(3, 5), indep = TRUE)
   params <- expand.grid(M = 5, lambda = c(.2, .5), depth = c(3, 5), indep = TRUE)
   paramscv$id <- factor(rep(1:nrow(params), each = cv.folds))
   paramscv.ls <- split(paramscv, 1:nrow(paramscv))
-  do_one <- function(args, folds, y, x, id, ss, ...){ 
+  do_one <- function(args, folds, y, x, id, train, ...){ 
     mvtboost:::lmerboost_cv(k = args$k, depth = args$depth, lambda = args$lambda,
-                 folds = folds, y = y, x = x, id = id, ss = ss , ...)}
+                 folds = folds, y = y, x = x, id = id, train = train , ...)}
   
-  #do_one(paramscv.ls[[1]], folds = folds, y = y, X = X, id = id, ss = 1:n, M = 5)
-  
-  ocv <- lapply(X = paramscv.ls, FUN = do_one, folds = folds, ss = 1:n, y = y, x = X, id = id, 
+  ocv <- lapply(X = paramscv.ls, FUN=do_one, folds=folds, train=1:n, y=y, x=X, id=id, 
                 M = 5, bag.fraction = 1)
 
-  cv.err <- tapply(ocv, paramscv$id, function(x){
-    lapply(x, function(el){el$test.err}) %>% dplyr::bind_rows(.) %>% rowMeans
-  }) %>% dplyr::bind_rows(.)
+  fold.err <- lapply(ocv, function(o){o$test.err})
+  cv.err <- tapply(fold.err, paramscv$id, function(x){ 
+    rowMeans(do.call(cbind, x), na.rm=T)})
+  
   
   min.cv.err <- lapply(cv.err, min)
   params$err <- min.cv.err
-  cond <- which(cv.err == min(cv.err), arr.ind = T)[2]
-  bc <- params[cond, ]
+  cv.err.cond <- lapply(cv.err, min, na.rm = TRUE)
+  best.cond <- which.min(cv.err.cond)
+  bc <- params[best.cond, ]
   
   set.seed(104)
   o <- lmerboost(y = y, X = X, id = id, cv.folds = 3, bag.fraction = 1, subset = 1:n,
