@@ -129,6 +129,8 @@ lmerboost_cv <- function(k, folds, y, x, id, train, ...){
 
 #' @export
 #' @importFrom gbm gbm.fit
+#' @importFrom stats sigma
+#' @importFrom lme4 lmer
 lmerboost.fit <- function(y, X, id, train.fraction=NULL, subset=NULL, indep=TRUE, M=100, 
                           lambda=.01, nt=1, depth=5, tune=FALSE, bag.fraction=.5, 
                           calc.derivs=FALSE, stop.threshold = .001, verbose = TRUE, ...){

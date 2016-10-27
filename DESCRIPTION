@@ -27,5 +27,6 @@ Imports:
     graphics,
     grDevices,
     utils,
+    lme4,
 VignetteBuilder: knitr
 RoxygenNote: 5.0.1
