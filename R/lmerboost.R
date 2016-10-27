@@ -129,7 +129,6 @@ lmerboost_cv <- function(k, folds, y, x, id, train, ...){
 
 #' @export
 #' @importFrom gbm gbm.fit
-#' @importFrom stats sigma
 #' @importFrom lme4 lmer
 lmerboost.fit <- function(y, X, id, train.fraction=NULL, subset=NULL, indep=TRUE, M=100, 
                           lambda=.01, nt=1, depth=5, tune=FALSE, bag.fraction=.5, 
@@ -194,7 +193,7 @@ lmerboost.fit <- function(y, X, id, train.fraction=NULL, subset=NULL, indep=TRUE
     # lmer on training
     o <- lme4::lmer(form, data=d, REML=T, subset = s, 
                     control = lme4::lmerControl(calc.derivs = FALSE))
-    sigma[i] <- sigma(o) * lambda
+    sigma[i] <- sigma_merMod(o) * lambda
     
     # 2016-10-19: Timed to show that this was fastest with large n and large ngrps
     yhatm <- predict(o, newdata=d, allow.new.levels = TRUE)
@@ -368,5 +367,16 @@ plot.lmerboost <- function(x, threshold = .001, lag = 1, ...){
   x$best.params$err <- formatC(signif(x$best.params$err[[1]], digits=3), digits=3,format="fg", flag="#")
   paramstring <- paste0(names(x$best.params), " = ", x$best.params, collapse = ", ")
   title(sub = paramstring)
+}
+
+
+sigma_merMod <- function (object, ...) {
+  dc <- object@devcomp
+  dd <- dc$dims
+  if (dd[["useSc"]]) 
+    dc$cmp[[if (dd[["REML"]]) 
+      "sigmaREML"
+      else "sigmaML"]]
+  else 1
 }
 
