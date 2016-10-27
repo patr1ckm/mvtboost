@@ -260,22 +260,60 @@ test_that("lmerboost.fit drops rank deficient cols", {
   # However, this means that the model matrix of the full data and of training
   # don't have the same dimensions; which breaks predictions.
   
-
-  
-  
   # Test case that demonstrates missing nodes
+  set.seed(104)
   x <- rep(0:1, each = 10)
   x2 <- sample(x)
   y <- x + rnorm(20)   # will split on x1, not x2
   x[c(10, 20)] <- NA   # will use x2 for a surrogate for these obs
-  s <- c(1:9, 11:19)   # training set does not have missing values
-  d <- data.frame(y, x, x2)
-  o <- gbm::gbm(y ~ ., data=d[s,], n.minobsinnode=1, shrinkage=1, n.trees=1, 
-           distribution="gaussian")
-  mm <- mvtboost:::gbm_mm(o, newdata = d)
+  train <- c(1:9, 11:19)   # training set does not have missing values
+  id <- factor(rep(1:5, each=4))
+  lambda = 1
+  bag.fraction=1
+  i <- 1
+  X <- cbind(x, x2)
+  s <- sample(train, size = ceiling(length(train)*bag.fraction), replace = FALSE)
+  s.oob <- setdiff(train, s)
   
-  keep_cols <- colSums(mm[s, ]) > 0
+  init <- mean(y)  
+  r <- y - init
+  d <- data.frame(r, x, x2)
+  og <- gbm::gbm(r ~ ., data=d[s,], n.minobsinnode=1, shrinkage=1, n.trees=1, 
+           distribution="gaussian", interaction.depth=1, bag.fraction=1)
+  gbm_pred <- predict(og, n.trees=1, newdata=d)
+  mm <- model.matrix(~factor(gbm_pred))[,-1,drop=F]
+  
+  keep_cols <- colSums(mm[s,,drop=FALSE ]) > 0
+  dropped_obs <- rowSums(mm[,!keep_cols,drop=FALSE]) > 0
   mm <- mm[,keep_cols, drop = FALSE]
+  colnames(mm) <- paste0("X", 1:ncol(mm))
+  addx <- paste0(colnames(mm), collapse = "+")
+  form <- as.formula(paste0("r ~ 1 + ", addx, "+ (1 + ", addx, " | id)"))
+  
+  # lmer on training
+  d <- data.frame(r, mm, id)
+  o <- lme4::lmer(form, data=d, REML=T, subset = s, 
+                  control = lme4::lmerControl(calc.derivs = FALSE))
+  
+  # 2016-10-19: Timed to show that this was fastest with large n and large ngrps
+  yhatm <- predict(o, newdata=d, allow.new.levels = TRUE)
+  fixedm <- cbind(1, mm) %*% o@beta
+  zuhat <- yhatm - fixedm
+  fixedm[dropped_obs, ] <- gbm_pred[dropped_obs]
+  yhatm[dropped_obs] <- gbm_pred[dropped_obs]
+  yhatm <- yhatm + init
+  fixedm <- fixedm + init
+   
+  set.seed(104)
+  lb <- lmerboost.fit(y=y, X=X, id=id, lambda=1, M=1, depth=1, bag.fraction=1,
+                        n.minobsinnode=1, subset=train)
+  expect_equal(lb$yhat, unname(yhatm[train]))
+  expect_equal(lb$ranef, unname(zuhat[train]))
+  expect_equal(lb$fixed, unname(fixedm[train]))
+  expect_equal(lb$trees, og$trees)
+  expect_equal(lb$yhatt, unname(yhatm[-train]))
+  expect_equal(lb$raneft, unname(zuhat[-train]))
+  expect_equal(lb$fixedt, unname(fixedm[-train]))
   
 })
 
@@ -295,8 +333,7 @@ context("lmerboost")
 
 test_that("lmerboost_cv", {
   # now we can use lmerboost.fit
-  
-  
+
   cv.folds <- 3
   folds <- sample(1:cv.folds, size=n, replace=TRUE)
   

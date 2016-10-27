@@ -170,25 +170,24 @@ lmerboost.fit <- function(y, X, id, train.fraction=NULL, subset=NULL, indep=TRUE
     
     # design matrix - add intercept via lmer. 
     # 2016-10-19: BE VERY CAREFUL IF YOU CHANGE THIS
-    mm <- model.matrix(~factor(gbm_pred))[,-1]
+    mm <- model.matrix(~factor(gbm_pred))[,-1, drop=FALSE]
     nnodes <- ncol(mm)
     colnames(mm) <- paste0("X", 1:nnodes)
+    
+    # check rank. problem is if columns are included for obs not in s via surrogates
+    # dropping non-full-rank column assigns these obs to default node.
+    # solved by: drop columns myself, replace dropped obs with gbm predictions
+    keep_cols <- colSums(mm[s, ,drop=FALSE]) > 0
+    dropped_obs  <- rowSums(mm[,!keep_cols, drop=FALSE]) > 0
+    
+    mm <- mm[,keep_cols, drop = FALSE]
+    d <- data.frame(r=r, mm, id)
     
     # formula
     addx <- paste0(colnames(mm), collapse = " + ")
     bars <- "||"
     if(!indep) bars <- "|"
-    
     form <- as.formula(paste0("r ~ ", addx, " + (",addx, " ", bars," id)"))
-    
-    # check rank. problem is if columns are included for obs not in s via surrogates
-    # dropping non-full-rank column assigns these obs to default node.
-    # solved by: drop columns myself, replace dropped obs with gbm predictions
-    keep_cols <- colSums(mm[s, ]) > 0
-    dropped_obs  <- rowSums(mm[,!keep_cols, drop=FALSE]) > 0
-    
-    mm <- mm[,keep_cols, drop = FALSE]
-    d <- data.frame(r=r, mm, id)
     
     # lmer on training
     o <- lme4::lmer(form, data=d, REML=T, subset = s, 
@@ -199,7 +198,8 @@ lmerboost.fit <- function(y, X, id, train.fraction=NULL, subset=NULL, indep=TRUE
     yhatm <- predict(o, newdata=d, allow.new.levels = TRUE)
     fixedm <- cbind(1, mm) %*% o@beta
     zuhat <- yhatm - fixedm
-    fixedm[dropped_obs, ] <- gbm_pred[dropped_obs]
+    fixedm[dropped_obs,] <- gbm_pred[dropped_obs]
+    yhatm[dropped_obs] <- gbm_pred[dropped_obs]
 
     # update totals at each iteration
     if(i == 1){
