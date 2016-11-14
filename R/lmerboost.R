@@ -260,27 +260,27 @@ gbm_mm <- function(o, n.trees=1, ...){
   model.matrix(~node)[,-1,drop=F]
 }
 
-assign_fold <- function(x, id, cv.folds){
-  folds <- list()
-  ids_by_group <- split(1:length(x), id[x])
-  
-  assign_fold_1group <- function(x, folds){
-    n <- length(x)
-    if(n == 1){
-      in_fold <- 0 # observation will always be in training set
-    } else {
-      # If 1 < n_i <= cv.folds, force one observation from group to be in training set
-      #  then randomly assign fold ids as usual for the other observations
-      in_fold <- c(sample(1:folds, size=min(n, folds), replace = F),
-                   sample(1:folds, size=max(0, (n - folds)), replace = T))
-    }
-    return(in_fold)
-  }
-  
-  folds <- unlist(lapply(ids_by_group, assign_fold_1group, folds = cv.folds), use.names = F)
-
-  return(folds)
-}
+# assign_fold <- function(x, id, cv.folds){
+#   folds <- list()
+#   ids_by_group <- split(1:length(x), id[x])
+#   
+#   assign_fold_1group <- function(x, folds){
+#     n <- length(x)
+#     if(n == 1){
+#       in_fold <- 0 # observation will always be in training set
+#     } else {
+#       # If 1 < n_i <= cv.folds, force one observation from group to be in training set
+#       #  then randomly assign fold ids as usual for the other observations
+#       in_fold <- c(sample(1:folds, size=min(n, folds), replace = F),
+#                    sample(1:folds, size=max(0, (n - folds)), replace = T))
+#     }
+#     return(in_fold)
+#   }
+#   
+#   folds <- unlist(lapply(ids_by_group, assign_fold_1group, folds = cv.folds), use.names = F)
+# 
+#   return(folds)
+# }
 
 
 ## This is a hard problem! The current implementation doesn't really admit a separate prediction method.
@@ -332,22 +332,22 @@ best_iter <- function(x, threshold, lag, smooth = FALSE){
 }
 
 
-get_subsample <- function(ss, id, bag.fraction){
-  id <- droplevels(id)
-  
-  # Get one obs from each group
-  sid <- tapply(ss, id, function(x){ 
-    x[sample(1:length(x), size=1)]
-  })
-  # compute the number of samples
-  size <- ceiling(length(ss) * bag.fraction) - length(sid)
-  
-  # sample randomly from the rest
-  c(sid, sample(ss[!(ss %in% sid)], size = size, replace=F)) 
-}
+# get_subsample <- function(ss, id, bag.fraction){
+#   id <- droplevels(id)
+#   
+#   # Get one obs from each group
+#   sid <- tapply(ss, id, function(x){ 
+#     x[sample(1:length(x), size=1)]
+#   })
+#   # compute the number of samples
+#   size <- ceiling(length(ss) * bag.fraction) - length(sid)
+#   
+#   # sample randomly from the rest
+#   c(sid, sample(ss[!(ss %in% sid)], size = size, replace=F)) 
+# }
 
 #' @export
-plot.lmerboost <- function(x, threshold = .001, lag = 1, ...){
+plot.lmerboost <- function(x, threshold = 0, lag = 1, ...){
   M <- length(x$train.err)
   ymax <- c(max(x$test.err, x$train.err, x$oob.err, na.rm = T))
   ymin <- c(min(x$test.err, x$train.err, x$oob.err, na.rm = T))
