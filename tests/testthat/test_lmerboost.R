@@ -12,7 +12,7 @@ Z <- model.matrix(~id + x:id - 1)
 u <- rnorm(ncol(Z), 0, 1)
 y <- x * .5 + Z %*% u + rnorm(n)
 X <- as.data.frame(x)
-tol = 5E-7
+tol = 1E-6
 
 context("lmerboost.fit")
 
@@ -49,10 +49,10 @@ test_that("lmerboost.fit m = 1, lambda = 1, bag.fraction = 1", {
   
   expect_equal(init, o$init)
   expect_equal(o.gbm$trees[[1]], o$trees[[1]])
-  expect_equal(unname(zuhat), o$ranef, tolerance = tol)
-  expect_equal(unname(fixed), o$fixed, tolerance = tol)
-  expect_equal(unname(yhat), o$yhat, tolerance = tol)
-  expect_equal(unname(predict(o.lmer)) + init, o$yhat, tolerance = tol)
+  expect_equal(unname(zuhat), o$ranef, tolerance = tol, check.attributes=F)
+  expect_equal(unname(fixed), o$fixed, tolerance = tol, check.attributes=F)
+  expect_equal(unname(yhat), o$yhat, tolerance = tol, check.attributes=F)
+  expect_equal(unname(predict(o.lmer)) + init, o$yhat, tolerance = tol, check.attributes=F)
 })
 
 test_that("lmerboost.fit m = 1, lambda = .5, bag.fraction = 1", {
@@ -76,10 +76,10 @@ test_that("lmerboost.fit m = 1, lambda = .5, bag.fraction = 1", {
   fixed <- drop(cbind(1, mm) %*% lme4::fixef(o.lmer)) * lambda + init
   yhat <- fixed + zuhat 
   
-  expect_equal(unname(zuhat), o$ranef, tolerance = tol)
-  expect_equal(unname(fixed), o$fixed, tolerance = tol)
-  expect_equal(unname(fixed + zuhat), o$yhat, tolerance = tol)
-  expect_equal(unname(predict(o.lmer))*lambda + init, o$yhat, tolerance = tol)
+  expect_equal(unname(zuhat), o$ranef, tolerance = tol, check.attributes=F)
+  expect_equal(unname(fixed), o$fixed, tolerance = tol, check.attributes=F)
+  expect_equal(unname(fixed + zuhat), o$yhat, tolerance = tol, check.attributes=F)
+  expect_equal(unname(predict(o.lmer))*lambda + init, o$yhat, tolerance = tol, check.attributes=F)
 })
 
 test_that("lmerboost.fit m = 10, lambda = .5, bag.fraction = 1", {
@@ -232,18 +232,16 @@ test_that("lmerboost.fit subset, train/oob/test err", {
   yhat <- yhat + init
   fixed <- fixed + init
 
-  expect_equal(yhat[traiN, ], o$yhat)
-  expect_equal(zuhat[traiN, ], o$ranef)
-  expect_equal(fixed[traiN, ], o$fixed)
-  expect_equal(yhat[-traiN, ], o$yhatt)
-  expect_equal(zuhat[-traiN, ], o$raneft)
-  expect_equal(fixed[-traiN, ], o$fixedt)
+  expect_equal(yhat[traiN, ], o$yhat[traiN, ])
+  expect_equal(zuhat[traiN, ], o$ranef[traiN, ])
+  expect_equal(fixed[traiN, ], o$fixed[traiN, ])
+  expect_equal(yhat[-traiN, ], o$yhat[-traiN, ])
+  expect_equal(zuhat[-traiN, ], o$ranef[-traiN, ])
+  expect_equal(fixed[-traiN, ], o$fixed[-traiN, ])
   expect_equal(train_err, o$train.err)  
   expect_equal(oob_err, o$oob.err)  
   expect_equal(test_err, o$test.err)  
 })
-
-## TODO:
 
 test_that("lmerboost.fit drops rank deficient cols", {
   # Rank deficiency in training can occur with missing data due to surrogate splitting.
@@ -307,25 +305,26 @@ test_that("lmerboost.fit drops rank deficient cols", {
   set.seed(104)
   lb <- lmerboost.fit(y=y, X=X, id=id, lambda=1, M=1, depth=1, bag.fraction=1,
                         n.minobsinnode=1, subset=train)
-  expect_equal(lb$yhat, unname(yhatm[train]))
-  expect_equal(lb$ranef, unname(zuhat[train]))
-  expect_equal(lb$fixed, unname(fixedm[train]))
+  expect_equal(lb$yhat[train], unname(yhatm[train]))
+  expect_equal(lb$ranef[train], unname(zuhat[train]))
+  expect_equal(lb$fixed[train], unname(fixedm[train]))
   expect_equal(lb$trees, og$trees)
-  expect_equal(lb$yhatt, unname(yhatm[-train]))
-  expect_equal(lb$raneft, unname(zuhat[-train]))
-  expect_equal(lb$fixedt, unname(fixedm[-train]))
+  expect_equal(lb$yhat[-train], unname(yhatm[-train]))
+  expect_equal(lb$ranef[-train], unname(zuhat[-train]))
+  expect_equal(lb$fixed[-train], unname(fixedm[-train]))
   
 })
 
 ## TODO: lmerboost.fit logical subset
 
-test_that("lmerboost.fit get_zuhat", {
-  o <- lme4::lmer(y ~ x + (1 + x|id))
-  re <- as.matrix(lme4::ranef(o)$id)
-  zuhat <- mvtboost:::get_zuhat(re = re, x = x, id = id)
-  zuhat_lmer <- c(predict(o) - cbind(1, x) %*% lme4::fixef(o))
-  expect_equal(unname(zuhat), zuhat_lmer)
-})
+# 2016-11-14 don't need this test anymore
+# test_that("lmerboost.fit get_zuhat", {
+#   o <- lme4::lmer(y ~ x + (1 + x|id))
+#   re <- as.matrix(lme4::ranef(o)$id)
+#   zuhat <- mvtboost:::get_zuhat(re = re, x = x, id = id)
+#   zuhat_lmer <- c(predict(o) - cbind(1, x) %*% lme4::fixef(o))
+#   expect_equal(unname(zuhat), zuhat_lmer)
+# })
 
 ## TODO: lmerboost.fit train.fraction, stop.threshold, depth, indep
 

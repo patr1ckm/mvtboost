@@ -109,14 +109,15 @@ lmerboost <- function(y, X, id,
     best_oob_err <- which.min(o$oob.err)
   }
   best.trees <- c(train = which.min(o$train.err), test = best_test_err, oob = best_oob_err, cv = best_cv_err)
+  bt <- min(best.trees)
   
-  out <- list(yhat = o$yhat, ranef = o$ranef, fixed = o$fixed, lambda = o$lambda, subset = subset, 
-              yhatt = o$yhatt, raneft = o$raneft, fixedt = o$fixedt,
+  out <- list(yhat = o$yhat[,bt], ranef = o$ranef[,bt], fixed = o$fixed[,bt], 
+              lambda = o$lambda, subset = subset, 
               best.trees = best.trees,
-              cond.cv.err = params, best.params = best.params, params = params,
-              trees = o$trees, sigma=o$sigma, xnames = colnames(X),
+              best.params = best.params, params = params,
+              trees = o$trees, mods=o$mods, sigma=o$sigma, xnames = colnames(X),
               train.err=o$train.err, oob.err=o$oob.err, test.err=o$test.err, cv.err=cv.err, 
-              s = train)
+              subset = train)
   class(out) <- "lmerboost"
   return(out)
 }
@@ -151,7 +152,7 @@ lmerboost.fit <- function(y, X, id, train.fraction=NULL, subset=NULL, indep=TRUE
   yhat <- ranef <- fixed <- matrix(0, n, M)
   sigma <- rep(0, M)
   train.err <- oob.err <- test.err <- rep(NA, M)
-  trees <- list()
+  trees <- mods <- list()
   
   for(i in 1:M){
     # s = training, s.oob = oob, -train = test
@@ -191,7 +192,7 @@ lmerboost.fit <- function(y, X, id, train.fraction=NULL, subset=NULL, indep=TRUE
     form <- as.formula(paste0("r ~ ", addx, " + (",addx, " ", bars," id)"))
     
     # lmer on training
-    o <- lme4::lmer(form, data=d, REML=T, subset = s, 
+    mods[[i]] <- o <- lme4::lmer(form, data=d, REML=T, subset = s, 
                     control = lme4::lmerControl(calc.derivs = FALSE))
     sigma[i] <- sigma_merMod(o) * lambda
     
@@ -234,9 +235,8 @@ lmerboost.fit <- function(y, X, id, train.fraction=NULL, subset=NULL, indep=TRUE
   yhat <- yhat + init
   fixed <- fixed + init
   
-  out <- list(yhat=yhat[train, ], ranef=ranef[train, ], fixed=fixed[train,], lambda=lambda, 
-              yhatt=yhat[-train, ], raneft=ranef[-train, ], fixedt=fixed[-train, ],
-              trees = trees, sigma=sigma, init=init,
+  out <- list(yhat=yhat, ranef=ranef, fixed=fixed, lambda=lambda, 
+              trees = trees, mods=mods, sigma=sigma, init=init,
               train.err=train.err, oob.err=oob.err, test.err=test.err)
   return(out)  
 }
@@ -245,6 +245,7 @@ lmerboost.fit <- function(y, X, id, train.fraction=NULL, subset=NULL, indep=TRUE
 # re = ranef(mod)$id
 # x = design matrix without intercept
 # id = grouping variable factor
+# 2016-11-14 this is just for testing purposes now
 get_zuhat <- function(re, x, id){
   Z <- model.matrix(~id + id:x - 1)
   b <- c(re)
@@ -317,6 +318,7 @@ predict.lmerboost <- function(object, newdata, M=NULL){
 }
 
 
+#' @export
 best_iter <- function(x, threshold, lag, smooth = FALSE){
   err <- x$cv.err
   err <- err[!is.na(err)]
@@ -378,5 +380,10 @@ sigma_merMod <- function (object, ...) {
       "sigmaREML"
       else "sigmaML"]]
   else 1
+}
+
+#' @export
+fitted.lmerboost <- function(object, ...){
+  object$yhat
 }
 
