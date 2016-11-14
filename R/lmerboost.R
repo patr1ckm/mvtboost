@@ -109,15 +109,14 @@ lmerboost <- function(y, X, id,
     best_oob_err <- which.min(o$oob.err)
   }
   best.trees <- c(train = which.min(o$train.err), test = best_test_err, oob = best_oob_err, cv = best_cv_err)
-  bt <- min(best.trees)
+  bt <-  which.min(best.trees)
   
-  out <- list(yhat = o$yhat[,bt], ranef = o$ranef[,bt], fixed = o$fixed[,bt], 
-              lambda = o$lambda, subset = subset, 
+  out <- list(yhat = o$yhat[,bt], ranef = o$ranef[,bt], fixed = o$fixed[,bt], lambda = o$lambda, subset = subset, 
               best.trees = best.trees,
-              best.params = best.params, params = params,
-              trees = o$trees, mods=o$mods, sigma=o$sigma, xnames = colnames(X),
+              cond.cv.err = params, best.params = best.params, params = params,
+              trees = o$trees, sigma=o$sigma, xnames = colnames(X),
               train.err=o$train.err, oob.err=o$oob.err, test.err=o$test.err, cv.err=cv.err, 
-              subset = train)
+              s = train)
   class(out) <- "lmerboost"
   return(out)
 }
@@ -167,14 +166,19 @@ lmerboost.fit <- function(y, X, id, train.fraction=NULL, subset=NULL, indep=TRUE
                                   shrinkage=1, bag.fraction=1, distribution="gaussian",
                                   verbose=FALSE, n.trees = 1, ...)
     trees[[i]] <- tree$trees[[1]]
+    pt <- pretty.gbm.tree(tree, 1)
+    
     # get gbm predictions for whole sample
     gbm_pred <- predict(tree, newdata = X, n.trees = 1) 
     
+    # prediction determines into which node observations fall
+    # factor labels correspond to terminal node id (rows of pt)
+    nodes <- droplevels(factor(gbm_pred, levels=as.character(pt$Prediction+tree$initF),
+                                     labels=1:nrow(pt)))
+    
     # design matrix - add intercept via lmer. 
-    # 2016-10-19: BE VERY CAREFUL IF YOU CHANGE THIS
-    mm <- model.matrix(~factor(gbm_pred))[,-1, drop=FALSE]
-    nnodes <- ncol(mm)
-    colnames(mm) <- paste0("X", 1:nnodes)
+    mm <- model.matrix(~nodes)[,-1, drop=FALSE]
+    colnames(mm) <- gsub("nodes", "X", colnames(mm))
     
     # check rank. problem is if columns are included for obs not in s via surrogates
     # dropping non-full-rank column assigns these obs to default node.
@@ -185,20 +189,21 @@ lmerboost.fit <- function(y, X, id, train.fraction=NULL, subset=NULL, indep=TRUE
     mm <- mm[,keep_cols, drop = FALSE]
     d <- data.frame(r=r, mm, id)
     
-    # formula
+    # lmer on training
     addx <- paste0(colnames(mm), collapse = " + ")
     bars <- "||"
     if(!indep) bars <- "|"
     form <- as.formula(paste0("r ~ ", addx, " + (",addx, " ", bars," id)"))
     
-    # lmer on training
     mods[[i]] <- o <- lme4::lmer(form, data=d, REML=T, subset = s, 
                     control = lme4::lmerControl(calc.derivs = FALSE))
     sigma[i] <- sigma_merMod(o) * lambda
     
     # 2016-10-19: Timed to show that this was fastest with large n and large ngrps
+    
     yhatm <- predict(o, newdata=d, allow.new.levels = TRUE)
     fixedm <- cbind(1, mm) %*% o@beta
+      
     zuhat <- yhatm - fixedm
     fixedm[dropped_obs,] <- gbm_pred[dropped_obs]
     yhatm[dropped_obs] <- gbm_pred[dropped_obs]
@@ -241,49 +246,6 @@ lmerboost.fit <- function(y, X, id, train.fraction=NULL, subset=NULL, indep=TRUE
   return(out)  
 }
 
-
-# re = ranef(mod)$id
-# x = design matrix without intercept
-# id = grouping variable factor
-# 2016-11-14 this is just for testing purposes now
-get_zuhat <- function(re, x, id){
-  Z <- model.matrix(~id + id:x - 1)
-  b <- c(re)
-  drop(Z %*% b)
-}
-
-
-
-
-gbm_mm <- function(o, n.trees=1, ...){
-  yhat <- predict(o, n.trees=n.trees, ...)
-  node <- factor(yhat)
-  model.matrix(~node)[,-1,drop=F]
-}
-
-# assign_fold <- function(x, id, cv.folds){
-#   folds <- list()
-#   ids_by_group <- split(1:length(x), id[x])
-#   
-#   assign_fold_1group <- function(x, folds){
-#     n <- length(x)
-#     if(n == 1){
-#       in_fold <- 0 # observation will always be in training set
-#     } else {
-#       # If 1 < n_i <= cv.folds, force one observation from group to be in training set
-#       #  then randomly assign fold ids as usual for the other observations
-#       in_fold <- c(sample(1:folds, size=min(n, folds), replace = F),
-#                    sample(1:folds, size=max(0, (n - folds)), replace = T))
-#     }
-#     return(in_fold)
-#   }
-#   
-#   folds <- unlist(lapply(ids_by_group, assign_fold_1group, folds = cv.folds), use.names = F)
-# 
-#   return(folds)
-# }
-
-
 ## This is a hard problem! The current implementation doesn't really admit a separate prediction method.
 ## without re-fitting the model.
 predict.lmerboost <- function(object, newdata, M=NULL){
@@ -296,29 +258,65 @@ predict.lmerboost <- function(object, newdata, M=NULL){
   lambda <- out$lambda
   
   for(m in 1:M){
-  
-    mm <- gbm_mm(object$trees[[m]], newdata=newdata, n.trees = 1)
-    nodes <- ncol(mm)
-    out.lmer <- object$mods[[m]] 
-    new.mm <- data.frame(id=id, mm)
+
+    # get gbm predictions for newdata
+    gbm_pred <- predict(trees[[i]], newdata = newdata, n.trees = 1) 
     
-    zucoefs <- as.matrix(ranef(out.lmer)[[1]])
-    zuhat <- get_zuhat(zucoefs, mm, id)
+    # design matrix - add intercept via lmer. 
+    # 2016-10-19: BE VERY CAREFUL IF YOU CHANGE THIS
+    mm <- model.matrix(~factor(gbm_pred))[,-1, drop=FALSE]
+    nnodes <- ncol(mm)
+    colnames(mm) <- paste0("X", 1:nnodes)
     
-    yhatm <- predict(out.lmer, newdata=newdata)
+    # check rank. problem is if columns are included for obs not in s via surrogates
+    # dropping non-full-rank column assigns these obs to default node.
+    # solved by: drop columns myself, replace dropped obs with gbm predictions
+    keep_cols <- colSums(mm[s, ,drop=FALSE]) > 0
+    dropped_obs  <- rowSums(mm[,!keep_cols, drop=FALSE]) > 0
     
-    ranef[,i] <- ranef[,i-1] + zuhat * lambda
+    mm <- mm[,keep_cols, drop = FALSE]
+    d <- data.frame(r=r, mm, id)
     
-    yhat[,i] <- yhat[,i-1] + yhatm * lambda
+    # lmer on training
+    addx <- paste0(colnames(mm), collapse = " + ")
+    bars <- "||"
+    if(!indep) bars <- "|"
+    form <- as.formula(paste0("r ~ ", addx, " + (",addx, " ", bars," id)"))
     
-    fixed[,i] <- fixed[,i-1] + (new.mm[,-grep("id", colnames(new.mm))] %*% as.matrix(fixef(out.lmer))) * lambda
+    o <- lme4::lmer(form, data=d, REML=T, subset = s, 
+                    control = lme4::lmerControl(calc.derivs = FALSE))
+    sigma[i] <- sigma_merMod(o) * lambda
+    
+    
+    
+    # 2016-10-19: Timed to show that this was fastest with large n and large ngrps
+    
+    yhatm <- predict(o, newdata=d, allow.new.levels = TRUE)
+    fixedm <- cbind(1, mm) %*% o@beta
+    
+    zuhat <- yhatm - fixedm
+    fixedm[dropped_obs,] <- gbm_pred[dropped_obs]
+    yhatm[dropped_obs] <- gbm_pred[dropped_obs]
+    
+    # update totals at each iteration
+    if(i == 1){
+      fixed[,i]  <- fixedm * lambda 
+      ranef[,i]  <- zuhat  * lambda
+      yhat[,i]   <- yhatm  * lambda 
+      
+    } else {
+      fixed[,i]  <- fixed[,i-1] + fixedm * lambda 
+      ranef[,i]  <- ranef[,i-1] + zuhat  * lambda
+      yhat[,i]   <- yhat[,i-1]  + yhatm  * lambda
+    }
+    
+    r <- r - yhatm * lambda 
   }
   
   return(list(yhat=yhat, ranef=ranef, fixed=fixed))
 }
 
 
-#' @export
 best_iter <- function(x, threshold, lag, smooth = FALSE){
   err <- x$cv.err
   err <- err[!is.na(err)]
@@ -334,22 +332,22 @@ best_iter <- function(x, threshold, lag, smooth = FALSE){
 }
 
 
-# get_subsample <- function(ss, id, bag.fraction){
-#   id <- droplevels(id)
-#   
-#   # Get one obs from each group
-#   sid <- tapply(ss, id, function(x){ 
-#     x[sample(1:length(x), size=1)]
-#   })
-#   # compute the number of samples
-#   size <- ceiling(length(ss) * bag.fraction) - length(sid)
-#   
-#   # sample randomly from the rest
-#   c(sid, sample(ss[!(ss %in% sid)], size = size, replace=F)) 
-# }
+get_subsample <- function(ss, id, bag.fraction){
+  id <- droplevels(id)
+  
+  # Get one obs from each group
+  sid <- tapply(ss, id, function(x){ 
+    x[sample(1:length(x), size=1)]
+  })
+  # compute the number of samples
+  size <- ceiling(length(ss) * bag.fraction) - length(sid)
+  
+  # sample randomly from the rest
+  c(sid, sample(ss[!(ss %in% sid)], size = size, replace=F)) 
+}
 
 #' @export
-plot.lmerboost <- function(x, threshold = 0, lag = 1, ...){
+plot.lmerboost <- function(x, threshold = .001, lag = 1, ...){
   M <- length(x$train.err)
   ymax <- c(max(x$test.err, x$train.err, x$oob.err, na.rm = T))
   ymin <- c(min(x$test.err, x$train.err, x$oob.err, na.rm = T))
@@ -382,8 +380,41 @@ sigma_merMod <- function (object, ...) {
   else 1
 }
 
-#' @export
-fitted.lmerboost <- function(object, ...){
-  object$yhat
+
+# re = ranef(mod)$id
+# x = design matrix without intercept
+# id = grouping variable factor
+get_zuhat <- function(re, x, id){
+  Z <- model.matrix(~id + id:x - 1)
+  b <- c(re)
+  drop(Z %*% b)
 }
 
+
+gbm_mm <- function(o, n.trees=1, ...){
+  yhat <- predict(o, n.trees=n.trees, ...)
+  node <- factor(yhat)
+  model.matrix(~node)[,-1,drop=F]
+}
+
+assign_fold <- function(x, id, cv.folds){
+  folds <- list()
+  ids_by_group <- split(1:length(x), id[x])
+  
+  assign_fold_1group <- function(x, folds){
+    n <- length(x)
+    if(n == 1){
+      in_fold <- 0 # observation will always be in training set
+    } else {
+      # If 1 < n_i <= cv.folds, force one observation from group to be in training set
+      #  then randomly assign fold ids as usual for the other observations
+      in_fold <- c(sample(1:folds, size=min(n, folds), replace = F),
+                   sample(1:folds, size=max(0, (n - folds)), replace = T))
+    }
+    return(in_fold)
+  }
+  
+  folds <- unlist(lapply(ids_by_group, assign_fold_1group, folds = cv.folds), use.names = F)
+  
+  return(folds)
+}

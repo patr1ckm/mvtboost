@@ -84,23 +84,28 @@ test_that("lmerboost.fit m = 1, lambda = .5, bag.fraction = 1", {
 
 test_that("lmerboost.fit m = 10, lambda = .5, bag.fraction = 1", {
   lambda <- .5
+  M <- 10
+  set.seed(104)
   o <- lmerboost.fit(y = y, X = X, id = id, 
                      bag.fraction = 1,  indep = TRUE, verbose = FALSE,
-                     M = 10, lambda = lambda, depth = 5, stop.threshold = 0, n.minobsinnode = 10)
+                     M = M, lambda = lambda, depth = 5, stop.threshold = 0, n.minobsinnode = 10)
   
-  M <- 10
+  set.seed(104)
+  
   zuhat <- fixed <- yhat <- matrix(0, n, 10)
   init <- mean(y)
   r <- y - mean(y)
   for(i in 1:M){
-    set.seed(104)
     o.gbm <- gbm::gbm.fit(y = r, x = X, n.trees = 1, shrinkage = 1, bag.fraction = 1, 
-                          distribution = "gaussian", interaction.depth = 5, verbose = F)
-    mm <- mvtboost:::gbm_mm(o.gbm, n.trees = 1, newdata = X)
+                          distribution = "gaussian", interaction.depth = 5, verbose = F, n.minobsinnode = 10)
+    mm <- model.matrix(~factor(predict(o.gbm, n.trees = 1, newdata = X)))[,-1]
+    
+    
     colnames(mm) <- paste0("X", 1:ncol(mm))
     d <- data.frame(r, mm, id)
     o.lmer <- lme4::lmer(r ~ X1 + X2 + X3 + X4 + X5 + (1 + X1 + X2 + X3 + X4 + X5 || id), REML = T, 
                          control = lme4::lmerControl(calc.derivs = FALSE), data = d)
+    expect_equal(o.lmer, o$mods[[i]])
     
     Zm <- model.matrix(~id + mm:id - 1)
     zuhatm <- drop(Zm %*% c(as.matrix(lme4::ranef(o.lmer)[[1]])))
