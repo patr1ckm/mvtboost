@@ -128,7 +128,7 @@ lmerboost_cv <- function(k, folds, y, x, id, train, ...){
 
 
 #' @export
-#' @importFrom gbm gbm.fit
+#' @importFrom gbm gbm.fit pretty.gbm.tree
 #' @importFrom lme4 lmer
 lmerboost.fit <- function(y, X, id, train.fraction=NULL, subset=NULL, indep=TRUE, M=100, 
                           lambda=.01, nt=1, depth=5, tune=FALSE, bag.fraction=.5, 
@@ -166,15 +166,21 @@ lmerboost.fit <- function(y, X, id, train.fraction=NULL, subset=NULL, indep=TRUE
                                   shrinkage=1, bag.fraction=1, distribution="gaussian",
                                   verbose=FALSE, n.trees = 1, ...)
     trees[[i]] <- tree$trees[[1]]
-    pt <- pretty.gbm.tree(tree, 1)
+    pt <- gbm::pretty.gbm.tree(tree, 1)
     
     # get gbm predictions for whole sample
     gbm_pred <- predict(tree, newdata = X, n.trees = 1) 
     
+    
+    # list terminal nodes (-1) first; rownames are are terminal node ids
+    # this forces node factor order to have a terminal node as reference, not surrogate
+    pt <- pt[order(pt$SplitVar), ]
+    
     # prediction determines into which node observations fall
     # factor labels correspond to terminal node id (rows of pt)
-    nodes <- droplevels(factor(gbm_pred, levels=as.character(pt$Prediction+tree$initF),
-                                     labels=1:nrow(pt)))
+    nodes <- factor(gbm_pred, 
+                    levels=as.character(pt$Prediction+tree$initF), 
+                    labels=rownames(pt)) %>% droplevels 
     
     # design matrix - add intercept via lmer. 
     mm <- model.matrix(~nodes)[,-1, drop=FALSE]
@@ -287,8 +293,6 @@ predict.lmerboost <- function(object, newdata, M=NULL){
                     control = lme4::lmerControl(calc.derivs = FALSE))
     sigma[i] <- sigma_merMod(o) * lambda
     
-    
-    
     # 2016-10-19: Timed to show that this was fastest with large n and large ngrps
     
     yhatm <- predict(o, newdata=d, allow.new.levels = TRUE)
@@ -393,7 +397,7 @@ get_zuhat <- function(re, x, id){
 
 gbm_mm <- function(o, n.trees=1, ...){
   yhat <- predict(o, n.trees=n.trees, ...)
-  node <- factor(yhat)
+  node <- factor(yhat, le)
   model.matrix(~node)[,-1,drop=F]
 }
 

@@ -1,11 +1,16 @@
 
+# These tests are as follows
+# 1. Make sure it runs 
+# 2. Compare current version to a previous implementation; make sure changes are ok
+# 3. Make sure all the buttons work
+
 set.seed(104)
 ngroups <- 100
 group_size <- 10
 n <- ngroups * group_size
 id <- factor(rep(1:ngroups, each = group_size))
 
-traiN <- sample(1:800, size = 500, replace = FALSE)
+train <- sample(1:800, size = 500, replace = FALSE)
 
 x <- rnorm(n)
 Z <- model.matrix(~id + x:id - 1)
@@ -18,7 +23,7 @@ context("lmerboost.fit")
 
 test_that("lmerboost runs", {
   o <- lmerboost(y = y, X = X, id = id, M = 5, cv.folds = 1, lambda = .1)
-  o <- lmerboost(y = y, X = X, id = id, M = 5, cv.folds = 1, lambda = .1, subset = traiN)
+  o <- lmerboost(y = y, X = X, id = id, M = 5, cv.folds = 1, lambda = .1, subset = train)
   o <- lmerboost(y = y, X = X, id = id, M = 3, cv.folds = 3)
   Xmis <- X
   Xmis[sample(1:n, size = n/2, replace = FALSE),] <- NA
@@ -26,164 +31,14 @@ test_that("lmerboost runs", {
   expect_is(o, "lmerboost")
 })
 
-test_that("lmerboost.fit m = 1, lambda = 1, bag.fraction = 1", {
-  set.seed(104)
-  o <- lmerboost.fit(y = y, X = X, id = id, 
-                 bag.fraction = 1,  indep = TRUE,
-                 M = 1, lambda = 1, depth = 5, stop.threshold = 0, n.minobsinnode = 10)
-  set.seed(104)
-  init <- mean(y)
-  r = y - init
-  o.gbm <- gbm::gbm.fit(y = r, x = X, n.trees = 1, shrinkage = 1, bag.fraction = 1, 
-               distribution = "gaussian", interaction.depth = 5, verbose = F)
-  mm <- mvtboost:::gbm_mm(o.gbm, n.trees = 1, newdata = X)
-  colnames(mm) <- paste0("X", 1:ncol(mm))
-  dr <- data.frame(r, mm, id)
-  o.lmer <- lme4::lmer(r ~ X1 + X2 + X3 + X4 + X5 + (1 + X1 + X2 + X3 + X4 + X5 || id), REML = T, 
-                       control = lme4::lmerControl(calc.derivs = FALSE), data = dr)
-  
-  Zm <- model.matrix(~id + mm:id - 1)
-  zuhat <- drop(Zm %*% c(as.matrix(lme4::ranef(o.lmer)[[1]])))
-  fixed <- drop(cbind(1, mm) %*% lme4::fixef(o.lmer)) + init
-  yhat <- fixed + zuhat
-  
-  expect_equal(init, o$init)
-  expect_equal(o.gbm$trees[[1]], o$trees[[1]])
-  expect_equal(unname(zuhat), o$ranef, tolerance = tol, check.attributes=F)
-  expect_equal(unname(fixed), o$fixed, tolerance = tol, check.attributes=F)
-  expect_equal(unname(yhat), o$yhat, tolerance = tol, check.attributes=F)
-  expect_equal(unname(predict(o.lmer)) + init, o$yhat, tolerance = tol, check.attributes=F)
-})
 
-test_that("lmerboost.fit m = 1, lambda = .5, bag.fraction = 1", {
-  lambda <- .5
-  o <- lmerboost.fit(y = y, X = X, id = id, 
-                     bag.fraction = 1,  indep = TRUE,
-                     M = 1, lambda = lambda, depth = 5, stop.threshold = 0, n.minobsinnode = 10)
-  set.seed(104)
-  init <- mean(y)
-  r <- y - init
-  o.gbm <- gbm::gbm.fit(y = r, x = X, n.trees = 1, shrinkage = 1, bag.fraction = 1, 
-                        distribution = "gaussian", interaction.depth = 5, verbose = F)
-  mm <- mvtboost:::gbm_mm(o.gbm, n.trees = 1, newdata = X)
-  colnames(mm) <- paste0("X", 1:ncol(mm))
-  d <- data.frame(r, mm, id)
-  o.lmer <- lme4::lmer(r ~ X1 + X2 + X3 + X4 + X5 + (1 + X1 + X2 + X3 + X4 + X5 || id), REML = T, 
-                       control = lme4::lmerControl(calc.derivs = FALSE), data = d)
-  
-  Zm <- model.matrix(~id + mm:id - 1)
-  zuhat <- drop(Zm %*% c(as.matrix(lme4::ranef(o.lmer)[[1]]))) * lambda
-  fixed <- drop(cbind(1, mm) %*% lme4::fixef(o.lmer)) * lambda + init
-  yhat <- fixed + zuhat 
-  
-  expect_equal(unname(zuhat), o$ranef, tolerance = tol, check.attributes=F)
-  expect_equal(unname(fixed), o$fixed, tolerance = tol, check.attributes=F)
-  expect_equal(unname(fixed + zuhat), o$yhat, tolerance = tol, check.attributes=F)
-  expect_equal(unname(predict(o.lmer))*lambda + init, o$yhat, tolerance = tol, check.attributes=F)
-})
-
-test_that("lmerboost.fit m = 10, lambda = .5, bag.fraction = 1", {
-  lambda <- .5
-  M <- 10
-  set.seed(104)
-  o <- lmerboost.fit(y = y, X = X, id = id, 
-                     bag.fraction = 1,  indep = TRUE, verbose = FALSE,
-                     M = M, lambda = lambda, depth = 5, stop.threshold = 0, n.minobsinnode = 10)
-  
-  set.seed(104)
-  
-  zuhat <- fixed <- yhat <- matrix(0, n, 10)
-  init <- mean(y)
-  r <- y - mean(y)
-  for(i in 1:M){
-    o.gbm <- gbm::gbm.fit(y = r, x = X, n.trees = 1, shrinkage = 1, bag.fraction = 1, 
-                          distribution = "gaussian", interaction.depth = 5, verbose = F, n.minobsinnode = 10)
-    mm <- model.matrix(~factor(predict(o.gbm, n.trees = 1, newdata = X)))[,-1]
-    
-    
-    colnames(mm) <- paste0("X", 1:ncol(mm))
-    d <- data.frame(r, mm, id)
-    o.lmer <- lme4::lmer(r ~ X1 + X2 + X3 + X4 + X5 + (1 + X1 + X2 + X3 + X4 + X5 || id), REML = T, 
-                         control = lme4::lmerControl(calc.derivs = FALSE), data = d)
-    expect_equal(o.lmer, o$mods[[i]])
-    
-    Zm <- model.matrix(~id + mm:id - 1)
-    zuhatm <- drop(Zm %*% c(as.matrix(lme4::ranef(o.lmer)[[1]])))
-    fixedm <- drop(cbind(1, mm) %*% lme4::fixef(o.lmer))
-    yhatm <- zuhatm + fixedm 
-    if(i == 1){
-      zuhat[,i] <- zuhatm * lambda
-      fixed[,i] <- fixedm * lambda
-      yhat[,i] <- yhatm * lambda
-    } else {
-      zuhat[,i] <- zuhat[,i - 1] + zuhatm * lambda
-      fixed[,i] <- fixed[,i - 1] + fixedm * lambda
-      yhat[,i] <- yhat[,i-1] + yhatm * lambda
-    }
-    r <- r - yhatm * lambda
-  }
-  yhat <- yhat + init
-  fixed <- fixed + init
-  
-  expect_equal(yhat, o$yhat, tolerance = tol)
-  expect_equal(zuhat, o$ranef,  tolerance = tol)
-  expect_equal(fixed, o$fixed,  tolerance = tol)
-})
-
-test_that("lmerboost.fit bag.fraction = .5", {
-  bag.fraction = .5
-  lambda <- .5
-  set.seed(104)
-  o <- lmerboost.fit(y = y, X = X, id = id, 
-                     bag.fraction = bag.fraction,  indep = TRUE, verbose = FALSE,
-                     M = 10, lambda = lambda, depth = 5, stop.threshold = 0, n.minobsinnode = 10)
-  set.seed(104)
-  M <- 10
-  n <- length(y)
-  zuhat <- fixed <- yhat <- matrix(0, n, 10)
-  init <- mean(y)
-  r <- y - mean(y)
-  for(i in 1:M){
-    
-    s <- sample(1:n, size=ceiling(bag.fraction*n), replace=FALSE)
-    o.gbm <- gbm::gbm.fit(y = r[s], x = X[s, , drop = F], n.trees = 1, shrinkage = 1, bag.fraction = 1, 
-                          distribution = "gaussian", interaction.depth = 5, verbose = F)
-    mm <- mvtboost:::gbm_mm(o.gbm, n.trees = 1, newdata = X)
-    colnames(mm) <- paste0("X", 1:ncol(mm))
-    d <- data.frame(r, mm, id)
-    o.lmer <- lme4::lmer(r ~ X1 + X2 + X3 + X4 + X5 + (1 + X1 + X2 + X3 + X4 + X5 || id), REML = T, 
-                         control = lme4::lmerControl(calc.derivs = FALSE), data = d, subset = s)
-    
-    Zm <- model.matrix(~id + mm:id - 1)
-    zuhatm <- drop(Zm %*% c(as.matrix(lme4::ranef(o.lmer)[[1]])))
-    fixedm <- drop(cbind(1, mm) %*% lme4::fixef(o.lmer))
-    yhatm <- zuhatm + fixedm 
-    if(i == 1){
-      zuhat[,i] <- zuhatm * lambda
-      fixed[,i] <- fixedm * lambda
-      yhat[,i] <- yhatm * lambda
-    } else {
-      zuhat[,i] <- zuhat[,i - 1] + zuhatm * lambda
-      fixed[,i] <- fixed[,i - 1] + fixedm * lambda
-      yhat[,i] <- yhat[,i-1] + yhatm * lambda
-    }
-    r <- r - yhatm * lambda
-  }
-  yhat <- yhat + init
-  fixed <- fixed + init
-  
-  expect_equal(yhat, o$yhat,  tolerance = tol)
-  expect_equal(zuhat, o$ranef, tolerance = tol)
-  expect_equal(fixed, o$fixed, tolerance = tol)
-})
-
-test_that("lmerboost.fit subset, train/oob/test err", {
+test_that("lmerboost.fit bag.fraction, lambda, subset, train/oob/test err", {
   bag.fraction = .5
   lambda <- .5
   n <- length(y)
 
   set.seed(104)
-  o <- lmerboost.fit(y = y, X = X, id = id, subset = traiN,
+  o <- lmerboost.fit(y = y, X = X, id = id, subset = train,
                      bag.fraction = bag.fraction,  indep = TRUE, verbose = FALSE,
                      M = 10, lambda = lambda, depth = 5, stop.threshold = 0, n.minobsinnode = 10)
 
@@ -196,19 +51,25 @@ test_that("lmerboost.fit subset, train/oob/test err", {
   r <- y - mean(y)
   for(i in 1:M){
 
-    # the only change is to subsample from traiN rather than 1:n, and to subset on id
+    # the only change is to subsample from train rather than 1:n, and to subset on id
     # note that s is always an index to observations in the  original data
-    s <- sample(traiN, size=ceiling(length(traiN)*bag.fraction), replace=FALSE)
-    s.oob <- setdiff(traiN, s)
+    s <- sample(train, size=ceiling(length(train)*bag.fraction), replace=FALSE)
+    s.oob <- setdiff(train, s)
 
     o.gbm <- gbm::gbm.fit(y = r[s], x = X[s, , drop = F], n.trees = 1, shrinkage = 1, bag.fraction = 1,
                           distribution = "gaussian", interaction.depth = 5, verbose = F)
-    mm <- mvtboost:::gbm_mm(o.gbm, n.trees = 1, newdata = X)
-    colnames(mm) <- paste0("X", 1:ncol(mm))
+    pt <- gbm::pretty.gbm.tree(o.gbm, i.tree=1)
+    gbm_pred <- predict(o.gbm, newdata=X, n.trees=1)
+    nodes <- droplevels(factor(gbm_pred, levels=as.character(pt$Prediction + o.gbm$initF), 
+                               labels=1:nrow(pt)))
+    mm <- model.matrix(~nodes)[,-1]
+    colnames(mm) <- gsub("nodes", "X", colnames(mm))
+    
     d <- data.frame(r, mm, id)
-    o.lmer <- lme4::lmer(r ~ X1 + X2 + X3 + X4 + X5 + (1 + X1 + X2 + X3 + X4 + X5 || id), REML = T,
-                         control = lme4::lmerControl(calc.derivs = FALSE), data = d, subset = s)
-
+    addx <- paste0(colnames(mm), collapse=" + ")
+    form <- as.formula(paste0("r ~ ", addx, " + (", addx, "||id)"))
+    o.lmer <- lme4::lmer(form, data=d, subset=s, REML = T,
+                         control = lme4::lmerControl(calc.derivs = FALSE))
     Zm <- model.matrix(~id + mm:id - 1)
     
     re <- as.matrix(lme4::ranef(o.lmer)[[1]]) #
@@ -231,18 +92,18 @@ test_that("lmerboost.fit subset, train/oob/test err", {
     r <- r - yhatm * lambda
     train_err[i] <- mean(((y[s, ] - init) - yhat[s, i])^2)
     oob_err[i]   <- mean(((y[s.oob, ] - init) - yhat[s.oob, i])^2)
-    test_err[i]  <- mean(((y[-traiN, ] - init) - yhat[-traiN, i])^2)
+    test_err[i]  <- mean(((y[-train, ] - init) - yhat[-train, i])^2)
     
   }
   yhat <- yhat + init
   fixed <- fixed + init
 
-  expect_equal(yhat[traiN, ], o$yhat[traiN, ])
-  expect_equal(zuhat[traiN, ], o$ranef[traiN, ])
-  expect_equal(fixed[traiN, ], o$fixed[traiN, ])
-  expect_equal(yhat[-traiN, ], o$yhat[-traiN, ])
-  expect_equal(zuhat[-traiN, ], o$ranef[-traiN, ])
-  expect_equal(fixed[-traiN, ], o$fixed[-traiN, ])
+  expect_equal(yhat[train, ], o$yhat[train, ])
+  expect_equal(zuhat[train, ], o$ranef[train, ])
+  expect_equal(fixed[train, ], o$fixed[train, ])
+  expect_equal(yhat[-train, ], o$yhat[-train, ])
+  expect_equal(zuhat[-train, ], o$ranef[-train, ])
+  expect_equal(fixed[-train, ], o$fixed[-train, ])
   expect_equal(train_err, o$train.err)  
   expect_equal(oob_err, o$oob.err)  
   expect_equal(test_err, o$test.err)  
@@ -321,15 +182,6 @@ test_that("lmerboost.fit drops rank deficient cols", {
 })
 
 ## TODO: lmerboost.fit logical subset
-
-# 2016-11-14 don't need this test anymore
-# test_that("lmerboost.fit get_zuhat", {
-#   o <- lme4::lmer(y ~ x + (1 + x|id))
-#   re <- as.matrix(lme4::ranef(o)$id)
-#   zuhat <- mvtboost:::get_zuhat(re = re, x = x, id = id)
-#   zuhat_lmer <- c(predict(o) - cbind(1, x) %*% lme4::fixef(o))
-#   expect_equal(unname(zuhat), zuhat_lmer)
-# })
 
 ## TODO: lmerboost.fit train.fraction, stop.threshold, depth, indep
 
