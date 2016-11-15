@@ -151,7 +151,7 @@ lmerboost.fit <- function(y, X, id, train.fraction=NULL, subset=NULL, indep=TRUE
   yhat <- ranef <- fixed <- matrix(0, n, M)
   sigma <- rep(0, M)
   train.err <- oob.err <- test.err <- rep(NA, M)
-  trees <- mods <- list()
+  trees <- mods <-list()
   
   for(i in 1:M){
     # s = training, s.oob = oob, -train = test
@@ -165,7 +165,11 @@ lmerboost.fit <- function(y, X, id, train.fraction=NULL, subset=NULL, indep=TRUE
     tree <- gbm.fit(y = r[s], x=X[s, ,drop=F], interaction.depth=depth,
                                   shrinkage=1, bag.fraction=1, distribution="gaussian",
                                   verbose=FALSE, n.trees = 1, ...)
+    if(i == 1){
+      var.type = tree$var.type
+    }
     trees[[i]] <- tree$trees[[1]]
+    #c.split[[i]] <- tree$c.splits
     pt <- gbm::pretty.gbm.tree(tree, 1)
     
     # get gbm predictions for whole sample
@@ -247,8 +251,10 @@ lmerboost.fit <- function(y, X, id, train.fraction=NULL, subset=NULL, indep=TRUE
   fixed <- fixed + init
   
   out <- list(yhat=yhat, ranef=ranef, fixed=fixed, lambda=lambda, 
-              trees = trees, mods=mods, sigma=sigma, init=init,
+              trees = trees, init=init, var.type=var.type,
+              mods=mods, sigma=sigma, 
               train.err=train.err, oob.err=oob.err, test.err=test.err)
+  class(out) <- "lmerboost"
   return(out)  
 }
 
@@ -262,14 +268,23 @@ predict.lmerboost <- function(object, newdata, M=NULL){
   n <-  length(object$yhat)
   yhat <- ranef <- fixed <- matrix(0, n, M)
   
-  lambda <- out$lambda
+  lambda <- object$lambda
   
   for(m in 1:M){
     
-    pt <- gbm::pretty.gbm.tree(object$trees[[i]], 1)
+    pt <- data.frame(object$trees[[i]])
+    names(pt) <- c("SplitVar", "SplitCodePred", "LeftNode", 
+                     "RightNode", "MissingNode", "ErrorReduction", "Weight", 
+                     "Prediction")
+    row.names(pt) <- 0:(nrow(pt) - 1)
     
-    # get gbm predictions for whole sample
-    gbm_pred <- predict(trees[[i]], newdata = X, n.trees = 1) 
+  
+    # basically just coerce trees to a gbm object;
+    # note
+    gbm.obj <- list(initF=object$init, trees=object$trees, 
+                c.split = object$c.split, var.type=object$var.type)
+    class(gbm.obj) <- "gbm"
+    gbm_pred <- predict(gbm.obj, n.trees=i, newdata=newdata) 
     
     
     # list terminal nodes (-1) first; rownames are are terminal node ids

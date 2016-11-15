@@ -260,3 +260,9 @@ test_that("lmerboost influence", {
   inf <- influence(ob)
   expect_gt(inf[1], 0)
 })
+
+test_that("lmerboost predict", {
+  o <- lmerboost(y = y, X = X, id = id, M = 5, cv.folds = 1, lambda = .1)
+  predict(o, newdata=X, M=1)
+  
+})
