@@ -254,6 +254,7 @@ lmerboost.fit <- function(y, X, id, train.fraction=NULL, subset=NULL, indep=TRUE
 
 ## This is a hard problem! The current implementation doesn't really admit a separate prediction method.
 ## without re-fitting the model.
+#' @export
 predict.lmerboost <- function(object, newdata, M=NULL){
   # save trees, lmer objects at each iteration (damn)
   
@@ -264,36 +265,32 @@ predict.lmerboost <- function(object, newdata, M=NULL){
   lambda <- out$lambda
   
   for(m in 1:M){
-
-    # get gbm predictions for newdata
-    gbm_pred <- predict(trees[[i]], newdata = newdata, n.trees = 1) 
     
-    # design matrix - add intercept via lmer. 
-    # 2016-10-19: BE VERY CAREFUL IF YOU CHANGE THIS
-    mm <- model.matrix(~factor(gbm_pred))[,-1, drop=FALSE]
-    nnodes <- ncol(mm)
-    colnames(mm) <- paste0("X", 1:nnodes)
+    pt <- gbm::pretty.gbm.tree(object$trees[[i]], 1)
     
-    # check rank. problem is if columns are included for obs not in s via surrogates
-    # dropping non-full-rank column assigns these obs to default node.
-    # solved by: drop columns myself, replace dropped obs with gbm predictions
-    keep_cols <- colSums(mm[s, ,drop=FALSE]) > 0
-    dropped_obs  <- rowSums(mm[,!keep_cols, drop=FALSE]) > 0
+    # get gbm predictions for whole sample
+    gbm_pred <- predict(trees[[i]], newdata = X, n.trees = 1) 
     
-    mm <- mm[,keep_cols, drop = FALSE]
-    d <- data.frame(r=r, mm, id)
     
-    # lmer on training
-    addx <- paste0(colnames(mm), collapse = " + ")
-    bars <- "||"
-    if(!indep) bars <- "|"
-    form <- as.formula(paste0("r ~ ", addx, " + (",addx, " ", bars," id)"))
+    # list terminal nodes (-1) first; rownames are are terminal node ids
+    # this forces node factor order to have a terminal node as reference, not surrogate
+    pt <- pt[order(pt$SplitVar), ]
     
-    o <- lme4::lmer(form, data=d, REML=T, subset = s, 
-                    control = lme4::lmerControl(calc.derivs = FALSE))
-    sigma[i] <- sigma_merMod(o) * lambda
+    # prediction determines into which node observations fall
+    # factor labels correspond to terminal node id (rows of pt)
+    nodes <- factor(gbm_pred, 
+                    levels=as.character(pt$Prediction+tree$initF), 
+                    labels=rownames(pt)) %>% droplevels 
     
-    # 2016-10-19: Timed to show that this was fastest with large n and large ngrps
+    # column names of design matrix in new data match tree fit to training data
+    mm <- model.matrix(~nodes)[,-1, drop=FALSE]
+    colnames(mm) <- gsub("nodes", "X", colnames(mm))
+    
+    # no rank check because no subsampling
+    
+    d <- data.frame(mm, id)
+    
+    o <- object$mods[[i]]
     
     yhatm <- predict(o, newdata=d, allow.new.levels = TRUE)
     fixedm <- cbind(1, mm) %*% o@beta
