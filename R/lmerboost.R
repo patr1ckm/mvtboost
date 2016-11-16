@@ -109,14 +109,13 @@ lmerboost <- function(y, X, id,
     best_oob_err <- which.min(o$oob.err)
   }
   best.trees <- c(train = which.min(o$train.err), test = best_test_err, oob = best_oob_err, cv = best_cv_err)
-  bt <-  which.min(best.trees)
+  bt <-  min(best.trees, na.rm=TRUE)
   
-  out <- list(yhat = o$yhat[,bt], ranef = o$ranef[,bt], fixed = o$fixed[,bt], lambda = o$lambda, subset = subset, 
-              best.trees = best.trees,
-              cond.cv.err = params, best.params = best.params, params = params,
-              trees = o$trees, sigma=o$sigma, xnames = colnames(X),
-              train.err=o$train.err, oob.err=o$oob.err, test.err=o$test.err, cv.err=cv.err, 
-              s = train)
+  out <- list(yhat=o$yhat[,bt], ranef=o$ranef[,bt], fixed=o$fixed[,bt], lambda=o$lambda, subset = subset, 
+              best.trees = best.trees, best.params = best.params, params = params,
+              sigma=o$sigma, xnames = colnames(X), mods=o$mods,
+              trees = o$trees, init=o$init, var.type=o$var.type, c.split=o$c.split,
+              train.err=o$train.err, oob.err=o$oob.err, test.err=o$test.err, cv.err=cv.err)
   class(out) <- "lmerboost"
   return(out)
 }
@@ -151,7 +150,7 @@ lmerboost.fit <- function(y, X, id, train.fraction=NULL, subset=NULL, indep=TRUE
   yhat <- ranef <- fixed <- matrix(0, n, M)
   sigma <- rep(0, M)
   train.err <- oob.err <- test.err <- rep(NA, M)
-  trees <- mods <-list()
+  trees <- mods <- c.split <- list()
   
   for(i in 1:M){
     # s = training, s.oob = oob, -train = test
@@ -169,7 +168,7 @@ lmerboost.fit <- function(y, X, id, train.fraction=NULL, subset=NULL, indep=TRUE
       var.type = tree$var.type
     }
     trees[[i]] <- tree$trees[[1]]
-    #c.split[[i]] <- tree$c.splits
+    c.split[[i]] <- tree$c.splits
     pt <- gbm::pretty.gbm.tree(tree, 1)
     
     # get gbm predictions for whole sample
@@ -182,9 +181,9 @@ lmerboost.fit <- function(y, X, id, train.fraction=NULL, subset=NULL, indep=TRUE
     
     # prediction determines into which node observations fall
     # factor labels correspond to terminal node id (rows of pt)
-    nodes <- factor(gbm_pred, 
+    nodes <- droplevels(factor(gbm_pred, 
                     levels=as.character(pt$Prediction+tree$initF), 
-                    labels=rownames(pt)) %>% droplevels 
+                    labels=rownames(pt)))
     
     # design matrix - add intercept via lmer. 
     mm <- model.matrix(~nodes)[,-1, drop=FALSE]
@@ -251,26 +250,25 @@ lmerboost.fit <- function(y, X, id, train.fraction=NULL, subset=NULL, indep=TRUE
   fixed <- fixed + init
   
   out <- list(yhat=yhat, ranef=ranef, fixed=fixed, lambda=lambda, 
-              trees = trees, init=init, var.type=var.type,
+              trees = trees, init=init, var.type=var.type, c.split=c.split,
               mods=mods, sigma=sigma, 
               train.err=train.err, oob.err=oob.err, test.err=test.err)
   class(out) <- "lmerboost"
   return(out)  
 }
 
-## This is a hard problem! The current implementation doesn't really admit a separate prediction method.
-## without re-fitting the model.
+
 #' @export
-predict.lmerboost <- function(object, newdata, M=NULL){
+predict.lmerboost <- function(object, newdata, newid, M=NULL){
   # save trees, lmer objects at each iteration (damn)
   
   if(is.null(M)){ M <- length(object$mods)}
-  n <-  length(object$yhat)
+  n <- nrow(newdata)
   yhat <- ranef <- fixed <- matrix(0, n, M)
   
   lambda <- object$lambda
   
-  for(m in 1:M){
+  for(i in 1:M){
     
     pt <- data.frame(object$trees[[i]])
     names(pt) <- c("SplitVar", "SplitCodePred", "LeftNode", 
@@ -279,12 +277,11 @@ predict.lmerboost <- function(object, newdata, M=NULL){
     row.names(pt) <- 0:(nrow(pt) - 1)
     
   
-    # basically just coerce trees to a gbm object;
-    # note
+    # coerce lb object to a gbm object
     gbm.obj <- list(initF=object$init, trees=object$trees, 
                 c.split = object$c.split, var.type=object$var.type)
     class(gbm.obj) <- "gbm"
-    gbm_pred <- predict(gbm.obj, n.trees=i, newdata=newdata) 
+    gbm_pred <- predict(gbm.obj, n.trees=i, single.tree=TRUE, newdata=newdata) 
     
     
     # list terminal nodes (-1) first; rownames are are terminal node ids
@@ -293,27 +290,25 @@ predict.lmerboost <- function(object, newdata, M=NULL){
     
     # prediction determines into which node observations fall
     # factor labels correspond to terminal node id (rows of pt)
-    nodes <- factor(gbm_pred, 
-                    levels=as.character(pt$Prediction+tree$initF), 
-                    labels=rownames(pt)) %>% droplevels 
+    #  note- when single.tree=TRUE, intercept is not included
+    nodes <- droplevels(factor(gbm_pred, 
+                    levels=as.character(pt$Prediction), 
+                    labels=rownames(pt)))
     
     # column names of design matrix in new data match tree fit to training data
     mm <- model.matrix(~nodes)[,-1, drop=FALSE]
     colnames(mm) <- gsub("nodes", "X", colnames(mm))
     
-    # no rank check because no subsampling
+    # no rank check because no subsampling; no dropped obs
     
-    d <- data.frame(mm, id)
+    d <- data.frame(mm, id=newid)
     
     o <- object$mods[[i]]
     
     yhatm <- predict(o, newdata=d, allow.new.levels = TRUE)
     fixedm <- cbind(1, mm) %*% o@beta
-    
     zuhat <- yhatm - fixedm
-    fixedm[dropped_obs,] <- gbm_pred[dropped_obs]
-    yhatm[dropped_obs] <- gbm_pred[dropped_obs]
-    
+
     # update totals at each iteration
     if(i == 1){
       fixed[,i]  <- fixedm * lambda 
@@ -325,11 +320,11 @@ predict.lmerboost <- function(object, newdata, M=NULL){
       ranef[,i]  <- ranef[,i-1] + zuhat  * lambda
       yhat[,i]   <- yhat[,i-1]  + yhatm  * lambda
     }
-    
-    r <- r - yhatm * lambda 
   }
+  yhat <- yhat + object$init
+  fixed <- fixed + object$init
   
-  return(list(yhat=yhat, ranef=ranef, fixed=fixed))
+  return(list(yhat=yhat[,M], ranef=ranef[,M], fixed=fixed[,M]))
 }
 
 

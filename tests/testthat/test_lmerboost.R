@@ -262,7 +262,21 @@ test_that("lmerboost influence", {
 })
 
 test_that("lmerboost predict", {
-  o <- lmerboost(y = y, X = X, id = id, M = 5, cv.folds = 1, lambda = .1)
-  predict(o, newdata=X, M=1)
+  M = 10
+  lb <- lmerboost(y = y, X = X, id = id, M = M, cv.folds = 3, lambda = .5,
+                 bag.fraction=.5, subset=1:500)
+  yh <- predict(lb, newdata=X, newid=id, M=min(lb$best.trees, na.rm=T))
+  expect_equal(lb$yhat, yh$yhat)
+  expect_equal(lb$fixed, yh$fixed)
+  expect_equal(lb$ranef, yh$ranef)
+  
+  Xnew <- data.frame(x=rnorm(n))
+  newid <- factor(rep(101, n))
+  
+  yh2 <- predict(lb, newdata=Xnew, newid=id)
+  
+  yh3 <- predict(lb, newdata=Xnew, newid=newid)
+  # a new group has 0 ranef
+  expect_equal(yh3$ranef, rep(0, n))
   
 })
