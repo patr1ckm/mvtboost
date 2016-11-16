@@ -262,8 +262,8 @@ test_that("lmerboost influence", {
 })
 
 test_that("lmerboost predict", {
-  M = 10
-  lb <- lmerboost(y = y, X = X, id = id, M = M, cv.folds = 3, lambda = .5,
+  M = 5
+  lb <- lmerboost(y = y, X = X, id = id, M = M, cv.folds = 3, lambda = c(.5, 1),
                  bag.fraction=.5, subset=1:500)
   yh <- predict(lb, newdata=X, newid=id, M=min(lb$best.trees, na.rm=T))
   expect_equal(lb$yhat, yh$yhat)
@@ -273,6 +273,7 @@ test_that("lmerboost predict", {
   Xnew <- data.frame(x=rnorm(n))
   newid <- factor(rep(101, n))
   
+  # how to check? idk a separate implementation?
   yh2 <- predict(lb, newdata=Xnew, newid=id)
   
   yh3 <- predict(lb, newdata=Xnew, newid=newid)
