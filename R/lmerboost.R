@@ -327,60 +327,6 @@ predict.lmerboost <- function(object, newdata, newid, M=NULL){
   return(list(yhat=yhat[,M], ranef=ranef[,M], fixed=fixed[,M]))
 }
 
-
-best_iter <- function(x, threshold, lag, smooth = FALSE){
-  err <- x$cv.err
-  err <- err[!is.na(err)]
-  if(smooth) err <- smooth(err)
-  
-  best.iter <- which(abs(diff(err, lag = lag)) < threshold)
-  
-  if(length(best.iter) == 0){
-    best.iter <- which.min(x$cv.err)
-  } else {
-    best.iter <- min(best.iter)
-  }
-}
-
-
-get_subsample <- function(ss, id, bag.fraction){
-  id <- droplevels(id)
-  
-  # Get one obs from each group
-  sid <- tapply(ss, id, function(x){ 
-    x[sample(1:length(x), size=1)]
-  })
-  # compute the number of samples
-  size <- ceiling(length(ss) * bag.fraction) - length(sid)
-  
-  # sample randomly from the rest
-  c(sid, sample(ss[!(ss %in% sid)], size = size, replace=F)) 
-}
-
-#' @export
-plot.lmerboost <- function(x, threshold = .001, lag = 1, ...){
-  M <- length(x$train.err)
-  ymax <- c(max(x$test.err, x$train.err, x$oob.err, na.rm = T))
-  ymin <- c(min(x$test.err, x$train.err, x$oob.err, na.rm = T))
-  
-  best.iter <- best_iter(x, threshold = threshold, lag = lag)
-  
-  plot(x = 1:M, y = x$train.err, type = "l", ylim = c(ymin, ymax), ylab = "error")
-  lines(x = 1:M, y = x$test.err, col = "red", lty = 2)
-  lines(x = 1:M, y = x$oob.err, col = "blue")
-  lines(x = 1:M, y = x$cv.err, col = "red")
-  
-  abline(v = best.iter)
-  
-  legend("top", legend = c("train", "test", "oob", "cv"), 
-         col = c("black", "red", "blue", "red"),
-         lty = c(1, 2, 1, 1), bty = "n")
-  x$best.params$err <- formatC(signif(x$best.params$err[[1]], digits=3), digits=3,format="fg", flag="#")
-  paramstring <- paste0(names(x$best.params), " = ", x$best.params, collapse = ", ")
-  title(sub = paramstring)
-}
-
-
 sigma_merMod <- function (object, ...) {
   dc <- object@devcomp
   dd <- dc$dims
@@ -389,43 +335,4 @@ sigma_merMod <- function (object, ...) {
       "sigmaREML"
       else "sigmaML"]]
   else 1
-}
-
-
-# re = ranef(mod)$id
-# x = design matrix without intercept
-# id = grouping variable factor
-get_zuhat <- function(re, x, id){
-  Z <- model.matrix(~id + id:x - 1)
-  b <- c(re)
-  drop(Z %*% b)
-}
-
-
-gbm_mm <- function(o, n.trees=1, ...){
-  yhat <- predict(o, n.trees=n.trees, ...)
-  node <- factor(yhat, le)
-  model.matrix(~node)[,-1,drop=F]
-}
-
-assign_fold <- function(x, id, cv.folds){
-  folds <- list()
-  ids_by_group <- split(1:length(x), id[x])
-  
-  assign_fold_1group <- function(x, folds){
-    n <- length(x)
-    if(n == 1){
-      in_fold <- 0 # observation will always be in training set
-    } else {
-      # If 1 < n_i <= cv.folds, force one observation from group to be in training set
-      #  then randomly assign fold ids as usual for the other observations
-      in_fold <- c(sample(1:folds, size=min(n, folds), replace = F),
-                   sample(1:folds, size=max(0, (n - folds)), replace = T))
-    }
-    return(in_fold)
-  }
-  
-  folds <- unlist(lapply(ids_by_group, assign_fold_1group, folds = cv.folds), use.names = F)
-  
-  return(folds)
 }
