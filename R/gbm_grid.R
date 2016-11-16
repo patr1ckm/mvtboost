@@ -36,14 +36,14 @@ gbm_grid <- function(y, x, cv.folds, mc.cores=1, subset=NULL, ...){
   
   if(mc.cores > 1){
     cl <- parallel::makePSOCKcluster(mc.cores)
-    clusterExport(cl, "gbm.fit", envir = environment())
-    clusterExport(cl, "do_one_fold", envir = environment())
+    parallel::clusterExport(cl, "gbm.fit", envir = environment())
+    parallel::clusterExport(cl, "do_one_fold", envir = environment())
     
     #ocv <- lapply(seq_along(args.ls), FUN=do_one_row, args=args.ls, train=train, folds=folds, Xm=x, y=y)
-    ocv <- clusterApply(cl=cl, x=seq_along(args.ls), 
+    ocv <- parallel::clusterApply(cl=cl, x=seq_along(args.ls), 
                         fun=do_one_row, args=args.ls, train=train, folds=folds, Xm=x, y=y)
     
-    stopCluster(cl)
+    parallel::stopCluster(cl)
   } else {
     ocv <- lapply(seq_along(args.ls), FUN=do_one_row, args=args.ls, train=train, 
                   folds=folds, Xm=x, y=y)
@@ -57,7 +57,7 @@ gbm_grid <- function(y, x, cv.folds, mc.cores=1, subset=NULL, ...){
   
   d <- data.frame()
   
-  out <- do.call(gbm.fit, append(list(y=y[train], x=x[train, ,drop=F]), best_args))
+  out <- do.call(gbm::gbm.fit, append(list(y=y[train], x=x[train, ,drop=F]), best_args))
   out$cv.error <- cv_err[[best_arg_idx]]
   # todo: out$valid.error
   return(list(gbm=out, best_args=best_args, args=args))

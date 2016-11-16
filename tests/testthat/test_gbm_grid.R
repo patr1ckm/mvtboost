@@ -1,6 +1,6 @@
 # Testing gbm_grid
 
-n <- 500
+n <- 1000
 x <- matrix(rnorm(n))
 colnames(x) <- "x"
 y <- x*.5
@@ -8,6 +8,7 @@ n <- length(y)
 cv.folds <- 3
 train <- seq_along(y)
 folds <- sample(1:cv.folds, size=length(train), replace=TRUE)
+tol = 5E-5
 
 args_cv <- expand.grid(
   k=1:3,
@@ -58,9 +59,9 @@ test_that("gbm_grid grid", {
 
 test_that("gbm_grid cv.folds=1", {
   expect_error(o <- gbm_grid(y=y, x=x[,1], cv.folds=1, mc.cores=1, distribution="gaussian"))
-  o <- gbm_grid(y=y, x=x[,1], cv.folds=1, mc.cores=1, subset=1:250, distribution="gaussian", verbose=FALSE)
+  o <- gbm_grid(y=y, x=x[,1,drop=F], cv.folds=1, mc.cores=1, subset=1:250, distribution="gaussian", verbose=FALSE)
   expect_named(o)
-  o <- gbm_grid(y=y, x=x[,1], cv.folds=1, mc.cores=3, subset=1:250, distribution="gaussian", verbose=FALSE)
+  o <- gbm_grid(y=y, x=x[,1,drop=F], cv.folds=1, mc.cores=3, subset=1:250, distribution="gaussian", verbose=FALSE)
   expect_named(o)
 })
 
@@ -68,7 +69,7 @@ test_that("gbm_grid do_one_fold", {
   for(k in 1:3){
     s <- train[folds != k]
     set.seed(102)
-    o <- gbm.fit(y=y[s], x=x[s, ,drop=F], distribution="gaussian", verbose=FALSE,n.trees=5)
+    o <- gbm::gbm.fit(y=y[s], x=x[s, ,drop=F], distribution="gaussian", verbose=FALSE,n.trees=5)
     yhat <- predict(o, newdata=data.frame(y=y, x=x), n.trees=1:5)
     test_err <- rep(0, 5)
     for(i in 1:5){
@@ -76,7 +77,7 @@ test_that("gbm_grid do_one_fold", {
     }
     set.seed(102)
     one_fold <- mvtboost:::do_one_fold(k=k, folds=folds, train=1:n, y=y, x=x, distribution="gaussian", verbose=FALSE, n.trees=5)
-    expect_equivalent(test_err, one_fold, info=paste0("k = ",k))
+    expect_equal(test_err, one_fold, info=paste0("k = ",k), tolerance=tol, check.attributes=F)
   }
 })
 
