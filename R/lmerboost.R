@@ -281,6 +281,8 @@ predict.lmerboost <- function(object, newdata, newid, M=NULL){
     gbm.obj <- list(initF=object$init, trees=object$trees, 
                 c.split = object$c.split, var.type=object$var.type)
     class(gbm.obj) <- "gbm"
+    
+    # note: when single.tree=TRUE, initF is not included in gbm predicted values
     gbm_pred <- predict(gbm.obj, n.trees=i, single.tree=TRUE, newdata=newdata) 
     
     
@@ -290,19 +292,15 @@ predict.lmerboost <- function(object, newdata, newid, M=NULL){
     
     # prediction determines into which node observations fall
     # factor labels correspond to terminal node id (rows of pt)
-    #  note- when single.tree=TRUE, intercept is not included
-    nodes <- droplevels(factor(gbm_pred, 
+    # note: don't want to droplevels b/c it's valid for obs to fall in just one node
+    nodes <- factor(gbm_pred, 
                     levels=as.character(pt$Prediction), 
-                    labels=rownames(pt)))
+                    labels=rownames(pt))
     
     # column names of design matrix in new data match tree fit to training data
-    if(nlevels(nodes) > 1){
-      mm <- model.matrix(~nodes)[,-1, drop=FALSE]
-      colnames(mm) <- gsub("nodes", "X", colnames(mm))
-      d <- data.frame(mm, id=newid)
-    } else {
-      d <- data.frame(id=newid)
-    } 
+    mm <- model.matrix(~nodes)[,-1, drop=FALSE]
+    colnames(mm) <- gsub("nodes", "X", colnames(mm))
+    d <- data.frame(mm, id=newid)
     # no rank check because no subsampling; no dropped obs
 
     o <- object$mods[[i]]
