@@ -296,13 +296,15 @@ predict.lmerboost <- function(object, newdata, newid, M=NULL){
                     labels=rownames(pt)))
     
     # column names of design matrix in new data match tree fit to training data
-    mm <- model.matrix(~nodes)[,-1, drop=FALSE]
-    colnames(mm) <- gsub("nodes", "X", colnames(mm))
-    
+    if(nlevels(nodes) > 1){
+      mm <- model.matrix(~nodes)[,-1, drop=FALSE]
+      colnames(mm) <- gsub("nodes", "X", colnames(mm))
+      d <- data.frame(mm, id=newid)
+    } else {
+      d <- data.frame(id=newid)
+    } 
     # no rank check because no subsampling; no dropped obs
-    
-    d <- data.frame(mm, id=newid)
-    
+
     o <- object$mods[[i]]
     
     yhatm <- predict(o, newdata=d, allow.new.levels = TRUE)

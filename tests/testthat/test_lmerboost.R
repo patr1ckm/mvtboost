@@ -19,15 +19,11 @@ y <- x * .5 + Z %*% u + rnorm(n)
 X <- as.data.frame(x)
 tol = 1E-6
 
+og <- gbm(y ~ ., data=data.frame(y, x))
+gr <- plot(og, 1, return.grid=T)
+yhat <- predict(og, newdata=gr, n.trees=100)
+
 # helper function used in older version
-# re = ranef(mod)$id
-# x = design matrix without intercept
-# id = grouping variable factor
-get_zuhat <- function(re, x, id){
-  Z <- model.matrix(~id + id:x - 1)
-  b <- c(re)
-  drop(Z %*% b)
-}
 
 context("lmerboost.fit")
 
