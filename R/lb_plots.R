@@ -1,5 +1,9 @@
 
-
+#' Marginal (partial dependence) plots for lmerboost objects
+#' @param x lmerboost object
+#' @param X matrix of predictors
+#' @param id index or name of id variable
+#' @param i.var index or names of variables to plot over (can include id index)
 #' @export
 plot.lmerboost <- function(x, X, id, i.var=1,
                            n.trees=min(x$best.trees, na.rm=T), 
@@ -7,7 +11,10 @@ plot.lmerboost <- function(x, X, id, i.var=1,
                            return.grid=FALSE, ...){
   
   if(all(is.character(i.var))){
-    i.var <- match(i.var, x$xnames)
+    i.var <- match(i.var, colnames(X))
+  }
+  if(is.character(id)){
+    id <- match(id, colnames(X))
   }
   grid.levels <- vector("list", length(i.var))
   for(i in i.var){
@@ -17,25 +24,38 @@ plot.lmerboost <- function(x, X, id, i.var=1,
       grid.levels[[i]] <- levels(X[,i])
     }
   }
-  newX <- expand.grid(grid.levels)
   
   if(ncol(X) > length(i.var)){
+    
     # average over other predictors
-    X <- data.frame(X, X, id)
-  
-    for(i in 1:nrow(newX)){
-      d <- data.frame(newX[rep(i, nrow(X)), ], X[,-i.var])
-      yhat[i] <- predict(x, newdata=d, newid=id)
-    }
-    loc <- rep(1:nrow(newX), each=nrow(X))
-    yhat_m <- tapply(yhat, INDEX = loc, FUN = mean)
-    grid <- data.frame(newX, value=yhat_m)
+    
+    # This is very slow. The inner loop here is slow (predict.lmerboost) and it
+    # gets bad if newX is very large
+    #for(i in 1:nrow(newX)){
+    #  d <- data.frame(newX[rep(i, nrow(X)), ], X[,-i.var])
+    #  yhat[i] <- mean(predict(x, newdata=d, newid=id)$yhat)
+    #}
+    grid <- expand.grid(grid.levels[1:2])
+    grid.levels[[i+1]] <- 1:nrow(X)
+    
+    newX <- expand.grid(grid.levels)
+    nrows <- prod(lengths(grid.levels[1:2]))
+    bigX <- dplyr::bind_rows(lapply(1:nrows, 
+                   function(i, i.vars){X[,-i.vars,drop=F]}, i.vars=i.vars))
+    newid <- rep(id, nrows)    
+    newX <- cbind(newX, bigX)    
+    colnames(newX) <- c(colnames(X)[i.vars], colnames(X)[-i.vars])
+    
+    yhat_long <- predict(x, newdata=newX, newid=newid, M=n.trees)$yhat 
+    loc <- rep(1:nrow(X), each=nrows)
+    yhat <- tapply(yhat_long, INDEX = loc, FUN = mean)
   } else {
     # just compute predictions for grid, no averaging
-    colnames(newX) <- colnames(X)[i.var]
-    yhat <- predict(x, newdata=newX, newid=id, M=n.trees)$yhat
-    grid <- data.frame(newX, y=yhat)
+    grid <- expand.grid(grid.levels)
+    colnames(grid) <- colnames(X)[i.var]
+    yhat <- predict(x, newdata=grid, newid=id, M=n.trees)$yhat
   }
+  grid$y <- yhat
 
   colnames(newdata) <- colnames(X)  
   if(return.grid){

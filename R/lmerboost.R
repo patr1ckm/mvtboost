@@ -17,6 +17,13 @@
 
 # vectors can be passed to M, lambda, indep, and depth for cross validation
 
+#' boosting with random effects
+#' 
+#' @param y outcome vector (continuous)
+#' @param X matrix or data frame of predictors 
+#' @param id name or index of grouping variable
+#' @param train.fraction of sample used for training
+#' @param subset index of observations to use for training
 #' @export
 #' @importFrom parallel mclapply
 lmerboost <- function(y, X, id, 
@@ -47,6 +54,9 @@ lmerboost <- function(y, X, id,
     train <- sample(train, ceiling(train.fraction*length(ss)), replace = F)
   }
   if(is.logical(subset)){train <- which(subset)}
+  if(is.character(id)){
+    id <- match(id, colnames(X))
+  }
   
   if(cv.folds > 1){
     #cat("cv:", fill = T)
@@ -161,7 +171,7 @@ lmerboost.fit <- function(y, X, id, train.fraction=NULL, subset=NULL, indep=TRUE
     s.oob <- setdiff(train, s)
     
     # fit a tree
-    tree <- gbm.fit(y = r[s], x=X[s, ,drop=F], interaction.depth=depth,
+    tree <- gbm.fit(y = r[s], x=X[s, -id, drop=F], interaction.depth=depth,
                                   shrinkage=1, bag.fraction=1, distribution="gaussian",
                                   verbose=FALSE, n.trees = 1, ...)
     if(i == 1){
@@ -196,7 +206,7 @@ lmerboost.fit <- function(y, X, id, train.fraction=NULL, subset=NULL, indep=TRUE
     dropped_obs  <- rowSums(mm[,!keep_cols, drop=FALSE]) > 0
     
     mm <- mm[,keep_cols, drop = FALSE]
-    d <- data.frame(r=r, mm, id)
+    d <- data.frame(r=r, mm, id=X[,id])
     
     # lmer on training
     addx <- paste0(colnames(mm), collapse = " + ")

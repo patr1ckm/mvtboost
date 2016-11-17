@@ -13,6 +13,7 @@ u <- rnorm(ncol(Z), 0, 1)
 y <- x * .5 + Z %*% u + rnorm(n)
 X <- as.data.frame(x)
 tol = 1E-6
+Xt <- data.frame(X, X, X)
 
 o <- lmerboost(y = y, X = X, id = id, M = 5, cv.folds = 1, lambda = .1)
 plot(o, X=data.frame(X, id=id), i.var=1)
