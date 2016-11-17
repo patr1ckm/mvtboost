@@ -306,7 +306,7 @@ predict.lmerboost <- function(object, newdata, newid, M=NULL){
     o <- object$mods[[i]]
     
     yhatm <- predict(o, newdata=d, allow.new.levels = TRUE)
-    fixedm <- cbind(1, mm) %*% o@beta
+    fixedm <- predict(o, newdata=d, re.form=NA)
     zuhat <- yhatm - fixedm
 
     # update totals at each iteration
