@@ -182,7 +182,7 @@ lmerboost.fit <- function(y, X, id, train.fraction=NULL, subset=NULL, indep=TRUE
     pt <- gbm::pretty.gbm.tree(tree, 1)
     
     # get gbm predictions for whole sample
-    gbm_pred <- predict(tree, newdata = X, n.trees = 1) 
+    gbm_pred <- predict(tree, newdata = X[,-id,drop=F], n.trees = 1) 
     
     
     # list terminal nodes (-1) first; rownames are are terminal node ids
@@ -200,10 +200,12 @@ lmerboost.fit <- function(y, X, id, train.fraction=NULL, subset=NULL, indep=TRUE
     colnames(mm) <- gsub("nodes", "X", colnames(mm))
     
     # check rank. problem is if columns are included for obs not in s via surrogates
-    # dropping non-full-rank column assigns these obs to default node.
+    # dropping non-full-rank column assigns these obs to default node (arbitrary)
     # solved by: drop columns myself, replace dropped obs with gbm predictions
-    keep_cols <- colSums(mm[s, ,drop=FALSE]) > 0
-    dropped_obs  <- rowSums(mm[,!keep_cols, drop=FALSE]) > 0
+    missing_id <- !is.na(X[,id])
+    complete_obs <- unique(c(s, which(missing_id)))
+    keep_cols <- colSums(mm[complete_obs, ,drop=FALSE]) > 0
+    dropped_obs  <- (rowSums(mm[,!keep_cols, drop=FALSE]) > 0) | missing_id
     
     mm <- mm[,keep_cols, drop = FALSE]
     d <- data.frame(r=r, mm, id=X[,id])

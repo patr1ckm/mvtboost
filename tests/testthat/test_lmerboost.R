@@ -24,7 +24,8 @@ tol = 1E-6
 context("lmerboost.fit")
 
 test_that("lmerboost runs", {
-  o <- lmerboost(y = y, X = X, id=2, M = 5, cv.folds = 1, lambda = .1)
+  o1 <- lmerboost(y = y, X = X, id=2, M = 5, cv.folds = 1, lambda = .1)
+  o2 <- lmerboost(y = y, X = X, id="id", M = 5, cv.folds = 1, lambda = .1)
   o <- lmerboost(y = y, X = X, id=2, M = 5, cv.folds = 1, lambda = .1, subset = train)
   o <- lmerboost(y = y, X = X, id=2, M = 3, cv.folds = 3)
   Xmis <- X
