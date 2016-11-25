@@ -51,7 +51,7 @@ test_that("mvtbCV", {
 
 test_that("mvtb - CV param", {
 # 4. check an initial split of training and test, with CV only in the training set
-out <- mvtb(X=X,Y=Y,s=1:500,n.trees=n.trees,shrinkage=.5,cv.folds=3,save.cv=TRUE)
+out <- mvtb(X=X, Y=Y, s=1:500, n.trees=n.trees, shrinkage=.5, cv.folds=3, save.cv=TRUE)
 out2 <- mvtb(X=X,Y=Y,n.trees=n.trees,train.fraction=.5,shrinkage=.5,cv.folds=3,s=NULL,save.cv=TRUE)
 check.samp(out$ocv,s=out$params$s,folds=3)
 s <- out2$s

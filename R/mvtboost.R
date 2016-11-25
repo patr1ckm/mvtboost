@@ -218,7 +218,7 @@ mvtb <- function(Y,X,n.trees=100,
 #'          s=1:nrow(X),
 #'          seednum=NULL,...)
 #' @export
-mvtb.fit <- function(Y,X,
+mvtb.fit <- function(Y, X,
                      n.trees=100,
                      shrinkage=.01,
                      interaction.depth=1,
@@ -275,14 +275,14 @@ mvtbCV <- function(Y, X, n.trees, cv.folds, save.cv, s, mc.cores, ...) {
     testerr.k <- matrix(NA,nrow=n.trees,ncol=cv.folds)
     out.k <- list()
 
-    runone <- function(k,cv.groups,sorig, ...){
+    runone <- function(k, cv.groups, sorig, x, ...){
       if(any(k %in% cv.groups)) {
         s <- sorig[which(cv.groups != k)]
       } else { 
         # since we already subsetted on s, fit to entire training sample
         s <- sorig
       }
-      out <- mvtb.fit(s=s, ...) # the only thing that changes is s. everything is passed via ..., including Y and X
+      out <- mvtb.fit(s=s, X=x, ...) # the only thing that changes is s. everything is passed via ..., including Y and X
       return(out)
     }
     
@@ -293,9 +293,12 @@ mvtbCV <- function(Y, X, n.trees, cv.folds, save.cv, s, mc.cores, ...) {
         out.k[[k]] <- runone(k=k, cv.groups=cv.groups, sorig=s, Y=Y, X=X, n.trees=n.trees, ...) 
       }
     } else {
-      for(k in 1:(cv.folds+1)){
-        out.k[[k]] <- runone(k=k, cv.groups=cv.groups, sorig=s, Y=Y, X=X, n.trees=n.trees, ...) 
-      }
+      #for(k in 1:(cv.folds+1)){
+      #  out.k[[k]] <- runone(k=k, cv.groups=cv.groups, sorig=s, Y=Y, X=X, n.trees=n.trees, ...) 
+      #}
+      out.k <- parallel::mclapply(1:(cv.folds+1), FUN=runone, 
+                mc.cores=mc.cores, cv.groups=cv.groups, sorig=s, 
+                Y=Y, x=X, n.trees=n.trees, ...)
     }
         
     for(k in 1:cv.folds) {
@@ -324,7 +327,7 @@ mvtbCV <- function(Y, X, n.trees, cv.folds, save.cv, s, mc.cores, ...) {
 #' @return Returns an (array, matrix, vector) of predictions for all outcomes. The third dimension corresponds to the 
 #' predictions at a given number of trees, the second dimension corresponds to the number of outcomes.
 #' @export
-#' 
+#' @importFrom stats predict
 predict.mvtb <- function(object, n.trees=NULL, newdata, drop=TRUE, ...) {
   out <- object
   if(any(unlist(lapply(out,function(li){is.raw(li)})))){
