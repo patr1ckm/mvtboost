@@ -47,6 +47,8 @@ test_that("lmerboost.fit bag.fraction, lambda, subset, train/oob/test err", {
 
 
   set.seed(104)
+  idx <- 2
+  id <- X[,idx]
   M <- 10
   zuhat <- fixed <- yhat <- matrix(0, n, M)
   train_err <- oob_err <- test_err <- rep(0, M)
@@ -59,14 +61,18 @@ test_that("lmerboost.fit bag.fraction, lambda, subset, train/oob/test err", {
     s <- sample(train, size=ceiling(length(train)*bag.fraction), replace=FALSE)
     s.oob <- setdiff(train, s)
 
-    o.gbm <- gbm::gbm.fit(y = r[s], x = X[s, , drop = F], n.trees = 1, shrinkage = 1, bag.fraction = 1,
+    o.gbm <- gbm::gbm.fit(y = r[s], x = X[s, -idx, drop = F], n.trees = 1, shrinkage = 1, bag.fraction = 1,
                           distribution = "gaussian", interaction.depth = 5, verbose = F)
     pt <- gbm::pretty.gbm.tree(o.gbm, i.tree=1)
-    gbm_pred <- predict(o.gbm, newdata=X, n.trees=1)
+    gbm_pred <- predict(o.gbm, newdata=X[,-idx, drop=F], n.trees=1)
     nodes <- droplevels(factor(gbm_pred, levels=as.character(pt$Prediction + o.gbm$initF), 
                                labels=1:nrow(pt)))
     mm <- model.matrix(~nodes)[,-1]
     colnames(mm) <- gsub("nodes", "X", colnames(mm))
+    
+    keep_cols <- colSums(mm[s, ]) > 0
+    dropped_obs <- rowSums(mm[, !keep_cols, drop=F]) > 0
+    mm <- mm[,keep_cols]
     
     d <- data.frame(r, mm, id)
     addx <- paste0(colnames(mm), collapse=" + ")
@@ -82,6 +88,7 @@ test_that("lmerboost.fit bag.fraction, lambda, subset, train/oob/test err", {
 
     zuhatm <- drop(Zm %*% c(new_re))
     fixedm <- drop(cbind(1, mm) %*% lme4::fixef(o.lmer))
+    fixedm[dropped_obs] <- gbm_pred[dropped_obs]
     yhatm <- zuhatm + fixedm
     if(i == 1){
       zuhat[,i] <- zuhatm * lambda
@@ -172,7 +179,9 @@ test_that("lmerboost.fit drops rank deficient cols", {
   fixedm <- fixedm + init
    
   set.seed(104)
-  lb <- lmerboost.fit(y=y, X=X, id=2, lambda=1, M=1, depth=1, bag.fraction=1,
+  
+  X <- data.frame(x, x2, id)
+  lb <- lmerboost.fit(y=y, X=X, id=3, lambda=1, M=1, depth=1, bag.fraction=1,
                         n.minobsinnode=1, subset=train)
   expect_equal(lb$yhat[train], unname(yhatm[train]))
   expect_equal(lb$ranef[train], unname(zuhat[train]))
@@ -192,7 +201,6 @@ context("lmerboost")
 
 test_that("lmerboost_cv", {
   # now we can use lmerboost.fit
-
   cv.folds <- 3
   folds <- sample(1:cv.folds, size=n, replace=TRUE)
   
@@ -258,8 +266,8 @@ test_that("lmerboost_cv train", {
 ## TODO: combinations of params
 
 test_that("lmerboost influence", {
-  X <- data.frame(X1 = x, X2 = rnorm(n))
-  ob <- lmerboost(y = y, X = X, id=2, M = 3, cv.folds = 1, lambda = .5)
+  X <- data.frame(X1 = x, X2 = rnorm(n), id=id)
+  ob <- lmerboost(y = y, X = X, id=3, M = 3, cv.folds = 1, lambda = .5)
   inf <- influence(ob)
   expect_gt(inf[1], 0)
 })
@@ -268,18 +276,17 @@ test_that("lmerboost predict", {
   M = 5
   lb <- lmerboost(y = y, X = X, id=2, M = M, cv.folds = 3, lambda = c(.5, 1),
                  bag.fraction=.5, subset=1:500)
-  yh <- predict(lb, newdata=X, newid=2, M=min(lb$best.trees, na.rm=T))
+  yh <- predict(lb, newdata=X, id=2, M=min(lb$best.trees, na.rm=T))
   expect_equal(lb$yhat, yh$yhat)
   expect_equal(lb$fixed, yh$fixed)
   expect_equal(lb$ranef, yh$ranef)
   
-  Xnew <- data.frame(x=rnorm(n))
-  newid <- factor(rep(101, n))
+  Xnew <- data.frame(x=rnorm(n), id=id)
+  Xnewid <- data.frame(x=rnorm(n), id=factor(rep(101, n)))
   
-  # how to check? idk a separate implementation?
-  yh2 <- predict(lb, newdata=Xnew, newid=2)
+  yh2 <- predict(lb, newdata=Xnew, id=2)
   
-  yh3 <- predict(lb, newdata=Xnew, newid=newid)
+  yh3 <- predict(lb, newdata=Xnewid, id=2)
   # a new group has 0 ranef
   expect_equal(yh3$ranef, rep(0, n))
   

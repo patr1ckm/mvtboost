@@ -5,9 +5,10 @@
 #' @param id index or name of id variable
 #' @param i.var index or names of variables to plot over (can include id index)
 #' @export
+#' @import ggplot2
 plot.lmerboost <- function(x, X, id, i.var=1,
                            n.trees=min(x$best.trees, na.rm=T), 
-                           continuous.resolution=100,
+                           continuous.resolution=20,
                            return.grid=FALSE, ...){
   
   if(all(is.character(i.var))){
@@ -17,11 +18,11 @@ plot.lmerboost <- function(x, X, id, i.var=1,
     id <- match(id, colnames(X))
   }
   grid.levels <- vector("list", length(i.var))
-  for(i in i.var){
-    if(is.numeric(X[,i])){
-      grid.levels[[i]] <- seq(min(X[,i]), max(X[,i]), length.out=continuous.resolution)
+  for(i in seq_along(i.var)){
+    if(is.numeric(X[,i.var[i]])){
+      grid.levels[[i]] <- seq(min(X[,i.var[i]]), max(X[,i.var[i]]), length.out=continuous.resolution)
     } else {
-      grid.levels[[i]] <- levels(X[,i])
+      grid.levels[[i]] <- levels(X[,i.var[i]])
     }
   }
   
@@ -35,19 +36,24 @@ plot.lmerboost <- function(x, X, id, i.var=1,
     #  d <- data.frame(newX[rep(i, nrow(X)), ], X[,-i.var])
     #  yhat[i] <- mean(predict(x, newdata=d, newid=id)$yhat)
     #}
-    grid <- expand.grid(grid.levels[1:2])
-    grid.levels[[i+1]] <- 1:nrow(X)
     
+    # final grid using averaged predictions
+    grid <- expand.grid(grid.levels[seq_along(i.var)])
+    
+    # create big x matrix for prediction, which contains nrow(grid) copies of the data
+    
+    # individual id varies fastest
+    grid.levels <- append(list(1:nrow(X)), grid.levels) 
     newX <- expand.grid(grid.levels)
-    nrows <- prod(lengths(grid.levels[1:2]))
+    nrows <- nrow(grid)
     bigX <- dplyr::bind_rows(lapply(1:nrows, 
-                   function(i, i.vars){X[,-i.vars,drop=F]}, i.vars=i.vars))
-    newid <- rep(id, nrows)    
+                   function(i, i.var){X[,-i.var,drop=F]}, i.var=i.var))
+    newid <- rep(X[,id], nrows)    
     newX <- cbind(newX, bigX)    
-    colnames(newX) <- c(colnames(X)[i.vars], colnames(X)[-i.vars])
+    colnames(newX) <- c("iid", colnames(X)[i.var], colnames(X)[-i.var])
     
     yhat_long <- predict(x, newdata=newX, newid=newid, M=n.trees)$yhat 
-    loc <- rep(1:nrow(X), each=nrows)
+    loc <- rep(1:nrow(grid), each=nrow(X))
     yhat <- tapply(yhat_long, INDEX = loc, FUN = mean)
   } else {
     # just compute predictions for grid, no averaging
@@ -56,42 +62,43 @@ plot.lmerboost <- function(x, X, id, i.var=1,
     yhat <- predict(x, newdata=grid, newid=id, M=n.trees)$yhat
   }
   grid$y <- yhat
-
-  colnames(newdata) <- colnames(X)  
+  
   if(return.grid){
     return(grid)
   }
  
   if(length(i.var) == 1){
-    plot(y=grid$value, x=grid$Var1, type="l", ...)
+    g <- ggplot(d=grid, aes(y=y, x=Var1)) +
+      geom_point() + geom_line() +
+      xlab(colnames(X)[i.var])
   } else if(length(i.var) == 2){
     d <- grid
     var.names <- colnames(X)[i.var]
     colnames(d) <- c("X1", "X2", "y")
-    f.factor <- sapply(d, is.factor(d))
+    f.factor <- sapply(d, is.factor)
     
     if(!f.factor[1] && !f.factor[2]){
-      print(levelplot(y ~ X1 * X2, data = d, xlab = var.names[i.var[1]], 
-                      ylab = var.names[i.var[2]], ...))
+      g <- ggplot(d, aes(X1, X2, z=y)) + geom_tile(aes(fill=y)) +
+        xlab(var.names[i.var[1]]) +
+        ylab(var.names[i.var[2]])
     }
-    if(!f.factor[1] && f.factor[2]){
-      print(xyplot(y ~ X1 | X2, data = d, xlab = var.names[i.var[1]], 
-                 ylab = paste("f(", var.names[i.var[1]], ",", 
-                              var.names[i.var[2]], ")", sep = ""), type = "l", 
-                 panel = panel.xyplot, ...))
+    if(f.factor[2]){
+      g <- ggplot(d, aes(y=y, x=X1)) +
+        geom_point() + geom_line() +
+        facet_wrap(~X2) + 
+        ylab(paste("f(", var.names[i.var[1]], ",",var.names[i.var[2]], ")", sep = ""))
     }
-    if(f.factor[1] && !f.factor[2]){
-      print(xyplot(y ~ X2 | X1, data = d, xlab = var.names[i.var[1]], 
-                   ylab = paste("f(", var.names[i.var[2]], ",", 
-                                var.names[i.var[1]], ")", sep = ""), type = "l", 
-                   panel = panel.xyplot, ...))
+    if(f.factor[1]){
+      g <- ggplot(d, aes(y=y, x=X2)) +
+        geom_point() + geom_line() +
+        facet_wrap(~X1) + 
+        ylab(paste("f(", var.names[i.var[1]], ",",var.names[i.var[2]], ")", sep = ""))
     }
-    if(f.factor[1] && f.factor[2])
-    # all factors
-    print(stripplot(X1 ~ y | X2, data = d, xlab = var.names[i.var[2]], 
-                    ylab = paste("f(", var.names[i.var[1]], ",", 
-                                 var.names[i.var[2]], ")", sep = ""), ...))
+  } else {
+    stop("set return.grid=TRUE to make a custom graph")
   }
+  print(g)
+  return(g)
 }
 
 #' @export

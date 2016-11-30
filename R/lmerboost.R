@@ -199,13 +199,16 @@ lmerboost.fit <- function(y, X, id, train.fraction=NULL, subset=NULL, indep=TRUE
     mm <- model.matrix(~nodes)[,-1, drop=FALSE]
     colnames(mm) <- gsub("nodes", "X", colnames(mm))
     
+    # Have to handle missinginess on id as a special case
+    # observations that are missing on id will receive gbm predictions
+    complete_obs <- intersect(s, which(!is.na(X[,id])))
+    
     # check rank. problem is if columns are included for obs not in s via surrogates
     # dropping non-full-rank column assigns these obs to default node (arbitrary)
     # solved by: drop columns myself, replace dropped obs with gbm predictions
-    missing_id <- !is.na(X[,id])
-    complete_obs <- unique(c(s, which(missing_id)))
+    
     keep_cols <- colSums(mm[complete_obs, ,drop=FALSE]) > 0
-    dropped_obs  <- (rowSums(mm[,!keep_cols, drop=FALSE]) > 0) | missing_id
+    dropped_obs  <- rowSums(mm[,!keep_cols, drop=FALSE]) > 0
     
     mm <- mm[,keep_cols, drop = FALSE]
     d <- data.frame(r=r, mm, id=X[,id])
@@ -271,12 +274,17 @@ lmerboost.fit <- function(y, X, id, train.fraction=NULL, subset=NULL, indep=TRUE
 
 
 #' @export
-predict.lmerboost <- function(object, newdata, newid, M=NULL){
+predict.lmerboost <- function(object, newdata, id, M=NULL){
   # save trees, lmer objects at each iteration (damn)
   
   if(is.null(M)){ M <- length(object$mods)}
   n <- nrow(newdata)
   yhat <- ranef <- fixed <- matrix(0, n, M)
+  if(is.character(id)){
+    id <- match(id, colnames(newdata))
+  }
+  newid <- newdata[,id]
+  newdata <- newdata[,-id, drop=F]
   
   lambda <- object$lambda
   
