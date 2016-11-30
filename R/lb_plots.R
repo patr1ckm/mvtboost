@@ -48,18 +48,19 @@ plot.lmerboost <- function(x, X, id, i.var=1,
     nrows <- nrow(grid)
     bigX <- dplyr::bind_rows(lapply(1:nrows, 
                    function(i, i.var){X[,-i.var,drop=F]}, i.var=i.var))
-    newid <- rep(X[,id], nrows)    
-    newX <- cbind(newX, bigX)    
-    colnames(newX) <- c("iid", colnames(X)[i.var], colnames(X)[-i.var])
+    newid <- rep(X[,id], times=nrows)    
+    newX <- cbind(newX, bigX, id=newid)    
+    colnames(newX) <- c("iid", colnames(X)[i.var], colnames(X)[-i.var], "id")
     
-    yhat_long <- predict(x, newdata=newX, newid=newid, M=n.trees)$yhat 
+    yhat_long <- predict(x, newdata=newX, id="id", M=n.trees)$yhat 
     loc <- rep(1:nrow(grid), each=nrow(X))
     yhat <- tapply(yhat_long, INDEX = loc, FUN = mean)
   } else {
     # just compute predictions for grid, no averaging
     grid <- expand.grid(grid.levels)
     colnames(grid) <- colnames(X)[i.var]
-    yhat <- predict(x, newdata=grid, newid=id, M=n.trees)$yhat
+    grid$id <- X[,id]
+    yhat <- predict(x, newdata=grid, id="id", M=n.trees)$yhat
   }
   grid$y <- yhat
   
