@@ -1,12 +1,64 @@
 
-#' Marginal (partial dependence) plots for lmerboost objects
+#' Marginal plots for lmerboost objects
+#' 
+#' Note, these are not true partial dependence plots, these plots only show the marginal
+#' effects of at most two predictors. 
+#' 
 #' @param x lmerboost object
 #' @param X matrix of predictors
-#' @param id index or name of id variable
+#' @param id name or index of grouping variable
 #' @param i.var index or names of variables to plot over (can include id index)
 #' @export
 #' @import ggplot2
-plot.lmerboost <- function(x, X, id, i.var=1,
+#' 
+plot.lmerboost <- function(x, X, id, i.var, n.trees=min(x$best.trees)){
+  
+  if(all(is.character(i.var))){
+    i.var <- match(i.var, colnames(X))
+  }
+  if(is.character(id)){
+    id <- match(id, colnames(X))
+  }
+  
+  # use yhat from x at n.trees?
+  yhat <- x$yhat[, n.trees]
+  Xnew <- X[, i.var]
+  cnames <- colnames(Xnew)[i.var]
+  d <- data.frame(y=yhat, Xnew)
+  f.factor <- sapply(Xnew, is.factor)
+  
+  if(length(i.var) == 1){
+    g <- ggplot(d=d, aes_string(y=y, x=cnames))) +
+      geom_point() + geom_line()
+  } else if(length(i.var) == 2){
+    if(!f.factor[1] && !f.factor[2]){
+      g <- ggplot(d, aes_string((X1, X2, z=y)) + geom_tile(aes(fill=y)) +
+        xlab(var.names[i.var[1]]) +
+        ylab(var.names[i.var[2]])
+    }
+    if(f.factor[2]){
+      g <- ggplot(d, aes(y=y, x=X1)) +
+        geom_point() + geom_line() +
+        facet_wrap(~X2) + 
+        ylab(paste("f(", var.names[i.var[1]], ",",var.names[i.var[2]], ")", sep = ""))
+    }
+    if(f.factor[1]){
+      g <- ggplot(d, aes(y=y, x=X2)) +
+        geom_point() + geom_line() +
+        facet_wrap(~X1) + 
+        ylab(paste("f(", var.names[i.var[1]], ",",var.names[i.var[2]], ")", sep = ""))
+    }
+  } else {
+    stop("set return.grid=TRUE to make a custom graph")
+  }
+  print(g)
+  return(g)
+  
+  
+}
+
+
+grid.lmerboost <- function(x, X, id, i.var=1,
                            n.trees=min(x$best.trees, na.rm=T), 
                            continuous.resolution=20,
                            return.grid=FALSE, ...){

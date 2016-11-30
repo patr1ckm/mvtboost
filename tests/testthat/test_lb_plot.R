@@ -10,7 +10,9 @@ train <- sample(n, size = .5*n, replace = FALSE)
 
 x <- rnorm(n)
 X <- model.matrix(~x*id)
-b <- c(1, .5, rnorm(ncol(X)-2, 0, 1))
+b <- c(0, 1, 
+       rep(0, 9),
+       c(1, 1, 1, 1, -2, -2, -2, -2, -2))
 
 ysig <- X %*% b
 y <- X %*% b + rnorm(n, 0, .01)
@@ -22,34 +24,25 @@ Xn <- data.frame(matrix(rnorm(n*2), n, 2))
 Xt <- data.frame(Xm, Xn, id=id)
 dd <- data.frame(y=y, Xm, id)
 
-# marginal plot
-par(mfcol=c(1,1), mar=c(4,4,1,3))
-plot(y=ysig, x=Xm)
-abline(lm(ysig~Xm), col="red")
-
-# plots as a function of id
-par(mfcol=c(3, 3), mar=c(3,1,1,1))
-for(i in 1:9){plot(y=ysig[id==i], x=Xm[id==i], type="l", main=paste0(i), ylim=c(-2,6))}
-par(mfcol=c(1, 1), mar=c(4,4,1,3))
-#summary(lme4::lmer(y ~ 1 + Xm + (1+Xm|id)))
-
 pdf("tests/true.pdf")
-xyplot(ysig ~ Xm | id, type="l")
+xyplot(ysig ~ Xm | id, type="l", ylim=c(-5, 6))
 dev.off()
 
-
-
-
-# GBM is correct, sort of?
+# GBM is correct
 og <- gbm(y ~ ., data = data.frame(y=y, Xt), n.trees=1000, interaction.depth=20,
           distribution="gaussian", cv.folds=3, n.cores=6)
 
 pdf("tests/gbm_test.pdf")
-plot(og, i.var=c(1,4), n.trees=gbm.perf(og, plot.it = F))
+plot(og, i.var=c(1,4), n.trees=gbm.perf(og, plot.it = F), ylim=c(-5, 6))
 dev.off()
 
-o <- lmerboost(y = y, X = Xt, id = "id", M = 500, cv.folds = 3, lambda = c(.01, .05, .1), mc.cores=6)
+o <- lmerboost(y = y, X = Xt, id = "id", M = 500, cv.folds = 3, lambda = c(.01, .05), mc.cores=6, depth=10)
 perf.lmerboost(o)
+
+i <- order(Xm)
+xyplot(predict(og)[i] ~ Xm[i] | id[i], type="l", ylim=c(-5, 6))
+plot(og, i.var=c(1,4), n.trees=gbm.perf(og, plot.it = F), ylim=c(-5, 6))
+xyplot(o$yhat[i] ~ Xm[i] | id[i], type="l", ylim=c(-5, 6))
 
 # things we need to test
 # for each: including only the variables used for plotting, and all variables
@@ -75,7 +68,7 @@ Xs <- Xt[id %in% 1:9, ]
 Xs$id <- droplevels(Xs$id)
 
 grid <- plot(o, X=Xs, id=4, i.var=c(1, 4), return.grid=T, continuous.resolution = 10)
-xyplot(y ~ Var1 | Var2, data=grid, type="l")
+xyplot(y ~ Var1 | Var2, data=grid, type="l", ylim=c(-5, 6))
 plot(o, X=Xs, id=4, i.var=c(1, 4), return.grid=F, continuous.resolution = 10)
 
 grid <- plot(o, X=Xt, id=2, i.var=c(1, 2), return.grid=T)
