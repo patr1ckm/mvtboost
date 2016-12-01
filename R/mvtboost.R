@@ -282,24 +282,24 @@ mvtbCV <- function(Y, X, n.trees, cv.folds, save.cv, s, mc.cores, ...) {
         # since we already subsetted on s, fit to entire training sample
         s <- sorig
       }
-      out <- mvtb.fit(s=s, X=x, ...) # the only thing that changes is s. everything is passed via ..., including Y and X
+      out <- mvtb.fit(s=s, X=x, ...) 
       return(out)
     }
     
     # Last fold contains the full sample
     ## The 'if' notation is just to make sure it works on windows.
-    if(mc.cores > 1) { 
-      for(k in 1:(cv.folds+1)){
-        out.k[[k]] <- runone(k=k, cv.groups=cv.groups, sorig=s, Y=Y, X=X, n.trees=n.trees, ...) 
-      }
-    } else {
+    #if(mc.cores > 1) { 
+    #  for(k in 1:(cv.folds+1)){
+    #    out.k[[k]] <- runone(k=k, cv.groups=cv.groups, sorig=s, Y=Y, X=X, n.trees=n.trees, ...) 
+    #  }
+    #} else {
       #for(k in 1:(cv.folds+1)){
       #  out.k[[k]] <- runone(k=k, cv.groups=cv.groups, sorig=s, Y=Y, X=X, n.trees=n.trees, ...) 
       #}
       out.k <- parallel::mclapply(1:(cv.folds+1), FUN=runone, 
                 mc.cores=mc.cores, cv.groups=cv.groups, sorig=s, 
                 Y=Y, x=X, n.trees=n.trees, ...)
-    }
+    #}
         
     for(k in 1:cv.folds) {
       testerr.k[,k] <- out.k[[k]]$testerr

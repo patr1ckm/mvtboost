@@ -80,9 +80,12 @@ expect_silent(mvtb(X=X,Y=Y,n.trees=5, train.fraction=.5, bag.fraction=.5,s=1:500
 expect_output(mvtb(X=X,Y=Y,n.trees=5, train.fraction=.5, bag.fraction=.5,s=1:500,seednum=8, compress=FALSE, cv.folds=3, save.cv=T, verbose = T))
 })
 
-#context("parallel")
 
-# r <- mvtb(X=X,Y=Y,n.trees=500, train.fraction=.5, bag.fraction=.5,s=1:500,seednum=8, compress=FALSE, cv.folds=3, save.cv=T, mc.cores=3)
+test_that("parallel", {
+  skip("skip parallel tests for now")
+  t1 <- system.time(r <- mvtb(X=X,Y=Y,n.trees=100, train.fraction=.5, bag.fraction=.5,s=1:500,
+          seednum=8, compress=FALSE, cv.folds=3, mc.cores=3))
+})
 
 test_that("keep.data", {
   r <- mvtb(X=X,Y=Y,n.trees=50, keep.data=FALSE)
