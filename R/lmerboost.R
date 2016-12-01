@@ -218,9 +218,15 @@ lmerboost.fit <- function(y, X, id, train.fraction=NULL, subset=NULL, indep=TRUE
     bars <- "||"
     if(!indep) bars <- "|"
     form <- as.formula(paste0("r ~ ", addx, " + (",addx, " ", bars," id)"))
+    e <- new.env(parent=globalenv()) 
+    e$s <- s
+    environment(form) <- e
     
-    mods[[i]] <- o <- lme4::lmer(form, data=d, REML=T, subset = s, 
-                    control = lme4::lmerControl(calc.derivs = FALSE))
+    o <- lme4::lmer(form, data=d, REML=T, subset = s, 
+                  control = lme4::lmerControl(calc.derivs = FALSE))
+    o@frame <- o@frame[1, ]
+     
+    mods[[i]] <- o
     sigma[i] <- sigma_merMod(o) * lambda
     
     # 2016-10-19: Timed to show that this was fastest with large n and large ngrps

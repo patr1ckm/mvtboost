@@ -24,7 +24,7 @@ Xn <- data.frame(matrix(rnorm(n*2), n, 2))
 Xt <- data.frame(Xm, Xn, id=id)
 dd <- data.frame(y=y, Xm, id)
 
-pdf("tests/true.pdf")
+pdf("tests/testthat/true.pdf")
 xyplot(ysig ~ Xm | id, type="l", ylim=c(-5, 6))
 dev.off()
 
@@ -32,11 +32,15 @@ dev.off()
 og <- gbm(y ~ ., data = data.frame(y=y, Xt), n.trees=1000, interaction.depth=20,
           distribution="gaussian", cv.folds=3, n.cores=6)
 
-pdf("tests/gbm_test.pdf")
+pdf("tests/testthat/gbm_test.pdf")
 plot(og, i.var=c(1,4), n.trees=gbm.perf(og, plot.it = F), ylim=c(-5, 6))
 dev.off()
 
-o <- lmerboost(y = y, X = Xt, id = "id", M = 500, cv.folds = 3, lambda = c(.01, .05), mc.cores=6, depth=10)
+if(!file.exists("lb_out.Rdata")){
+  o <- lmerboost(y = y, X = Xt, id = "id", M = 500, cv.folds = 3, lambda = c(.01, .05), mc.cores=6, depth=10)
+  save(o, file="tests/testthat/lb_out.Rdata")
+}
+
 perf.lmerboost(o)
 
 i <- order(Xm)

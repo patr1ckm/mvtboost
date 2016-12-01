@@ -1,8 +1,8 @@
 
 #' Marginal plots for lmerboost objects
 #' 
-#' Note, these are not true partial dependence plots, these plots only show the marginal
-#' effects of at most two predictors. 
+#' The fitted values are plotted against one or two predictors. Note that
+#' that this is not a partial dependence plot.
 #' 
 #' @param x lmerboost object
 #' @param X matrix of predictors
@@ -28,33 +28,32 @@ plot.lmerboost <- function(x, X, id, i.var, n.trees=min(x$best.trees)){
   f.factor <- sapply(Xnew, is.factor)
   
   if(length(i.var) == 1){
-    g <- ggplot(d=d, aes_string(y=y, x=cnames))) +
+    g <- ggplot(d=d, aes_string(y=y, x=cnames)) +
       geom_point() + geom_line()
   } else if(length(i.var) == 2){
     if(!f.factor[1] && !f.factor[2]){
-      g <- ggplot(d, aes_string((X1, X2, z=y)) + geom_tile(aes(fill=y)) +
+      g <- ggplot(d, aes_string(x=cnames[1], y=cnames[2], z="y")) + 
+        geom_tile(aes(fill=y)) +
         xlab(var.names[i.var[1]]) +
         ylab(var.names[i.var[2]])
     }
     if(f.factor[2]){
-      g <- ggplot(d, aes(y=y, x=X1)) +
+      g <- ggplot(d, aes_string(y=y, x=cnames[1])) +
         geom_point() + geom_line() +
-        facet_wrap(~X2) + 
-        ylab(paste("f(", var.names[i.var[1]], ",",var.names[i.var[2]], ")", sep = ""))
+        facet_wrap(cnames[2]) + 
+        ylab(paste("f(", cnames[i.var[1]], ",",cnames[i.var[2]], ")", sep = ""))
     }
     if(f.factor[1]){
-      g <- ggplot(d, aes(y=y, x=X2)) +
+      g <- ggplot(d, aes_string(y=y, x=cnames[2])) +
         geom_point() + geom_line() +
-        facet_wrap(~X1) + 
-        ylab(paste("f(", var.names[i.var[1]], ",",var.names[i.var[2]], ")", sep = ""))
+        facet_wrap(cnames[1]) + 
+        ylab(paste("f(", cnames[i.var[1]], ",",cnames[i.var[2]], ")", sep = ""))
     }
   } else {
     stop("set return.grid=TRUE to make a custom graph")
   }
   print(g)
   return(g)
-  
-  
 }
 
 
