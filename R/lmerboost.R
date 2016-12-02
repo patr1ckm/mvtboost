@@ -123,7 +123,7 @@ lmerboost <- function(y, X, id,
   
   out <- list(yhat=o$yhat[,bt], ranef=o$ranef[,bt], fixed=o$fixed[,bt], lambda=o$lambda, subset = subset, 
               best.trees = best.trees, best.params = best.params, params = params,
-              sigma=o$sigma, xnames = colnames(X), mods=o$mods,
+              sigma=o$sigma, xnames = colnames(X), mods=o$mods, id=id,
               trees = o$trees, init=o$init, var.type=o$var.type, c.split=o$c.split,
               train.err=o$train.err, oob.err=o$oob.err, test.err=o$test.err, cv.err=cv.err)
   class(out) <- "lmerboost"

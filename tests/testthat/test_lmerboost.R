@@ -270,6 +270,7 @@ test_that("lmerboost influence", {
   ob <- lmerboost(y = y, X = X, id=3, M = 3, cv.folds = 1, lambda = .5)
   inf <- influence(ob)
   expect_gt(inf[1], 0)
+  expect_equal(length(inf), 2)
 })
 
 test_that("lmerboost predict", {
