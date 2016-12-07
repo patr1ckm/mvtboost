@@ -284,7 +284,7 @@ test_that("lmerboost influence", {
 test_that("lmerboost predict", {
   M = 5
   lb <- lmerboost(y = y, X = X, id=2, M = M, cv.folds = 3, lambda = c(.5, 1),
-                 bag.fraction=.5, subset=1:500)
+                 bag.fraction=.5, subset=1:500, save.mods=TRUE)
   yh <- predict(lb, newdata=X, id=2, M=min(lb$best.trees, na.rm=T))
   expect_equal(lb$yhat, yh$yhat)
   expect_equal(lb$fixed, yh$fixed)

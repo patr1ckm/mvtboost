@@ -36,7 +36,7 @@ lmerboost <- function(y, X, id,
                       lambda=.01, 
                       nt=1, 
                       depth=5, 
-                      tune=FALSE, 
+                      save.mods=FALSE,
                       stop.threshold = .001,
                       mc.cores=1, 
                       verbose = TRUE, ...){
@@ -71,8 +71,8 @@ lmerboost <- function(y, X, id,
     cv.mods <- parallel::mclapply(conds.ls, function(args, ...){ 
       try(do.call(lmerboost_cv, append(args, list(...))))
     }, y=y, x=X, id=id, train=train, folds = folds, 
-      bag.fraction = bag.fraction, stop.threshold = stop.threshold,
-      verbose = FALSE, mc.cores = mc.cores)
+      bag.fraction = bag.fraction, stop.threshold = stop.threshold, 
+      verbose=FALSE, save.mods=save.mods, mc.cores = mc.cores)
 
     # average over cv folds for each condition
     if(any(sapply(cv.mods, function(x){is(x, "try-error")}))){
@@ -94,9 +94,11 @@ lmerboost <- function(y, X, id,
     
     o <- lmerboost.fit(y = y, X = X, id = id, 
           train.fraction = train.fraction, subset = subset, 
-          bag.fraction = bag.fraction, stop.threshold = stop.threshold, verbose = verbose,
-          M = best.params$M, lambda = best.params$lambda, depth=best.params$depth, indep = best.params$indep,
-          nt = nt,  tune=FALSE)
+          bag.fraction = bag.fraction, stop.threshold = stop.threshold, 
+          verbose = verbose, save.mods=save.mods,
+          M = best.params$M, lambda = best.params$lambda, 
+          depth=best.params$depth, indep = best.params$indep,
+          nt = nt)
     
   } else { # cv.folds = 1
     cv.err <- rep(NA, M)
@@ -109,7 +111,7 @@ lmerboost <- function(y, X, id,
          train.fraction = train.fraction, subset = subset,
          bag.fraction = bag.fraction, stop.threshold = stop.threshold,
          M = M, lambda = lambda, depth=depth, indep = indep, 
-         nt = nt,  tune=FALSE, verbose = verbose)
+         nt = nt, verbose = verbose, save.mods=save.mods)
   }
   if(all(is.na(o$test.err))){ 
     best_test_err <- NA
@@ -143,8 +145,9 @@ lmerboost_cv <- function(k, folds, y, x, id, train, ...){
 #' @importFrom gbm gbm.fit pretty.gbm.tree
 #' @importFrom lme4 lmer
 lmerboost.fit <- function(y, X, id, train.fraction=NULL, subset=NULL, indep=TRUE, M=100, 
-                          lambda=.01, nt=1, depth=5, tune=FALSE, bag.fraction=.5, 
-                          calc.derivs=FALSE, stop.threshold = .001, verbose = TRUE, ...){
+                          lambda=.01, nt=1, depth=5,  bag.fraction=.5, 
+                          calc.derivs=FALSE, stop.threshold = .001, verbose = TRUE, 
+                          save.mods=FALSE, ...){
   
   init <- mean(y)
   r <- y - init
@@ -229,7 +232,7 @@ lmerboost.fit <- function(y, X, id, train.fraction=NULL, subset=NULL, indep=TRUE
                   control = lme4::lmerControl(calc.derivs = FALSE))
     o@frame <- o@frame[1, ]
      
-    mods[[i]] <- o
+    if(save.mods) mods[[i]] <- o
     sigma[i] <- sigma_merMod(o) * lambda
     
     # 2016-10-19: Timed to show that this was fastest with large n and large ngrps
@@ -272,6 +275,7 @@ lmerboost.fit <- function(y, X, id, train.fraction=NULL, subset=NULL, indep=TRUE
   }
   yhat <- yhat + init
   fixed <- fixed + init
+  if(!save.mods) mods <- NULL # so you can test for it
   
   out <- list(yhat=yhat, ranef=ranef, fixed=fixed, lambda=lambda, 
               trees = trees, init=init, var.type=var.type, c.split=c.split,
@@ -285,6 +289,7 @@ lmerboost.fit <- function(y, X, id, train.fraction=NULL, subset=NULL, indep=TRUE
 #' @export
 predict.lmerboost <- function(object, newdata, id, M=NULL){
   # save trees, lmer objects at each iteration (damn)
+  if(is.null(object$mods)) stop("need to save models for predictions in newdata")
   
   if(is.null(M)){ M <- length(object$mods)}
   n <- nrow(newdata)
