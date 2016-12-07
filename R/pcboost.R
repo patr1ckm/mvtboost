@@ -41,8 +41,8 @@ pcb <- function(Y,X,n.trees=100,
 #' Predicted values from principal components boosting
 #' @inheritParams  predict.mvtb 
 #' @export
-predict.pcb <- function(object, n.trees = NULL, newdata, drop=TRUE, ...){
-  Yhat <- predict(object, n.trees = n.trees, newdata = newdata, drop = drop) 
+predict.pcb <- function(object, n.trees = NULL, newdata, ...){
+  Yhat <- predict(object, n.trees = n.trees, newdata = newdata) 
   Pred  <- Pred %*% t(object$ev$vectors)
   return(Pred)
 }

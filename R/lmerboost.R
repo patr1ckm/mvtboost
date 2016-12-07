@@ -17,15 +17,26 @@
 
 # vectors can be passed to M, lambda, indep, and depth for cross validation
 
-#' boosting with random effects
+#' Boosted decision trees with random effects
 #' 
 #' @param y outcome vector (continuous)
 #' @param X matrix or data frame of predictors 
 #' @param id name or index of grouping variable
 #' @param train.fraction of sample used for training
 #' @param subset index of observations to use for training
+#' @param bag.fraction fraction of training set used at each iteration
+#' @param cv.folds number of cross-validation folds
+#' @param indep whether randome effects are independent (default TRUE)
+#' @param M number of trees
+#' @param lambda step size
+#' @param nt number of trees fit at each iteration
+#' @param depth depth of trees
+#' @param save.mods whether to save the lmer model at each iteration (required to use 'predict' later)
+#' @param stop.threshold unused
+#' @param mc.cores number of parallel cores
+#' @param verbose whether fitting is verbose
+#' @param ... arguments passed to gbm
 #' @export
-#' @importFrom parallel mclapply
 lmerboost <- function(y, X, id, 
                       train.fraction=NULL, 
                       subset=NULL, 
@@ -141,8 +152,11 @@ lmerboost_cv <- function(k, folds, y, x, id, train, ...){
 }
 
 
+
+#' @describeIn lmerboost Fitting function for lmerboost
+#' @param calc.derivs whether to calculate derivatives at each iteration with lmer
 #' @export
-#' @importFrom gbm gbm.fit pretty.gbm.tree
+#' @importFrom gbm gbm.fit pretty.gbm.tree predict.gbm
 #' @importFrom lme4 lmer
 lmerboost.fit <- function(y, X, id, train.fraction=NULL, subset=NULL, indep=TRUE, M=100, 
                           lambda=.01, nt=1, depth=5,  bag.fraction=.5, 
@@ -177,7 +191,7 @@ lmerboost.fit <- function(y, X, id, train.fraction=NULL, subset=NULL, indep=TRUE
     s.oob <- setdiff(train, s)
     
     # fit a tree
-    tree <- gbm.fit(y = r[s], x=X[s, -id, drop=F], interaction.depth=depth,
+    tree <- gbm::gbm.fit(y = r[s], x=X[s, -id, drop=F], interaction.depth=depth,
                                   shrinkage=1, bag.fraction=1, distribution="gaussian",
                                   verbose=FALSE, n.trees = 1, ...)
     if(i == 1){
@@ -202,7 +216,7 @@ lmerboost.fit <- function(y, X, id, train.fraction=NULL, subset=NULL, indep=TRUE
                     labels=rownames(pt)))
     
     # design matrix - add intercept via lmer. 
-    mm <- model.matrix(~nodes)[,-1, drop=FALSE]
+    mm <- stats::model.matrix(~nodes)[,-1, drop=FALSE]
     colnames(mm) <- gsub("nodes", "X", colnames(mm))
     
     # Have to handle missinginess on id as a special case
@@ -223,7 +237,7 @@ lmerboost.fit <- function(y, X, id, train.fraction=NULL, subset=NULL, indep=TRUE
     addx <- paste0(colnames(mm), collapse = " + ")
     bars <- "||"
     if(!indep) bars <- "|"
-    form <- as.formula(paste0("r ~ ", addx, " + (",addx, " ", bars," id)"))
+    form <- stats::as.formula(paste0("r ~ ", addx, " + (",addx, " ", bars," id)"))
     e <- new.env(parent=globalenv()) 
     e$s <- s
     environment(form) <- e
@@ -237,7 +251,7 @@ lmerboost.fit <- function(y, X, id, train.fraction=NULL, subset=NULL, indep=TRUE
     
     # 2016-10-19: Timed to show that this was fastest with large n and large ngrps
     
-    yhatm <- predict(o, newdata=d, allow.new.levels = TRUE)
+    yhatm <- lme4::predict.merMod(o, newdata=d, allow.new.levels = TRUE)
     fixedm <- cbind(1, mm) %*% o@beta
       
     zuhat <- yhatm - fixedm
@@ -286,8 +300,14 @@ lmerboost.fit <- function(y, X, id, train.fraction=NULL, subset=NULL, indep=TRUE
 }
 
 
-#' @export
-predict.lmerboost <- function(object, newdata, id, M=NULL){
+#' Prediction for lmerboost objects
+#' @param object lmerboost object
+#' @param newdata data frame of new data
+#' @param id column name or index referring to id variable
+#' @param M number of trees
+#' @param ... unused
+#' @export 
+predict.lmerboost <- function(object, newdata, id, M=NULL, ...){
   # save trees, lmer objects at each iteration (damn)
   if(is.null(object$mods)) stop("need to save models for predictions in newdata")
   

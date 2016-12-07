@@ -2,6 +2,7 @@
 #' @param y outcome
 #' @param x predictor
 #' @param id grouping variable
+#' @param subset subset of observations
 #' @param gbm.first whether gbm is fit first or not
 #' @param ... arguments passed to gbm
 #' @export
@@ -18,15 +19,13 @@ twostage <- function(y, x, id, subset = NULL, ...){
   tr <- suppressWarnings(gbm::gbm.perf(ob, plot.it=F))
   res <- y - predict(ob, newdata = d, n.trees = tr)
   df <- data.frame(y=res, x, id=id)
-  form <- as.formula(paste0("y ~ 1 + ", paste0(colnames(x), collapse = " + "),  " + (",
+  form <- stats::as.formula(paste0("y ~ 1 + ", paste0(colnames(x), collapse = " + "),  " + (",
                             paste0(colnames(x), collapse=" + "), " + 1 || id)"))
   ol <- lme4::lmer(form, data=df, subset = s)
   res <- list(o.lmer=ol, o.gbm=ob, tr=tr)
   class(res) <-  "twostage"
   return(res)
 }
-
-
 
 
 #' @export

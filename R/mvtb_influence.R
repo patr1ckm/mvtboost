@@ -33,6 +33,10 @@ mvtb.ri <- function(model, n.trees=NULL, relative="col",...){
 }
 
 
+#' @importFrom stats influence
+NULL
+
+
 #' Compute influence scores from mvtb
 #' @inheritParams mvtb.ri
 #' @export
@@ -53,7 +57,7 @@ influence.lmerboost <- function(model, n.trees = NULL, relative = TRUE, sort = F
   if(is.null(n.trees)){ 
     n.trees <- min(model$best.trees, na.rm = TRUE)
   }
-  inf <- mvtboost:::influence_from_tree_list(model$trees, n.trees = n.trees, 
+  inf <- influence_from_tree_list(model$trees, n.trees = n.trees, 
                                              var.names = model$xnames)
   inf <- inf[-model$id]
   if(relative) { inf <- (inf / sum(inf)) * 100 }
