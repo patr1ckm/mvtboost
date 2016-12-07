@@ -192,7 +192,6 @@ test_that("lmerboost.fit drops rank deficient cols", {
   expect_equal(lb$fixed[-train], unname(fixedm[-train]))
   
 })
-
 ## TODO: lmerboost.fit logical subset
 
 ## TODO: lmerboost.fit train.fraction, stop.threshold, depth, indep
@@ -254,6 +253,15 @@ test_that("lmerboost cv params", {
 })
 
 
+test_that("lmerboost err", {
+  # error in lmerboost.fit
+  y[56] <- NA
+  expect_error(o1 <- lmerboost(y = y, X = X, id=2, M = 5, cv.folds = 1, lambda = .1))
+  
+  o1 <- lmerboost(y = y, X = X, id=2, M = 5, cv.folds = 3, lambda = .1, mc.cores=3)
+  expect_true(all(sapply(o1, function(o){is(o, "try-error")})))
+  
+})
 
 ## TODO: checks of train.fraction, logical subset, etc
 

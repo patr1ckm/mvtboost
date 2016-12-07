@@ -77,7 +77,7 @@ test_that("gbm_grid do_one_fold", {
     }
     set.seed(102)
     one_fold <- mvtboost:::do_one_fold(k=k, folds=folds, train=1:n, y=y, x=x, distribution="gaussian", verbose=FALSE, n.trees=5)
-    expect_equal(test_err, one_fold, info=paste0("k = ",k), tolerance=tol, check.attributes=F)
+    expect_equal(unname(test_err), unname(one_fold), info=paste0("k = ",k), tolerance=tol, check.attributes=F)
   }
 })
 

@@ -69,12 +69,15 @@ lmerboost <- function(y, X, id,
     conds$id <- rep(1:nrow(params), each = cv.folds)
     
     cv.mods <- parallel::mclapply(conds.ls, function(args, ...){ 
-      do.call(lmerboost_cv, append(args, list(...)))
+      try(do.call(lmerboost_cv, append(args, list(...))))
     }, y=y, x=X, id=id, train=train, folds = folds, 
       bag.fraction = bag.fraction, stop.threshold = stop.threshold,
       verbose = FALSE, mc.cores = mc.cores)
 
     # average over cv folds for each condition
+    if(any(sapply(cv.mods, function(x){is(x, "try-error")}))){
+      return(cv.mods)
+    }
     fold.err <- lapply(cv.mods, function(o){o$test.err})
     cv.err <- tapply(fold.err, conds$id, function(x){ 
       rowMeans(do.call(cbind, x), na.rm=T)})
