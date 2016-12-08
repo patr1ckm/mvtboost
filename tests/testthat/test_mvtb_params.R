@@ -1,4 +1,4 @@
-context("test_params")
+context("test_mvtb_params")
 set.seed(123)
 n <- 1000
 B <- matrix(0,nrow=3,ncol=4)
