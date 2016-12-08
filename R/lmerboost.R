@@ -61,10 +61,12 @@ lmerboost <- function(y, X, id,
   } else {
     train <- subset
   }
-  if(!is.null(train.fraction)){
-    train <- sample(train, ceiling(train.fraction*length(ss)), replace = F)
-  }
   if(is.logical(subset)){train <- which(subset)}
+  
+  if(!is.null(train.fraction)){
+    train <- sample(train, ceiling(train.fraction*length(train)), replace = F)
+  }
+  
   if(is.character(id)){
     id <- match(id, colnames(X))
   }
@@ -86,7 +88,7 @@ lmerboost <- function(y, X, id,
       verbose=FALSE, save.mods=save.mods, mc.cores = mc.cores)
 
     # average over cv folds for each condition
-    if(any(sapply(cv.mods, function(x){is(x, "try-error")}))){
+    if(any(sapply(cv.mods, function(x){methods::is(x, "try-error")}))){
       return(cv.mods)
     }
     fold.err <- lapply(cv.mods, function(o){o$test.err})
@@ -173,7 +175,7 @@ lmerboost.fit <- function(y, X, id, train.fraction=NULL, subset=NULL, indep=TRUE
     train <- subset
   }
   if(!is.null(train.fraction)){
-    train <- sample(train, ceiling(train.fraction*length(ss)), replace = F)
+    train <- sample(train, ceiling(train.fraction*length(train)), replace = F)
   }
   if(is.logical(subset)){train <- which(subset)}
   

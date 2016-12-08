@@ -42,6 +42,7 @@ NULL
 #' @export
 influence.mvtb <- mvtb.ri
 
+#' @inheritParams mvtb.ri
 #' @export
 influence.twostage <- function(model, n.trees = NULL, relative = TRUE, sort = FALSE, ...){
   if(is.null(n.trees)){ n.trees = model$tr}
@@ -52,6 +53,8 @@ influence.twostage <- function(model, n.trees = NULL, relative = TRUE, sort = FA
   return(inf)
 }
 
+#' Compute influence scores from lmerboost
+#' @inheritParams mvtb.ri
 #' @export
 influence.lmerboost <- function(model, n.trees = NULL, relative = TRUE, sort = FALSE, ...){
   if(is.null(n.trees)){ 
@@ -65,8 +68,8 @@ influence.lmerboost <- function(model, n.trees = NULL, relative = TRUE, sort = F
   inf
 }
 
-
-#' Compute the influnce from pcb
+#' Compute influence scores from pcb
+#' @inheritParams mvtb.ri
 #' @export
 influence.pcb <- function(model, n.trees = NULL, relative = "col", ...){
   ri <- influence.mvtb(model = model, n.trees=n.trees, relative = FALSE) 
