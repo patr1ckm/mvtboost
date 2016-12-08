@@ -1,5 +1,5 @@
 
-context("speed")
+context("test_mvtb_speed")
 x <- matrix(rnorm(1000*5), 1000, 5)
 y <- x * 5 + rnorm(1000)
 

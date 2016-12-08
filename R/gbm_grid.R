@@ -36,7 +36,7 @@ gbm_grid <- function(y, x, cv.folds, mc.cores=1, subset=NULL, ...){
   
   if(mc.cores > 1){
     cl <- parallel::makePSOCKcluster(mc.cores)
-    parallel::clusterExport(cl, "gbm.fit", envir = environment())
+    #parallel::clusterExport(cl, gbm::gbm.fit envir = environment())
     parallel::clusterExport(cl, "do_one_fold", envir = environment())
     
     #ocv <- lapply(seq_along(args.ls), FUN=do_one_row, args=args.ls, train=train, folds=folds, Xm=x, y=y)

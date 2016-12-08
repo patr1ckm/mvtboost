@@ -256,9 +256,13 @@ test_that("lmerboost cv params", {
 test_that("lmerboost err", {
   # error in lmerboost.fit
   y[56] <- NA
-  expect_error(o1 <- lmerboost(y = y, X = X, id=2, M = 5, cv.folds = 1, lambda = .1))
+  msg <- capture_messages(
+    expect_error(o1 <- lmerboost(y = y, X = X, id=2, M = 5, cv.folds = 1, lambda = .1))
+  )
   
-  o1 <- lmerboost(y = y, X = X, id=2, M = 5, cv.folds = 3, lambda = .1, mc.cores=3)
+  msg <- capture_messages(
+    o1 <- lmerboost(y = y, X = X, id=2, M = 5, cv.folds = 3, lambda = .1, mc.cores=3)
+  )
   expect_true(all(sapply(o1, function(o){is(o, "try-error")})))
   
 })

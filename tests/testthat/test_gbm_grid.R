@@ -1,4 +1,5 @@
 # Testing gbm_grid
+context("test_gbm_grid")
 
 n <- 1000
 x <- matrix(rnorm(n))
@@ -8,7 +9,7 @@ n <- length(y)
 cv.folds <- 3
 train <- seq_along(y)
 folds <- sample(1:cv.folds, size=length(train), replace=TRUE)
-tol = 5E-5
+tol = 1E-4
 
 args_cv <- expand.grid(
   k=1:3,
