@@ -5,10 +5,11 @@
 #' @param model \code{mvtb} output model
 #' @param n.trees number of trees to use. Defaults to the minimum number of trees by CV, test, or training error for each outcome.
 #' @param relative How to scale the multivariate influences. If \code{"col"}, each column sums to 100. If \code{"tot"}, the whole matrix sums to 100 (a percent). Otherwise, the raw reductions in SSE are returned.
+#' @param sort whether or not results should be (reverse) sortd. Defaults to FALSE.
 #' @param ... Additional arguments passed to \code{gbm::relative.influence}
 #' @return Matrix of (relative) influences.
 #' @export 
-mvtb.ri <- function(model, n.trees=NULL, relative="col",...){
+mvtb.ri <- function(model, n.trees=NULL, relative="col", sort = FALSE, ...){
   
   if(any(unlist(lapply(model,function(li){is.raw(li)})))){
     model <- mvtb.uncomp(model)
@@ -20,7 +21,7 @@ mvtb.ri <- function(model, n.trees=NULL, relative="col",...){
   ri <- matrix(0,nrow=length(model$xnames),ncol=k)
   for(i in 1:k) {
     gbm.obj <- model$models[[i]]
-    ri[,i] <- gbm::relative.influence(gbm.obj,n.trees=n.trees[i],...)
+    ri[,i] <- gbm::relative.influence(gbm.obj,n.trees=n.trees[i], sort.=sort, ...)
   }
   if(relative == "col"){
     ri <- matrix(apply(ri,2,function(col){col/sum(col)})*100,nrow=nrow(ri),ncol=ncol(ri))
@@ -71,8 +72,8 @@ influence.lmerboost <- function(model, n.trees = NULL, relative = TRUE, sort = F
 #' Compute influence scores from pcb
 #' @inheritParams mvtb.ri
 #' @export
-influence.pcb <- function(model, n.trees = NULL, relative = "col", ...){
-  ri <- influence.mvtb(model = model, n.trees=n.trees, relative = FALSE) 
+influence.pcb <- function(model, n.trees = NULL, relative = "col", sort = FALSE, ...){
+  ri <- influence.mvtb(model = model, n.trees=n.trees, relative = FALSE, sort=sort) 
   ri <- data.frame(ri %*% t(model$ev$vectors))
   
   if(relative == "col"){

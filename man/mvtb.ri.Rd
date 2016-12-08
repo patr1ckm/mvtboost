@@ -4,7 +4,7 @@
 \alias{mvtb.ri}
 \title{Computes the relative influence of each predictor for each outcome}
 \usage{
-mvtb.ri(model, n.trees = NULL, relative = "col", ...)
+mvtb.ri(model, n.trees = NULL, relative = "col", sort = FALSE, ...)
 }
 \arguments{
 \item{model}{\code{mvtb} output model}
@@ -12,6 +12,8 @@ mvtb.ri(model, n.trees = NULL, relative = "col", ...)
 \item{n.trees}{number of trees to use. Defaults to the minimum number of trees by CV, test, or training error for each outcome.}
 
 \item{relative}{How to scale the multivariate influences. If \code{"col"}, each column sums to 100. If \code{"tot"}, the whole matrix sums to 100 (a percent). Otherwise, the raw reductions in SSE are returned.}
+
+\item{sort}{whether or not results should be (reverse) sortd. Defaults to FALSE.}
 
 \item{...}{Additional arguments passed to \code{gbm::relative.influence}}
 }
