@@ -158,8 +158,7 @@ lmerboost_cv <- function(k, folds, y, x, id, train, ...){
 #' @describeIn lmerboost Fitting function for lmerboost
 #' @param calc.derivs whether to calculate derivatives at each iteration with lmer
 #' @export
-#' @importFrom gbm gbm.fit pretty.gbm.tree predict.gbm
-#' @importFrom lme4 lmer
+#' @importFrom stats predict
 lmerboost.fit <- function(y, X, id, train.fraction=NULL, subset=NULL, indep=TRUE, M=100, 
                           lambda=.01, nt=1, depth=5,  bag.fraction=.5, 
                           calc.derivs=FALSE, stop.threshold = .001, verbose = TRUE, 
@@ -253,7 +252,7 @@ lmerboost.fit <- function(y, X, id, train.fraction=NULL, subset=NULL, indep=TRUE
     
     # 2016-10-19: Timed to show that this was fastest with large n and large ngrps
     
-    yhatm <- lme4::predict.merMod(o, newdata=d, allow.new.levels = TRUE)
+    yhatm <- predict(o, newdata=d, allow.new.levels = TRUE)
     fixedm <- cbind(1, mm) %*% o@beta
       
     zuhat <- yhatm - fixedm
@@ -309,6 +308,7 @@ lmerboost.fit <- function(y, X, id, train.fraction=NULL, subset=NULL, indep=TRUE
 #' @param M number of trees
 #' @param ... unused
 #' @export 
+#' @importFrom stats model.matrix
 predict.lmerboost <- function(object, newdata, id, M=NULL, ...){
   # save trees, lmer objects at each iteration (damn)
   if(is.null(object$mods)) stop("need to save models for predictions in newdata")

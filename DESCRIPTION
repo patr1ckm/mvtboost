@@ -17,7 +17,6 @@ Suggests:
     MASS,
     parallel,
     lars,
-    ggplot2,
     knitr,
     rmarkdown
 Imports:
@@ -29,5 +28,6 @@ Imports:
     utils,
     lme4,
     methods,
+    ggplot2
 VignetteBuilder: knitr
 RoxygenNote: 5.0.1

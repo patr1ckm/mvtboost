@@ -3,7 +3,6 @@
 #' @param x predictor
 #' @param id grouping variable
 #' @param subset subset of observations
-#' @param gbm.first whether gbm is fit first or not
 #' @param ... arguments passed to gbm
 #' @export
 twostage <- function(y, x, id, subset = NULL, ...){

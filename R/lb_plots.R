@@ -11,6 +11,7 @@
 #' @param n.trees nubmer of trees (default min(x$best.trees))
 #' @param ... unused
 #' @export
+#' @importFrom ggplot2 ggplot geom_line geom_point aes_string xlab ylab geom_tile facet_wrap
 plot.lmerboost <- function(x, X, id, i.var, n.trees=min(x$best.trees), ...){
   
   if(all(is.character(i.var))){
@@ -23,31 +24,31 @@ plot.lmerboost <- function(x, X, id, i.var, n.trees=min(x$best.trees), ...){
   # use yhat from x at n.trees?
   yhat <- x$yhat[, n.trees]
   Xnew <- X[, i.var]
-  cnames <- colnames(Xnew)[i.var]
+  var.names <- colnames(Xnew)[i.var]
   d <- data.frame(y=yhat, Xnew)
   f.factor <- sapply(Xnew, is.factor)
   
   if(length(i.var) == 1){
-    g <- ggplot2::ggplot(d=d, aes_string(y=y, x=cnames)) +
-      ggplot2::geom_point() + ggplot2::geom_line()
+    g <- ggplot(d, aes_string(y="y", x=var.names)) +
+      geom_point() + geom_line()
   } else if(length(i.var) == 2){
     if(!f.factor[1] && !f.factor[2]){
-      g <- ggplot2::ggplot(d, aes_string(x=cnames[1], y=cnames[2], z="y")) + 
-        ggplot2::geom_tile(aes(fill=y)) +
-        ggplot2::xlab(var.names[i.var[1]]) +
-        ggplot2::ylab(var.names[i.var[2]])
+      g <- ggplot(d, aes_string(x=var.names[1], y=var.names[2], z="y")) + 
+        geom_tile(aes_string(fill="y")) +
+        xlab(var.names[i.var[1]]) +
+        ylab(var.names[i.var[2]])
     }
     if(f.factor[2]){
-      g <- ggplot2::ggplot(d, aes_string(y=y, x=cnames[1])) +
-        ggplot2::geom_point() + ggplot2::geom_line() +
-        ggplot2::facet_wrap(cnames[2]) + 
-        ggplot2::ylab(paste("f(", cnames[i.var[1]], ",",cnames[i.var[2]], ")", sep = ""))
+      g <- ggplot(d, aes_string(y="y", x=var.names[1])) +
+        geom_point() + geom_line() +
+        facet_wrap(var.names[2]) + 
+        ylab(paste("f(", var.names[i.var[1]], ",",var.names[i.var[2]], ")", sep = ""))
     }
     if(f.factor[1]){
-      g <- ggplot2::ggplot(d, aes_string(y=y, x=cnames[2])) +
-        ggplot2::geom_point() + ggplot2::geom_line() +
-        ggplot2::facet_wrap(cnames[1]) + 
-        ggplot2::ylab(paste("f(", cnames[i.var[1]], ",",cnames[i.var[2]], ")", sep = ""))
+      g <- ggplot(d, aes_string(y="y", x=var.names[2])) +
+        geom_point() + geom_line() +
+        facet_wrap(var.names[1]) + 
+        ylab(paste("f(", var.names[i.var[1]], ",",var.names[i.var[2]], ")", sep = ""))
     }
   } else {
     stop("set return.grid=TRUE to make a custom graph")
@@ -159,6 +160,7 @@ plot.lmerboost <- function(x, X, id, i.var, n.trees=min(x$best.trees), ...){
 #' @param lag lag of the differences in error across iterations
 #' @param ... arguments passed to plot
 #' @export
+#' @importFrom graphics abline legend lines title
 perf.lmerboost <- function(x, threshold = 0, lag = 1, ...){
   M <- length(x$train.err)
   ymax <- c(max(x$test.err, x$train.err, x$oob.err, na.rm = T))
@@ -180,6 +182,7 @@ perf.lmerboost <- function(x, threshold = 0, lag = 1, ...){
   paramstring <- paste0(names(x$best.params), " = ", x$best.params, collapse = ", ")
   title(sub = paramstring)
 }
+
 
 best_iter <- function(x, threshold, lag, smooth = FALSE){
   err <- x$cv.err
