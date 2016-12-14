@@ -1,23 +1,18 @@
-## RRV: 2016-09-21
-## - Added best_iter, a function to compute the best iteration in various ways
-## RRV: 2016-09-20
-## - Added early stopping (via stop.threshold)
-## - Made it 10x faster by computing the random effects Z %*% u fast
-
-
-# y vector of observations
-# X matrix of predictors
-# id grouping variable
-# indep whether the random effects of nodes are correlated or indep (default FALSE for speed)
-# M is number of random effects estimation steps
-# lambda is the step size
-# cv.folds = number of cv.folds
-# nt = number of trees used in gbm/lmer iterations
-# depth = depth of trees used in gbm/lmer iteration
-
-# vectors can be passed to M, lambda, indep, and depth for cross validation
 
 #' Boosted decision trees with random effects
+#' 
+#' At each iteration, a single decision tree is fit using \code{gbm.fit}, and 
+#' the terminal node means are allowed to vary by group using \code{lmer}.
+#' 
+#' Meta-parameter tuning is handled by passing vectors of possible values for 
+#' \code{n.trees}, \code{shrinkage}, \code{indep}, \code{interaction.depth}, 
+#' and \code{n.minobsinnode} and setting \code{cv.folds > 1}. Setting 
+#' \code{mc.cores > 1} will carry out the tuning in parallel by forking via 
+#' \code{mclapply}.
+#' 
+#' Prediction is most easily carried out by passing the entire X matrix to
+#' lmerboost, and denoting the training set using \code{subset}. Otherwise, 
+#' set \code{save.mods=TRUE} and use \code{predict}.
 #' 
 #' @param y outcome vector (continuous)
 #' @param X matrix or data frame of predictors 
@@ -74,8 +69,8 @@ lmerboost <- function(y, X, id,
     
     folds <- sample(1:cv.folds, size=length(train), replace = TRUE)
     
-    params <- expand.grid(M = M, lambda = lambda, depth = depth, indep = indep)
-    conds <- expand.grid(k = 1:(cv.folds), M = M, lambda = lambda, depth = depth, indep = indep)
+    params <- expand.grid(n.trees = n.trees, shrinkage = shrinkage, interaction.depth = interaction.depth, indep = indep)
+    conds <- expand.grid(k = 1:(cv.folds), n.trees = n.trees, shrinkage = shrinkage, interaction.depth = interaction.depth, indep = indep)
     conds.ls <- split(conds, 1:nrow(conds))
     conds$id <- rep(1:nrow(params), each = cv.folds)
     
@@ -107,21 +102,21 @@ lmerboost <- function(y, X, id,
           train.fraction = train.fraction, subset = subset, 
           bag.fraction = bag.fraction, stop.threshold = stop.threshold, 
           verbose = verbose, save.mods=save.mods,
-          M = best.params$M, lambda = best.params$lambda, 
-          depth=best.params$depth, indep = best.params$indep,
+          n.trees = best.params$n.trees, shrinkage = best.params$shrinkage, 
+          interaction.depth=best.params$interaction.depth, indep = best.params$indep,
           nt = nt)
     
   } else { # cv.folds = 1
-    cv.err <- rep(NA, M)
+    cv.err <- rep(NA, n.trees)
     best_cv_err <- NA
     params <- best.params <- NULL
 
-    if(length(M) > 1 | length(lambda) > 1 | length(depth) > 1 | length(indep) > 1){ stop("can't specify vector params without cv.folds > 1")}
+    if(length(n.trees) > 1 | length(shrinkage) > 1 | length(interaction.depth) > 1 | length(indep) > 1){ stop("can't specify vector params without cv.folds > 1")}
     
     o <- lmerboost.fit(y = y, X = X, id = id, 
          train.fraction = train.fraction, subset = subset,
          bag.fraction = bag.fraction, stop.threshold = stop.threshold,
-         M = M, lambda = lambda, depth=depth, indep = indep, 
+         n.trees = n.trees, shrinkage = shrinkage, interaction.depth=interaction.depth, indep = indep, 
          nt = nt, verbose = verbose, save.mods=save.mods)
   }
   if(all(is.na(o$test.err))){ 
@@ -137,7 +132,7 @@ lmerboost <- function(y, X, id,
   best.trees <- c(train = which.min(o$train.err), test = best_test_err, oob = best_oob_err, cv = best_cv_err)
   bt <-  min(best.trees, na.rm=TRUE)
   
-  out <- list(yhat=o$yhat[,bt], ranef=o$ranef[,bt], fixed=o$fixed[,bt], lambda=o$lambda, subset = subset, 
+  out <- list(yhat=o$yhat[,bt], ranef=o$ranef[,bt], fixed=o$fixed[,bt], shrinkage=o$shrinkage, subset = subset, 
               best.trees = best.trees, best.params = best.params, params = params,
               sigma=o$sigma, xnames = colnames(X), mods=o$mods, id=id,
               trees = o$trees, init=o$init, var.type=o$var.type, c.split=o$c.split,
@@ -157,11 +152,19 @@ lmerboost_cv <- function(k, folds, y, x, id, train, ...){
 #' @param calc.derivs whether to calculate derivatives at each iteration with lmer
 #' @export
 #' @importFrom stats predict
-lmerboost.fit <- function(y, X, id, train.fraction=NULL, subset=NULL, indep=TRUE, M=100, 
-                          lambda=.01, nt=1, depth=5,  bag.fraction=.5, 
-                          calc.derivs=FALSE, stop.threshold = .001, verbose = TRUE, 
-                          save.mods=FALSE, ...){
-  
+#' 
+lmerboost.fit <- function(y, X, id, 
+                          n.trees=5,
+                          interaction.depth=3,
+                          n.minobsinnode=20,
+                          shrinkage=.01,
+                          bag.fraction=.5,
+                          train.fraction=NULL,
+                          subset=NULL,
+                          indep=TRUE, 
+                          save.mods=FALSE,
+                          verbose = TRUE, ...){
+
   init <- mean(y)
   r <- y - init
   n <- length(y)
@@ -176,12 +179,12 @@ lmerboost.fit <- function(y, X, id, train.fraction=NULL, subset=NULL, indep=TRUE
   }
   if(is.logical(subset)){train <- which(subset)}
   
-  yhat <- ranef <- fixed <- matrix(0, n, M)
-  sigma <- rep(0, M)
-  train.err <- oob.err <- test.err <- rep(NA, M)
+  yhat <- ranef <- fixed <- matrix(0, n, n.trees)
+  sigma <- rep(0, n.trees)
+  train.err <- oob.err <- test.err <- rep(NA, n.trees)
   trees <- mods <- c.split <- list()
   
-  for(i in 1:M){
+  for(i in 1:n.trees){
     # s = training, s.oob = oob, -train = test
     # 2016-10-19: DO NOT STRATIFY SUBSAMPLES BY GROUPS.
     # note that just using sample(x, 1) will fail if x has length 1
@@ -190,7 +193,7 @@ lmerboost.fit <- function(y, X, id, train.fraction=NULL, subset=NULL, indep=TRUE
     s.oob <- setdiff(train, s)
     
     # fit a tree
-    tree <- gbm::gbm.fit(y = r[s], x=X[s, -id, drop=F], interaction.depth=depth,
+    tree <- gbm::gbm.fit(y = r[s], x=X[s, -id, drop=F], interaction.depth=interaction.depth,
                                   shrinkage=1, bag.fraction=1, distribution="gaussian",
                                   verbose=FALSE, n.trees = 1, ...)
     if(i == 1){
@@ -246,7 +249,7 @@ lmerboost.fit <- function(y, X, id, train.fraction=NULL, subset=NULL, indep=TRUE
     o@frame <- o@frame[1, ]
      
     if(save.mods) mods[[i]] <- o
-    sigma[i] <- sigma_merMod(o) * lambda
+    sigma[i] <- sigma_merMod(o) * shrinkage
     
     # 2016-10-19: Timed to show that this was fastest with large n and large ngrps
     
@@ -259,17 +262,17 @@ lmerboost.fit <- function(y, X, id, train.fraction=NULL, subset=NULL, indep=TRUE
 
     # update totals at each iteration
     if(i == 1){
-      fixed[,i]  <- fixedm * lambda 
-      ranef[,i]  <- zuhat  * lambda
-      yhat[,i]   <- yhatm  * lambda 
+      fixed[,i]  <- fixedm * shrinkage 
+      ranef[,i]  <- zuhat  * shrinkage
+      yhat[,i]   <- yhatm  * shrinkage 
       
     } else {
-      fixed[,i]  <- fixed[,i-1] + fixedm * lambda 
-      ranef[,i]  <- ranef[,i-1] + zuhat  * lambda
-      yhat[,i]   <- yhat[,i-1]  + yhatm  * lambda
+      fixed[,i]  <- fixed[,i-1] + fixedm * shrinkage 
+      ranef[,i]  <- ranef[,i-1] + zuhat  * shrinkage
+      yhat[,i]   <- yhat[,i-1]  + yhatm  * shrinkage
     }
     
-    r <- r - yhatm * lambda
+    r <- r - yhatm * shrinkage
     
     if(verbose && (i %% 10 == 0)) cat(i, "")
     if(i==1){ 
@@ -290,7 +293,7 @@ lmerboost.fit <- function(y, X, id, train.fraction=NULL, subset=NULL, indep=TRUE
   fixed <- fixed + init
   if(!save.mods) mods <- NULL # so you can test for it
   
-  out <- list(yhat=yhat, ranef=ranef, fixed=fixed, lambda=lambda, 
+  out <- list(yhat=yhat, ranef=ranef, fixed=fixed, shrinkage=shrinkage, 
               trees = trees, init=init, var.type=var.type, c.split=c.split,
               mods=mods, sigma=sigma, 
               train.err=train.err, oob.err=oob.err, test.err=test.err)
@@ -303,26 +306,26 @@ lmerboost.fit <- function(y, X, id, train.fraction=NULL, subset=NULL, indep=TRUE
 #' @param object lmerboost object
 #' @param newdata data frame of new data
 #' @param id column name or index referring to id variable
-#' @param M number of trees
+#' @param n.trees number of trees
 #' @param ... unused
 #' @export 
 #' @importFrom stats model.matrix
-predict.lmerboost <- function(object, newdata, id, M=NULL, ...){
+predict.lmerboost <- function(object, newdata, id, n.trees=NULL, ...){
   # save trees, lmer objects at each iteration (damn)
   if(is.null(object$mods)) stop("need to save models for predictions in newdata")
   
-  if(is.null(M)){ M <- length(object$mods)}
+  if(is.null(n.trees)){ n.trees <- length(object$mods)}
   n <- nrow(newdata)
-  yhat <- ranef <- fixed <- matrix(0, n, M)
+  yhat <- ranef <- fixed <- matrix(0, n, n.trees)
   if(is.character(id)){
     id <- match(id, colnames(newdata))
   }
   newid <- newdata[,id]
   newdata <- newdata[,-id, drop=F]
   
-  lambda <- object$lambda
+  shrinkage <- object$shrinkage
   
-  for(i in 1:M){
+  for(i in 1:n.trees){
     
     pt <- data.frame(object$trees[[i]])
     names(pt) <- c("SplitVar", "SplitCodePred", "LeftNode", 
@@ -365,20 +368,20 @@ predict.lmerboost <- function(object, newdata, id, M=NULL, ...){
 
     # update totals at each iteration
     if(i == 1){
-      fixed[,i]  <- fixedm * lambda 
-      ranef[,i]  <- zuhat  * lambda
-      yhat[,i]   <- yhatm  * lambda 
+      fixed[,i]  <- fixedm * shrinkage 
+      ranef[,i]  <- zuhat  * shrinkage
+      yhat[,i]   <- yhatm  * shrinkage 
       
     } else {
-      fixed[,i]  <- fixed[,i-1] + fixedm * lambda 
-      ranef[,i]  <- ranef[,i-1] + zuhat  * lambda
-      yhat[,i]   <- yhat[,i-1]  + yhatm  * lambda
+      fixed[,i]  <- fixed[,i-1] + fixedm * shrinkage 
+      ranef[,i]  <- ranef[,i-1] + zuhat  * shrinkage
+      yhat[,i]   <- yhat[,i-1]  + yhatm  * shrinkage
     }
   }
   yhat <- yhat + object$init
   fixed <- fixed + object$init
   
-  return(list(yhat=yhat[,M], ranef=ranef[,M], fixed=fixed[,M]))
+  return(list(yhat=yhat[,n.trees], ranef=ranef[,n.trees], fixed=fixed[,n.trees]))
 }
 
 sigma_merMod <- function (object, ...) {
