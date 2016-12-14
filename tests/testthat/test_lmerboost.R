@@ -21,14 +21,6 @@ X <- data.frame(x, xc, id)
 
 tol = 1E-6
 
-#splits <- list()
-#o <- gbm(y~xc+id, n.trees=10)
-#splits[[1]] <- o$c.splits
-
-
-
-# helper function used in older version
-
 context("lmerboost.fit")
 
 test_that("lmerboost runs", {
@@ -189,7 +181,8 @@ test_that("lmerboost.fit drops rank deficient cols", {
   set.seed(104)
   
   X <- data.frame(x, x2, id)
-  lb <- lmerboost.fit(y=y, X=X, id="id", shrinkage=1, n.trees=1, interaction.depth=1, bag.fraction=1,
+  lb <- lmerboost.fit(y=y, X=X, id="id", shrinkage=1, n.trees=1,
+                      interaction.depth=1, bag.fraction=1,
                         n.minobsinnode=1, subset=train)
   expect_equal(lb$yhat[train], unname(yhatm[train]))
   expect_equal(lb$ranef[train], unname(zuhat[train]))
@@ -229,7 +222,7 @@ test_that("lmerboost cv params", {
   set.seed(104)
   cv.folds = 3
   folds <- sample(1:cv.folds, size=n, replace=TRUE)
-  paramscv <- expand.grid(n.trees = 5, k = 1:cv.folds, shrinkage = c(.2, .5), interaction.depth = c(3, 5), indep = TRUE)
+  paramscv <- expand.grid(n.trees = 5, k = 1:cv.folds, shrinkage = c(.2, .5), interaction.depth = c(3, 5), indep = TRUE, n.minobsinnode=20)
   params <- expand.grid(n.trees = 5, shrinkage = c(.2, .5), interaction.depth = c(3, 5), indep = TRUE)
   paramscv$id <- factor(rep(1:nrow(params), each = cv.folds))
   paramscv.ls <- split(paramscv, 1:nrow(paramscv))
