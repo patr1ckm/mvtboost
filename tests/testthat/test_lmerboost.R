@@ -222,8 +222,8 @@ test_that("lmerboost cv params", {
   set.seed(104)
   cv.folds = 3
   folds <- sample(1:cv.folds, size=n, replace=TRUE)
-  paramscv <- expand.grid(n.trees = 5, k = 1:cv.folds, shrinkage = c(.2, .5), interaction.depth = c(3, 5), indep = TRUE, n.minobsinnode=20)
-  params <- expand.grid(n.trees = 5, shrinkage = c(.2, .5), interaction.depth = c(3, 5), indep = TRUE)
+  paramscv <- expand.grid(k = 1:cv.folds, n.trees = 5, shrinkage = c(.2, .5), interaction.depth = c(3, 5), indep = TRUE, n.minobsinnode=20)
+  params <- expand.grid(n.trees = 5, shrinkage = c(.2, .5), interaction.depth = c(3, 5), indep = TRUE, n.minobsinnode=20)
   paramscv$id <- factor(rep(1:nrow(params), each = cv.folds))
   paramscv.ls <- split(paramscv, 1:nrow(paramscv))
   do_one <- function(args, folds, y, x, id, train, ...){ 
