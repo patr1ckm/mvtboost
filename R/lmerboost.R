@@ -399,7 +399,7 @@ predict.lmerboost <- function(object, newdata, id, n.trees=NULL, ...){
   
     # coerce lb object to a gbm object
     gbm.obj <- list(initF=object$init, trees=object$trees, 
-                c.split = object$c.split, var.type=object$var.type)
+                c.split = object$c.split[[i]], var.type=object$var.type)
     class(gbm.obj) <- "gbm"
     
     # note: when single.tree=TRUE, initF is not included in gbm predicted values
