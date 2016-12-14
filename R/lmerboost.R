@@ -101,19 +101,25 @@ lmerboost <- function(y, X, id,
     
     folds <- sample(1:cv.folds, size=length(train), replace = TRUE)
     
-    params <- expand.grid(n.trees=n.trees, shrinkage=shrinkage, 
-                          interaction.depth=interaction.depth, indep=indep,
+    params <- expand.grid(n.trees=n.trees, 
+                          shrinkage=shrinkage, 
+                          interaction.depth=interaction.depth, 
+                          indep=indep,
                           n.minobsinnode=n.minobsinnode)
-    conds <- expand.grid(k = 1:(cv.folds), n.trees=n.trees, shrinkage=shrinkage,
-                         interaction.depth=interaction.depth, indep=indep,
-                          n.minobsinnode=n.minobsinnode)
+    conds <- expand.grid(k = 1:(cv.folds), 
+                         n.trees=n.trees, 
+                         shrinkage=shrinkage,
+                         interaction.depth=interaction.depth, 
+                         indep=indep,
+                         n.minobsinnode=n.minobsinnode)
+    
     conds.ls <- split(conds, 1:nrow(conds))
     conds$id <- rep(1:nrow(params), each = cv.folds)
     
     cv.mods <- parallel::mclapply(conds.ls, function(args, ...){ 
       try(do.call(lmerboost_cv, append(args, list(...))))
-    }, y=y, x=X, id=id, train=train, folds = folds, 
-      bag.fraction = bag.fraction,  
+    }, y=y, x=X, id=id, train=train, folds=folds, 
+      bag.fraction=bag.fraction,  
       verbose=FALSE, save.mods=save.mods, mc.cores = mc.cores)
 
     # average over cv folds for each condition
@@ -138,8 +144,11 @@ lmerboost <- function(y, X, id,
           train.fraction = train.fraction, subset = subset, 
           bag.fraction = bag.fraction,  
           verbose = verbose, save.mods=save.mods,
-          n.trees = best.params$n.trees, shrinkage = best.params$shrinkage, 
-          interaction.depth=best.params$interaction.depth, indep = best.params$indep)
+          n.trees = best.params$n.trees, 
+          shrinkage = best.params$shrinkage, 
+          interaction.depth=best.params$interaction.depth, 
+          indep = best.params$indep,
+          n.minobsinnode = best.params$n.minobsinnode)
     
   } else { # cv.folds = 1
     cv.err <- rep(NA, n.trees)
@@ -149,10 +158,15 @@ lmerboost <- function(y, X, id,
     if(length(n.trees) > 1 | length(shrinkage) > 1 | length(interaction.depth) > 1 | length(indep) > 1){ stop("can't specify vector params without cv.folds > 1")}
     
     o <- lmerboost.fit(y = y, X = X, id = id, 
-         train.fraction = train.fraction, subset = subset,
-         bag.fraction = bag.fraction,
-         n.trees = n.trees, shrinkage = shrinkage, interaction.depth=interaction.depth, indep = indep, 
-         verbose = verbose, save.mods=save.mods)
+                       train.fraction = train.fraction,
+                       subset = subset,
+                       bag.fraction = bag.fraction,
+                       n.trees = n.trees, 
+                       shrinkage = shrinkage, 
+                       interaction.depth=interaction.depth, 
+                       indep = indep, 
+                       n.minobsinnode = n.minobsinnode,
+                       verbose = verbose, save.mods=save.mods)
   }
   if(all(is.na(o$test.err))){ 
     best_test_err <- NA
@@ -164,10 +178,14 @@ lmerboost <- function(y, X, id,
   } else {
     best_oob_err <- which.min(o$oob.err)
   }
-  best.trees <- c(train = which.min(o$train.err), test = best_test_err, oob = best_oob_err, cv = best_cv_err)
+  best.trees <- c(train = which.min(o$train.err),
+                  test = best_test_err,
+                  oob = best_oob_err,
+                  cv = best_cv_err)
   bt <-  min(best.trees, na.rm=TRUE)
   
-  out <- list(yhat=o$yhat[,bt], ranef=o$ranef[,bt], fixed=o$fixed[,bt], shrinkage=o$shrinkage, subset = subset, 
+  out <- list(yhat=o$yhat[,bt], ranef=o$ranef[,bt], fixed=o$fixed[,bt],
+              shrinkage=o$shrinkage, subset = subset, 
               best.trees = best.trees, best.params = best.params, params = params,
               sigma=o$sigma, xnames = colnames(X), mods=o$mods, id=id,
               trees = o$trees, init=o$init, var.type=o$var.type, c.split=o$c.split,
@@ -232,9 +250,13 @@ lmerboost.fit <- function(y, X, id,
     s.oob <- setdiff(train, s)
     
     # fit a tree
-    tree <- gbm::gbm.fit(y = r[s], x=X[s, -id, drop=F], interaction.depth=interaction.depth,
-                                  shrinkage=1, bag.fraction=1, distribution="gaussian",
-                                  verbose=FALSE, n.trees = 1, ...)
+    tree <- gbm::gbm.fit(y = r[s], x=X[s, -id, drop=F],
+                         interaction.depth=interaction.depth,
+                         shrinkage=1,
+                         bag.fraction=1,
+                         distribution="gaussian",
+                         verbose=FALSE,
+                         n.trees = 1, ...)
     if(i == 1){
       var.type = tree$var.type
     }
