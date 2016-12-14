@@ -43,7 +43,7 @@ test_that("mvtb.cluster",{
   expect_equal(dim(mvtb.cluster(covex)),c(ncovs,p))
   
   # run plot
-  mvtb.cluster(covex,plot=TRUE)
+  expect_output(mvtb.cluster(covex,plot=TRUE))
   
   cluster.covex <- mvtb.cluster(covex,dist.method="manhattan",clust.method="complete")
   expect_output(print(cluster.covex))

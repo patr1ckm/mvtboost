@@ -22,33 +22,31 @@
 #' @param y outcome vector (continuous)
 #' @param X matrix or data frame of predictors 
 #' @param id name or index of grouping variable
-#' @param train.fraction of sample used for training
-#' @param subset index of observations to use for training
+#' @param n.trees number of trees
+#' @param interaction.depth depth of trees
+#' @param n.minobsinnode minimum number of obs in each node
+#' @param shrinkage step size
 #' @param bag.fraction fraction of training set used at each iteration
+#' @param train.fraction of sample used for training
 #' @param cv.folds number of cross-validation folds
-#' @param indep whether randome effects are independent (default TRUE)
-#' @param M number of trees
-#' @param lambda step size
-#' @param nt number of trees fit at each iteration
-#' @param depth depth of trees
+#' @param subset index of observations to use for training
+#' @param indep whether random effects are independent or allowed to covary (default is independent, for speed)
 #' @param save.mods whether to save the lmer model at each iteration (required to use 'predict' later)
-#' @param stop.threshold unused
 #' @param mc.cores number of parallel cores
 #' @param verbose whether fitting is verbose
-#' @param ... arguments passed to gbm
+#' @param ... arguments passed to gbm.fit
 #' @export
 lmerboost <- function(y, X, id, 
-                      train.fraction=NULL, 
-                      subset=NULL, 
-                      bag.fraction=.5, 
+                      n.trees=5,
+                      interaction.depth=3,
+                      n.minobsinnode=20,
+                      shrinkage=.01,
+                      bag.fraction=.5,
+                      train.fraction=NULL,
                       cv.folds=1,
+                      subset=NULL,
                       indep=TRUE, 
-                      M=100, 
-                      lambda=.01, 
-                      nt=1, 
-                      depth=5, 
                       save.mods=FALSE,
-                      stop.threshold = .001,
                       mc.cores=1, 
                       verbose = TRUE, ...){
 
