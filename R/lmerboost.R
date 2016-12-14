@@ -8,28 +8,60 @@
 #' \code{n.trees}, \code{shrinkage}, \code{indep}, \code{interaction.depth}, 
 #' and \code{n.minobsinnode} and setting \code{cv.folds > 1}. Setting 
 #' \code{mc.cores > 1} will carry out the tuning in parallel by forking via 
-#' \code{mclapply}.
+#' \code{mclapply}. Tuning is only done within the training set.
 #' 
-#' Prediction is most easily carried out by passing the entire X matrix to
-#' lmerboost, and denoting the training set using \code{subset}. Otherwise, 
+#' Prediction is most easily carried out by passing the entire \code{X} matrix to
+#' \code{lmerboost}, and specifying the training set using \code{subset}. Otherwise, 
 #' set \code{save.mods=TRUE} and use \code{predict}.
 #' 
 #' @param y outcome vector (continuous)
 #' @param X matrix or data frame of predictors 
 #' @param id name or index of grouping variable
-#' @param n.trees number of trees
-#' @param interaction.depth depth of trees
-#' @param n.minobsinnode minimum number of obs in each node
-#' @param shrinkage step size
-#' @param bag.fraction fraction of training set used at each iteration
+#' @param n.trees the total number of trees to fit (iterations). 
+#' @param cv.folds number of cross-validation folds. In addition to the usual fit,
+#'  will perform cross-validation over a grid of meta-parameters (see details). 
+#' @param interaction.depth The maximum depth of trees. 1 implies a single split
+#'  (stump), 2 implies a tree with 2 splits, etc.
+#' @param n.minobsinnode minimum number of observations in the terminal nodes
+#'  of each tree
+#' @param shrinkage a shrinkage parameter applied to each tree. Also known as the 
+#' learning rate or step-size reduction.
+#' @param bag.fraction the fraction of the training set observations randomly 
+#' selected to propose the next tree. This introduces randomnesses into the model 
+#' fit. If \code{bag.fraction<1} then running the same model twice will result in
+#'  similar but different fits.  Using \code{set.seed} ensures reproducibility.
 #' @param train.fraction of sample used for training
-#' @param cv.folds number of cross-validation folds
 #' @param subset index of observations to use for training
-#' @param indep whether random effects are independent or allowed to covary (default is independent, for speed)
-#' @param save.mods whether to save the lmer model at each iteration (required to use 'predict' later)
+#' @param indep whether random effects are independent or allowed to covary
+#'  (default is TRUE, for speed)
+#' @param save.mods whether the \code{lmer} models fit at each iteration are saved
+#'  (required to use \code{predict})
 #' @param mc.cores number of parallel cores
-#' @param verbose whether fitting is verbose
+#' @param verbose In the final model fit, will print every `10` trees/iterations.
 #' @param ... arguments passed to gbm.fit
+#' @return An \code{lmerboost} object consisting of the following list elements:
+#' \describe{
+#'   \item{\code{yhat}}{Vector of predictions at the best iteration (\code{fixed} + \code{ranef})}
+#'   \item{\code{ranef}}{Vector of random effects at the best iteration}
+#'   \item{\code{fixed}}{Vector of fixed effect predictions at the best iteration}
+#'   \item{\code{shrinkange}}{Amount of shrinkage}
+#'   \item{\code{subset}}{Vector of observations used for training}
+#'   \item{\code{best.trees}}{Best number of trees by training, test, oob, and cv error}
+#'   \item{\code{best.params}}{The best set of meta-parameter values given by CV}
+#'   \item{\code{params}}{A data frame of all meta-parameter combinations and the corresponding CV error}
+#'   \item{\code{sigma}}{The variance due to the grouping variable at each iteration}
+#'   \item{\code{xnames}}{Column names of \code{X}}
+#'   \item{\code{mods}}{List of \code{lmer} models (if \code{save.mods=TRUE})}
+#'   \item{\code{id}}{name or index of the grouping variable}
+#'   \item{\code{trees}}{List of trees fit at each iteration}
+#'   \item{\code{init}}{initial prediction}
+#'   \item{\code{var.type}}{Type of variables (\code{gbm.fit})}
+#'   \item{\code{c.split}}{List of categorical splits (\code{gbm.fit})}
+#'   \item{\code{train.err}}{Training error at each iteration}
+#'   \item{\code{oob.err}}{Out of bag error at each iteration}
+#'   \item{\code{test.err}}{Test error at each iteration}
+#'   \item{\code{cv.err}}{Cross-validation error at each iteration}
+#' }
 #' @export
 lmerboost <- function(y, X, id, 
                       n.trees=5,
@@ -148,8 +180,8 @@ lmerboost_cv <- function(k, folds, y, x, id, train, ...){
 
 
 
-#' @describeIn lmerboost Fitting function for lmerboost
-#' @param calc.derivs whether to calculate derivatives at each iteration with lmer
+#' @describeIn lmerboost Fitting function for \code{lmerboost}
+#' @param calc.derivs whether to calculate derivatives at each iteration with \code{lmer} (only assesses convergence)
 #' @export
 #' @importFrom stats predict
 #' 

@@ -32,13 +32,13 @@ tol = 1E-6
 context("lmerboost.fit")
 
 test_that("lmerboost runs", {
-o1 <- lmerboost(y = y, X = X, id="id", M = 5, cv.folds = 1, lambda = .1)
-  o2 <- lmerboost(y = y, X = X, id="id", M = 5, cv.folds = 1, lambda = .1)
-  o <- lmerboost(y = y, X = X, id="id", M = 5, cv.folds = 1, lambda = .1, subset = train)
-  o <- lmerboost(y = y, X = X, id="id", M = 3, cv.folds = 3)
+o1 <- lmerboost(y = y, X = X, id="id", n.trees = 5, cv.folds = 1, lambda = .1)
+  o2 <- lmerboost(y = y, X = X, id="id", n.trees = 5, cv.folds = 1, lambda = .1)
+  o <- lmerboost(y = y, X = X, id="id", n.trees = 5, cv.folds = 1, lambda = .1, subset = train)
+  o <- lmerboost(y = y, X = X, id="id", n.trees = 3, cv.folds = 3)
   Xmis <- X
   Xmis[sample(1:n, size = n/2, replace = FALSE),] <- NA
-  o <- lmerboost(y = y, X = Xmis, id="id", M = 3, cv.folds = 3)
+  o <- lmerboost(y = y, X = Xmis, id="id", n.trees = 3, cv.folds = 3)
   expect_is(o, "lmerboost")
 })
 
@@ -51,18 +51,18 @@ test_that("lmerboost.fit bag.fraction, lambda, subset, train/oob/test err", {
   set.seed(104)
   o <- lmerboost.fit(y = y, X = X, id="id", subset = train,
                      bag.fraction = bag.fraction,  indep = TRUE, verbose = FALSE,
-                     M = 10, lambda = lambda, depth = 5, stop.threshold = 0, n.minobsinnode = 10)
+                     n.trees = 10, lambda = lambda, depth = 5, stop.threshold = 0, n.minobsinnode = 10)
 
 
   set.seed(104)
   idx <- 3
   id <- X[,idx]
-  M <- 10
-  zuhat <- fixed <- yhat <- matrix(0, n, M)
-  train_err <- oob_err <- test_err <- rep(0, M)
+  n.trees <- 10
+  zuhat <- fixed <- yhat <- matrix(0, n, n.trees)
+  train_err <- oob_err <- test_err <- rep(0, n.trees)
   init <- mean(y)
   r <- y - mean(y)
-  for(i in 1:M){
+  for(i in 1:n.trees){
 
     # the only change is to subsample from train rather than 1:n, and to subset on id
     # note that s is always an index to observations in the  original data
@@ -189,7 +189,7 @@ test_that("lmerboost.fit drops rank deficient cols", {
   set.seed(104)
   
   X <- data.frame(x, x2, id)
-  lb <- lmerboost.fit(y=y, X=X, id="id", lambda=1, M=1, depth=1, bag.fraction=1,
+  lb <- lmerboost.fit(y=y, X=X, id="id", lambda=1, n.trees=1, depth=1, bag.fraction=1,
                         n.minobsinnode=1, subset=train)
   expect_equal(lb$yhat[train], unname(yhatm[train]))
   expect_equal(lb$ranef[train], unname(zuhat[train]))
@@ -214,12 +214,12 @@ test_that("lmerboost_cv", {
   set.seed(104)
   ocv <- lapply(1:cv.folds, function(k, folds, train){
     ss <- train[folds != k]
-    lmerboost.fit(y = y, X = X, id="id", subset = ss, M = 5, verbose = F, lambda = .5)
+    lmerboost.fit(y = y, X = X, id="id", subset = ss, n.trees = 5, verbose = F, lambda = .5)
   }, folds = folds, train=1:n)
   
   set.seed(104)
   o <- lapply(1:cv.folds, mvtboost:::lmerboost_cv, 
-           folds = folds, train = 1:n, y = y, x = X, id="id", M = 5, lambda = .5)
+           folds = folds, train = 1:n, y = y, x = X, id="id", n.trees = 5, lambda = .5)
   
   expect_equivalent(o, ocv)
 })
@@ -229,8 +229,8 @@ test_that("lmerboost cv params", {
   set.seed(104)
   cv.folds = 3
   folds <- sample(1:cv.folds, size=n, replace=TRUE)
-  paramscv <- expand.grid(M = 5, k = 1:cv.folds, lambda = c(.2, .5), depth = c(3, 5), indep = TRUE)
-  params <- expand.grid(M = 5, lambda = c(.2, .5), depth = c(3, 5), indep = TRUE)
+  paramscv <- expand.grid(n.trees = 5, k = 1:cv.folds, lambda = c(.2, .5), depth = c(3, 5), indep = TRUE)
+  params <- expand.grid(n.trees = 5, lambda = c(.2, .5), depth = c(3, 5), indep = TRUE)
   paramscv$id <- factor(rep(1:nrow(params), each = cv.folds))
   paramscv.ls <- split(paramscv, 1:nrow(paramscv))
   do_one <- function(args, folds, y, x, id, train, ...){ 
@@ -238,7 +238,7 @@ test_that("lmerboost cv params", {
                  folds = folds, y = y, x = x, id="id", train = train , ...)}
   
   ocv <- lapply(X = paramscv.ls, FUN=do_one, folds=folds, train=1:n, y=y, x=X, id="id", 
-                M = 5, bag.fraction = 1)
+                n.trees = 5, bag.fraction = 1)
 
   fold.err <- lapply(ocv, function(o){o$test.err})
   cv.err <- tapply(fold.err, paramscv$id, function(x){ 
@@ -253,7 +253,7 @@ test_that("lmerboost cv params", {
   
   set.seed(104)
   o <- lmerboost(y = y, X = X, id="id", cv.folds = 3, bag.fraction = 1, subset = 1:n,
-                lambda = c(.2, .5), depth = c(3, 5), M = 5, mc.cores = 1)
+                lambda = c(.2, .5), depth = c(3, 5), n.trees = 5, mc.cores = 1)
   
   expect_identical(bc, o$best.params)
   expect_identical(params, o$params)
@@ -265,11 +265,11 @@ test_that("lmerboost err", {
   # error in lmerboost.fit
   y[56] <- NA
   msg <- capture_messages(
-    expect_error(o1 <- lmerboost(y = y, X = X, id="id", M = 5, cv.folds = 1, lambda = .1))
+    expect_error(o1 <- lmerboost(y = y, X = X, id="id", n.trees = 5, cv.folds = 1, lambda = .1))
   )
   
   msg <- capture.output(
-    o1 <- lmerboost(y = y, X = X, id="id", M = 5, cv.folds = 3, lambda = .1, mc.cores=3)
+    o1 <- lmerboost(y = y, X = X, id="id", n.trees = 5, cv.folds = 3, lambda = .1, mc.cores=3)
   )
   expect_true(all(sapply(o1, function(o){is(o, "try-error")})))
   
@@ -279,25 +279,25 @@ test_that("lmerboost err", {
 
 test_that("lmerboost_cv train", {
   # for now, just test that they run
-  o <- lmerboost(y=y, X=X, id="id", cv.folds=3, bag.fraction=1, subset=1:(n/2), M=3)
-  o <- lmerboost(y=y, X=X, id="id", cv.folds=3, bag.fraction=.5, subset=1:(n/2), M=3)
+  o <- lmerboost(y=y, X=X, id="id", cv.folds=3, bag.fraction=1, subset=1:(n/2), n.trees=3)
+  o <- lmerboost(y=y, X=X, id="id", cv.folds=3, bag.fraction=.5, subset=1:(n/2), n.trees=3)
 })
 
 ## TODO: combinations of params
 
 test_that("lmerboost influence", {
   X <- data.frame(X1 = x, X2 = rnorm(n), id=id)
-  ob <- lmerboost(y = y, X = X, id="id", M = 3, cv.folds = 1, lambda = .5)
+  ob <- lmerboost(y = y, X = X, id="id", n.trees = 3, cv.folds = 1, lambda = .5)
   inf <- influence(ob)
   expect_gt(inf[1], 0)
   expect_equal(length(inf), 2)
 })
 
 test_that("lmerboost predict", {
-  M = 5
-  lb <- lmerboost(y = y, X = X, id="id", M = M, cv.folds = 3, lambda = c(.5, 1),
+  n.trees = 5
+  lb <- lmerboost(y = y, X = X, id="id", n.trees = n.trees, cv.folds = 3, lambda = c(.5, 1),
                  bag.fraction=.5, subset=1:500, save.mods=TRUE)
-  yh <- predict(lb, newdata=X, id="id", M=min(lb$best.trees, na.rm=T))
+  yh <- predict(lb, newdata=X, id="id", n.trees=min(lb$best.trees, na.rm=T))
   expect_equal(lb$yhat, yh$yhat)
   expect_equal(lb$fixed, yh$fixed)
   expect_equal(lb$ranef, yh$ranef)
