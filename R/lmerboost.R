@@ -213,6 +213,10 @@ lmerboost.fit <- function(y, X, id,
     train <- sample(train, ceiling(train.fraction*length(train)), replace = F)
   }
   if(is.logical(subset)){train <- which(subset)}
+  if(is.character(id)){
+    id <- match(id, colnames(X))
+  }
+  
   
   yhat <- ranef <- fixed <- matrix(0, n, n.trees)
   sigma <- rep(0, n.trees)
