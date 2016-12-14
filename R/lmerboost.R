@@ -101,15 +101,19 @@ lmerboost <- function(y, X, id,
     
     folds <- sample(1:cv.folds, size=length(train), replace = TRUE)
     
-    params <- expand.grid(n.trees = n.trees, shrinkage = shrinkage, interaction.depth = interaction.depth, indep = indep)
-    conds <- expand.grid(k = 1:(cv.folds), n.trees = n.trees, shrinkage = shrinkage, interaction.depth = interaction.depth, indep = indep)
+    params <- expand.grid(n.trees=n.trees, shrinkage=shrinkage, 
+                          interaction.depth=interaction.depth, indep=indep,
+                          n.minobsinnode=n.minobsinnode)
+    conds <- expand.grid(k = 1:(cv.folds), n.trees=n.trees, shrinkage=shrinkage,
+                         interaction.depth=interaction.depth, indep=indep,
+                          n.minobsinnode=n.minobsinnode)
     conds.ls <- split(conds, 1:nrow(conds))
     conds$id <- rep(1:nrow(params), each = cv.folds)
     
     cv.mods <- parallel::mclapply(conds.ls, function(args, ...){ 
       try(do.call(lmerboost_cv, append(args, list(...))))
     }, y=y, x=X, id=id, train=train, folds = folds, 
-      bag.fraction = bag.fraction, stop.threshold = stop.threshold, 
+      bag.fraction = bag.fraction,  
       verbose=FALSE, save.mods=save.mods, mc.cores = mc.cores)
 
     # average over cv folds for each condition
@@ -132,11 +136,10 @@ lmerboost <- function(y, X, id,
     
     o <- lmerboost.fit(y = y, X = X, id = id, 
           train.fraction = train.fraction, subset = subset, 
-          bag.fraction = bag.fraction, stop.threshold = stop.threshold, 
+          bag.fraction = bag.fraction,  
           verbose = verbose, save.mods=save.mods,
           n.trees = best.params$n.trees, shrinkage = best.params$shrinkage, 
-          interaction.depth=best.params$interaction.depth, indep = best.params$indep,
-          nt = nt)
+          interaction.depth=best.params$interaction.depth, indep = best.params$indep)
     
   } else { # cv.folds = 1
     cv.err <- rep(NA, n.trees)
@@ -147,9 +150,9 @@ lmerboost <- function(y, X, id,
     
     o <- lmerboost.fit(y = y, X = X, id = id, 
          train.fraction = train.fraction, subset = subset,
-         bag.fraction = bag.fraction, stop.threshold = stop.threshold,
+         bag.fraction = bag.fraction,
          n.trees = n.trees, shrinkage = shrinkage, interaction.depth=interaction.depth, indep = indep, 
-         nt = nt, verbose = verbose, save.mods=save.mods)
+         verbose = verbose, save.mods=save.mods)
   }
   if(all(is.na(o$test.err))){ 
     best_test_err <- NA
@@ -316,7 +319,8 @@ lmerboost.fit <- function(y, X, id,
     oob.err[i]   <- mean((yhat[s.oob,i] - (y[s.oob] - init))^2)
     test.err[i]  <- mean((yhat[-train,i] - (y[-train] - init))^2)
     
-    # 2016-10-19: This was removed because it can stop too early.
+    # 2016-10-19: This was removed because it can stop too early and becomes 
+    # yet another tuning parameter.
     #if((i %% lag == 0) && (abs(test.err[i] - test.err[i - (lag - 1)]) < stop.threshold)){
     #  break;
     #}
