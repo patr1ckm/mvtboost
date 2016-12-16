@@ -140,7 +140,7 @@ Elith, J., Leathwick, J. R., & Hastie, T. (2008). A working guide to boosted reg
 
 Friedman, J. H. (2001). Greedy function approximation: a gradient boosting machine. Annals of statistics, 1189-1232.
 
-Miller P.J., Lubke G.H, McArtor D.B., Bergeman C.S. (2016) Finding structure in data with multivariate tree boosting.
+Miller, P. J., Lubke, G. H., McArtor, D. B., & Bergeman, C. S. (2016). Finding structure in data using multivariate tree boosting. Psychological Methods, 21(4), 583.
 
 Ridgeway, G., Southworth, M. H., & RUnit, S. (2013). Package 'gbm'. 
 
