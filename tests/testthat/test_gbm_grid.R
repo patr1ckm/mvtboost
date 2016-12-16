@@ -35,6 +35,7 @@ args.ls <- split(args_cv, 1:nrow(args_cv))
 dots <- list(interaction.depth=1:3, n.trees=500, distribution="gaussian", verbose=FALSE)
 
 test_that("gbm_grid parallel", {
+  skip_on_cran()
   system.time(o <- gbm_grid(y=y, x=x, cv.folds=3, 
                             interaction.depth=1:3, shrinkage=c(.1,.5,.8),
                             n.trees=500, distribution="gaussian",
@@ -61,6 +62,7 @@ test_that("gbm_grid grid", {
 })
 
 test_that("gbm_grid cv.folds=1", {
+  skip_on_cran()
   expect_error(o <- gbm_grid(y=y, x=x[,1], cv.folds=1, mc.cores=1, distribution="gaussian"))
   o <- gbm_grid(y=y, x=x[,1,drop=F], cv.folds=1, mc.cores=1, subset=1:250, distribution="gaussian", verbose=FALSE)
   expect_named(o)

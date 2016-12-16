@@ -270,6 +270,7 @@ test_that("lmerboost cv params", {
 
 
 test_that("lmerboost err", {
+  skip_on_cran()
   # error in lmerboost.fit
   y[56] <- NA
   msg <- capture_output(

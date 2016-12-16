@@ -38,6 +38,7 @@
 #'  (required to use \code{predict})
 #' @param mc.cores number of parallel cores
 #' @param verbose In the final model fit, will print every `10` trees/iterations.
+#' @param calc.derivs whether to calculate derivatives at each iteration with \code{lmer} (only assesses convergence)
 #' @param ... arguments passed to gbm.fit
 #' @return An \code{lmerboost} object consisting of the following list elements:
 #' \describe{
@@ -63,6 +64,7 @@
 #'   \item{\code{cv.err}}{Cross-validation error at each iteration}
 #' }
 #' @export
+#' @importFrom utils txtProgressBar setTxtProgressBar
 lmerboost <- function(y, X, id, 
                       n.trees=5,
                       interaction.depth=3,
@@ -202,7 +204,6 @@ lmerboost_cv <- function(k, folds, y, x, id, train, ...){
 
 
 #' @describeIn lmerboost Fitting function for \code{lmerboost}
-#' @param calc.derivs whether to calculate derivatives at each iteration with \code{lmer} (only assesses convergence)
 #' @export
 #' @importFrom stats predict
 #' 
