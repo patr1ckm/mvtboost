@@ -15,7 +15,7 @@ twostage <- function(y, x, id, subset = NULL, ...){
   }
   d <- data.frame(y, x)
   ob <- gbm::gbm(y ~ . , data=d[s, ], distribution="gaussian", ...)
-  tr <- suppressWarnings(gbm::gbm.perf(ob, plot.it=F))
+  tr <- suppressMessages(suppressWarnings(gbm::gbm.perf(ob, plot.it=F)))
   res <- y - predict(ob, newdata = d, n.trees = tr)
   df <- data.frame(y=res, x, id=id)
   form <- stats::as.formula(paste0("y ~ 1 + ", paste0(colnames(x), collapse = " + "),  " + (",
