@@ -240,7 +240,7 @@ lmerboost.fit <- function(y, X, id,
   sigma <- rep(0, n.trees)
   train.err <- oob.err <- test.err <- rep(NA, n.trees)
   trees <- mods <- c.split <- list()
-  pb <- txtProgressBar(min=0, max=n.trees, width=10, style=3)
+  if(verbose) pb <- txtProgressBar(min=0, max=n.trees, width=10, style=3)
   
   for(i in 1:n.trees){
     # s = training, s.oob = oob, -train = test
@@ -258,13 +258,14 @@ lmerboost.fit <- function(y, X, id,
                          bag.fraction=1,
                          distribution="gaussian",
                          verbose=FALSE,
+                         keep.data = F,
                          n.trees = 1, ...)
     if(i == 1){
-      var.type = tree$var.type
+      var.type = tree$variables$var_type
     }
     trees[[i]] <- tree$trees[[1]]
     c.split[[i]] <- tree$c.splits
-    pt <- gbm::pretty.gbm.tree(tree, 1)
+    pt <- gbm::pretty_gbm_tree(tree, 1)
     
     # get gbm predictions for whole sample
     gbm_pred <- predict(tree, newdata = data.frame(X[,-id,drop=F]), n.trees = 1) 
@@ -345,7 +346,7 @@ lmerboost.fit <- function(y, X, id,
     train.err[i] <- mean((yhat[s,i] - (y[s] - init))^2)
     oob.err[i]   <- mean((yhat[s.oob,i] - (y[s.oob] - init))^2)
     test.err[i]  <- mean((yhat[-train,i] - (y[-train] - init))^2)
-    setTxtProgressBar(pb, i)
+    if(verbose) setTxtProgressBar(pb, i)
     # 2016-10-19: This was removed because it can stop too early and becomes 
     # yet another tuning parameter.
     #if((i %% lag == 0) && (abs(test.err[i] - test.err[i - (lag - 1)]) < stop.threshold)){
@@ -375,7 +376,7 @@ lmerboost.fit <- function(y, X, id,
 #' @importFrom stats model.matrix
 predict.lmerboost <- function(object, newdata, id, n.trees=NULL, ...){
   # save trees, lmer objects at each iteration (damn)
-  if(is.null(object$mods)) stop("need to save models for predictions in newdata")
+  if(is.null(object$mods)) stop("need to set save.models=TRUE for predictions in newdata")
   
   if(is.null(n.trees)){ n.trees <- length(object$mods)}
   n <- nrow(newdata)
@@ -398,9 +399,10 @@ predict.lmerboost <- function(object, newdata, id, n.trees=NULL, ...){
     
   
     # coerce lb object to a gbm object
+    variables <- list(var_type=object$var.type)
     gbm.obj <- list(initF=object$init, trees=object$trees, 
-                c.split = object$c.split[[i]], var.type=object$var.type)
-    class(gbm.obj) <- "gbm"
+                c.splits = object$c.split[[i]], variables=variables)
+    class(gbm.obj) <- "GBMFit"
     
     # note: when single.tree=TRUE, initF is not included in gbm predicted values
     gbm_pred <- predict(gbm.obj, n.trees=i, single.tree=TRUE, 
