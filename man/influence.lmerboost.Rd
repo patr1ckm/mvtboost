@@ -16,7 +16,7 @@
 
 \item{sort}{whether or not results should be (reverse) sortd. Defaults to FALSE.}
 
-\item{...}{Additional arguments passed to \code{gbm::relative.influence}}
+\item{...}{Additional arguments passed to \code{gbm::relative_influence}}
 }
 \description{
 Compute influence scores from lmerboost

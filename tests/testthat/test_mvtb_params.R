@@ -20,17 +20,17 @@ test_that("n.trees", {
 test_that("train.fraction", {
 for(i in seq(.1, .9, by=.1)) {
     r <- mvtb(X=X, Y=Y, n.trees=1, train.fraction=i)
-    expect_equal(r$models[[1]]$nTrain, floor(n*i))
+    expect_equal(r$models[[1]]$params$num_train, floor(n*i))
     r <- mvtb_sep(X=X, Y=Y, n.trees=1, train.fraction=i)
-    expect_equal(r$models[[1]]$nTrain, floor(n*i))
+    expect_equal(r$models[[1]]$params$num_train, floor(n*i))
 }
 })
 
 test_that("bag.fraction", {
   r <- mvtb(X=X, Y=Y, n.trees=10, train.fraction=1, bag.fraction=.5)
-  for(i in 1:4) { expect_equal(r$models[[i]]$bag.fraction, .5) }
+  for(i in 1:4) { expect_equal(r$models[[i]]$params$bag_fraction, .5) }
   r <- mvtb_sep(X=X, Y=Y, n.trees=10, train.fraction=1, bag.fraction=.5)
-  for(i in 1:4) { expect_equal(r$models[[i]]$bag.fraction, .5) }
+  for(i in 1:4) { expect_equal(r$models[[i]]$params$bag_fraction, .5) }
 })
 
 test_that("subsetting", {
@@ -117,18 +117,18 @@ test_that("verbose", {
 test_that("keep.data", {
   for(f in c(mvtb, mvtb_sep)){
     r <- f(X=X,Y=Y,n.trees=50, keep.data=FALSE)
-    expect_null(r$models[[1]]$data)
+    expect_null(r$models[[1]]$gbm_data_obj)
     r <- f(X=X,Y=Y,n.trees=50, keep.data=TRUE)
-    expect_is(r$models[[1]]$data,"list")
+    expect_is(r$models[[1]]$gbm_data_obj,"GBMData")
   }
 })
 
 test_that("distribution", {
   for(f in c(mvtb, mvtb_sep)){
     r <- f(X=X,Y=Y,n.trees=50)
-    expect_equal(r$models[[1]]$distribution$name,"gaussian") # default is gaussian
-    r <- f(X=X,Y=Y,n.trees=50, distribution="gaussian")   
-    expect_equal(r$models[[1]]$distribution$name,"gaussian") 
+    expect_equal(r$models[[1]]$distribution$name,"Gaussian") # default is gaussian
+    r <- f(X=X,Y=Y,n.trees=50, distribution="Gaussian")   
+    expect_equal(r$models[[1]]$distribution$name,"Gaussian") 
     expect_error(mvtb(X=X,Y=Y,n.trees=50, distribution="bernoulli")) # correctly passes bernoulli to gbm 
   }
 })

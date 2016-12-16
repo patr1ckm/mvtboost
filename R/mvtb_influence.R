@@ -6,7 +6,7 @@
 #' @param n.trees number of trees to use. Defaults to the minimum number of trees by CV, test, or training error for each outcome.
 #' @param relative How to scale the multivariate influences. If \code{"col"}, each column sums to 100. If \code{"tot"}, the whole matrix sums to 100 (a percent). Otherwise, the raw reductions in SSE are returned.
 #' @param sort whether or not results should be (reverse) sortd. Defaults to FALSE.
-#' @param ... Additional arguments passed to \code{gbm::relative.influence}
+#' @param ... Additional arguments passed to \code{gbm::relative_influence}
 #' @return Matrix of (relative) influences.
 #' @export 
 mvtb.ri <- function(model, n.trees=NULL, relative="col", sort = FALSE, ...){
@@ -21,7 +21,7 @@ mvtb.ri <- function(model, n.trees=NULL, relative="col", sort = FALSE, ...){
   ri <- matrix(0,nrow=length(model$xnames),ncol=k)
   for(i in 1:k) {
     gbm.obj <- model$models[[i]]
-    ri[,i] <- gbm::relative.influence(gbm.obj,n.trees=n.trees[i], sort.=sort, ...)
+    ri[,i] <- gbm::relative_influence(gbm.obj,n.trees=n.trees[i], sort.=sort, ...)
   }
   if(relative == "col"){
     ri <- matrix(apply(ri,2,function(col){col/sum(col)})*100,nrow=nrow(ri),ncol=ncol(ri))
@@ -47,7 +47,7 @@ influence.mvtb <- mvtb.ri
 #' @export
 influence.twostage <- function(model, n.trees = NULL, relative = TRUE, sort = FALSE, ...){
   if(is.null(n.trees)){ n.trees = model$tr}
-  inf <- gbm::relative.influence(model$o.gbm, n.trees = n.trees, scale. = FALSE, sort. = sort)
+  inf <- gbm::relative_influence(model$o.gbm, n.trees = n.trees, scale. = FALSE, sort. = sort)
   if(relative){
     inf <- inf / sum(inf) * 100
   }
