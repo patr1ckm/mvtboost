@@ -14,7 +14,7 @@
 #' @param return.grid \code{TRUE/FALSE} return the prediction grid from \code{gbm}. Default is \code{FALSE}.
 #' @param ... extra arguments are passed to plot. See \code{?par}
 #' @return Produces a plot of the model implied effect along with the relative influence of the predictor. If \code{return.grid=TRUE}, returns the plotting matrix as well.
-#' @seealso \code{plot.gbm}, \code{mvtb.perspec}, for other plots, \code{mvtb.heat} to plot the covariance explained by predictors in a heatmap
+#' @seealso \code{plot.GBMFit}, \code{mvtb.perspec}, for other plots, \code{mvtb.heat} to plot the covariance explained by predictors in a heatmap
 #' @export
 #' @importFrom graphics plot rug
 #' @details 
@@ -26,9 +26,11 @@ plot.mvtb <- function(x, predictor.no=1, response.no=1, n.trees=NULL, X=NULL, xl
   if(any(unlist(lapply(x,function(li){is.raw(li)})))){
     x <- mvtb.uncomp(x)
   }
-  if(is.null(n.trees)) { n.trees <- apply(x$best.trees, 1, min, na.rm=T)[response.no] }
+  if(is.null(n.trees)) { 
+    n.trees <- apply(x$best.trees, 1, min, na.rm=T)[response.no] 
+  }
   gbm.obj <- x$models[[response.no]]
-  ri <- gbm::relative_influence(gbm.obj,n.trees=n.trees)
+  ri <- gbm::relative_influence(gbm.obj, num_trees=n.trees)
   ri <-  ri / sum(ri)*100 
   ri <- ri[predictor.no]
   
@@ -36,10 +38,10 @@ plot.mvtb <- function(x, predictor.no=1, response.no=1, n.trees=NULL, X=NULL, xl
     xlab <- paste0(names(ri)," ", formatC(ri,2), "%")
   }
   if(is.null(ylab)) { ylab <- x$ynames[response.no]}
-  grid <- gbm::plot.gbm(gbm.obj,i.var = predictor.no,n.trees = n.trees, 
-                        perspective=TRUE, return.grid=TRUE)  
+  grid <- plot(gbm.obj, var_index = predictor.no, num_trees = n.trees, 
+                return_grid=TRUE)  
   if(return.grid==FALSE){
-    plot(y=grid$y,x=grid[,1],type="l",bty="n",xlab=xlab,ylab=ylab,...)
+    plot(y=grid$y, x=grid[,1], type="l", bty="n", xlab=xlab, ylab=ylab, ...)
     if(!is.null(X)) { rug(jitter(X[,predictor.no])) }
   } else {
     return(grid)
@@ -52,7 +54,7 @@ plot.mvtb <- function(x, predictor.no=1, response.no=1, n.trees=NULL, X=NULL, xl
 #' This is a plot of the model implied function of 2 predictors averaged over the other predictors
 #' included in the model. This is called a partial dependence plot.
 #' As an alternative to the perspective (3D) plot, a 2D heat plot can be obtained directly
-#' using \code{?plot.gbm}.
+#' using \code{?plot.GBMFit}.
 #' 
 #' @param object \code{mvtb} output object
 #' @param response.no index of the response variable
@@ -68,7 +70,7 @@ plot.mvtb <- function(x, predictor.no=1, response.no=1, n.trees=NULL, X=NULL, xl
 #' @param zlab, title for z axis, must be character strings. 
 #' @param ... extra arguments are passed to persp. See \code{?persp}
 #' @return Function returns a plot.
-#' @seealso \code{plot.gbm}, \code{plot.mvtb}, \code{mvtb.heat}
+#' @seealso \code{plot.GBMFit}, \code{plot.mvtb}, \code{mvtb.heat}
 #' @export
 #' @importFrom graphics persp
 mvtb.perspec <- function(object,response.no=1,predictor.no=1:2,n.trees=NULL,
@@ -77,10 +79,14 @@ mvtb.perspec <- function(object,response.no=1,predictor.no=1:2,n.trees=NULL,
     object <- mvtb.uncomp(object)
   }
   if(length(object$var.names) == 1) stop("Need more than one predictor for perspective plot") 
-  if(is.null(n.trees)) { n.trees <- apply(object$best.trees, 1, min, na.rm=T)[response.no] }
+  if(is.null(n.trees)) { 
+    n.trees <- apply(object$best.trees, 1, min, na.rm=T)[response.no]
+  }
 
   gbm.obj <- object$models[[response.no]]
-  grid <- gbm::plot.gbm(gbm.obj,i.var = predictor.no,n.trees = n.trees,perspective=TRUE,return.grid=TRUE)
+  grid <- plot(gbm.obj, var_index = predictor.no, num_trees = n.trees,
+               return_grid=TRUE)
+  
   x <- as.numeric(unique(grid[,1]))
   y <- as.numeric(unique(grid[,2]))
   if(is.null(xlab)){
@@ -92,31 +98,39 @@ mvtb.perspec <- function(object,response.no=1,predictor.no=1:2,n.trees=NULL,
   if(is.null(zlab)){
     zlab <- object$ynames[response.no]
   }
-  z <- matrix(grid[,3],length(unique(x)),length(unique(y)))
-  persp(x=x,y=y,z=z,d=d,r=r,phi=phi,theta=theta,ticktype=ticktype,xlab=xlab,ylab=ylab,zlab=zlab,...)
+  z <- matrix(grid[,3], length(unique(x)), length(unique(y)))
+  persp(x=x, y=y, z=z, d=d, r=r, phi=phi, theta=theta, ticktype=ticktype, 
+        xlab=xlab, ylab=ylab, zlab=zlab, ...)
 }
 
 
 # Pairwise plot for 2 predictors and 1 response. 
-plot.pw.perspec <- function(object,response.no,predictor.no,npairs=3,nonlin.rank=NULL,p1=NULL,p2=NULL,theta=rep(-55,npairs),...){
-  if(any(unlist(lapply(object,function(li){is.raw(li)})))){
-    object <- mvtb.uncomp(object)
-  }
-  pred.names <- object$iter.models[[1]][[1]]$var.names
-  if(is.null(nonlin.rank)){
-    ris <- sort(object$ri[[2]][,response.no],decreasing=T)
-    if(is.null(p1)) p1 <- rep(match(names(ris[predictor.no]),pred.names),npairs)
-    if(is.null(p2)) p2 <- match(names(ris[(predictor.no+1):(predictor.no+npairs+1)]),pred.names)
-  } else {
-    r <- nonlin.rank[[response.no]]
-    if(is.null(p1)) p1 <- r$var1.index[predictor.no:(predictor.no+npairs-1)]
-    if(is.null(p2)) p2 <- r$var2.index[predictor.no:(predictor.no+npairs-1)]
-  }
-  for(i in 1:npairs) {
-    mvtb.perspec(object,response.no=response.no,predictor.no=c(p1[i],p2[i]),
-                 xlab=pred.names[p1[i]],ylab=pred.names[p2[i]],theta=theta[i],...)
-  }
-}
+# plot.pw.perspec <- function(object,
+#                             response.no,
+#                             predictor.no,
+#                             npairs=3,
+#                             nonlin.rank=NULL,
+#                             p1=NULL,
+#                             p2=NULL,
+#                             theta=rep(-55,npairs),...){
+#   if(any(unlist(lapply(object,function(li){is.raw(li)})))){
+#     object <- mvtb.uncomp(object)
+#   }
+#   pred.names <- object$iter.models[[1]][[1]]$var.names
+#   if(is.null(nonlin.rank)){
+#     ris <- sort(object$ri[[2]][,response.no],decreasing=T)
+#     if(is.null(p1)) p1 <- rep(match(names(ris[predictor.no]),pred.names),npairs)
+#     if(is.null(p2)) p2 <- match(names(ris[(predictor.no+1):(predictor.no+npairs+1)]),pred.names)
+#   } else {
+#     r <- nonlin.rank[[response.no]]
+#     if(is.null(p1)) p1 <- r$var1.index[predictor.no:(predictor.no+npairs-1)]
+#     if(is.null(p2)) p2 <- r$var2.index[predictor.no:(predictor.no+npairs-1)]
+#   }
+#   for(i in 1:npairs) {
+#     mvtb.perspec(object,response.no=response.no,predictor.no=c(p1[i],p2[i]),
+#                  xlab=pred.names[p1[i]],ylab=pred.names[p2[i]],theta=theta[i],...)
+#   }
+# }
 
 #' Clustered heatmap of tables from \code{mvtb}
 #' 
@@ -164,20 +178,22 @@ mvtb.heat <- function(x,clust.method="ward.D",dist.method="manhattan",dec=2,numf
   #}
   if(is.null(dim(x))){ x <- as.matrix(x)}
   if(!is.null(clust.method)){
-    x <- mvtb.cluster(x,clust.method=clust.method,dist.method=dist.method)
+    x <- mvtb.cluster(x, clust.method=clust.method, dist.method=dist.method)
   }
   if(is.null(numformat)){ 
     numformat <- function(val){sub("^(-?)0.", "\\1.", sprintf(paste0("%.",dec,"f"), val))}
   }
-  cellnote <- matrix(numformat(x),dim(x))
+  cellnote <- matrix(numformat(x), dim(x))
   #cellnote <- cellnote[rowInd,colInd] DONT BE TEMPTED TO DO THIS
   x <- t(x)
   cellnote <- t(cellnote)
   nc <- nrow(x) # final number of columns (usually predictors)
   nr <- ncol(x) # final number of rows    (usually dvs)
-  if(is.null(col)) { col <- colorRampPaletteAlpha(RColorBrewer::brewer.pal(9,"Greys"),100)}
-  image(x=1:nc,y=1:nr,abs(x),xlim = 0.5 + c(0, nc), ylim = 0.5 + 
-          c(0, nr),ylab="",xlab="",axes=F,col=col)
+  if(is.null(col)) { 
+    col <- colorRampPaletteAlpha(RColorBrewer::brewer.pal(9,"Greys"),100)
+  }
+  image(x=1:nc,y=1:nr,abs(x),xlim = 0.5 + c(0, nc), ylim = 0.5 + c(0, nr),
+        ylab="",xlab="",axes=F,col=col)
   #axis(1,at=seq(0,1,length=nrow(x)))
   #cexRow <- .2+1/log10(max(nc,nr))
   if(is.null(cexRow)) { cexRow <- log10(max(nc,nr, 10)) }

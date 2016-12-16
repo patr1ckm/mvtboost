@@ -42,9 +42,9 @@ Function returns a plot.
 This is a plot of the model implied function of 2 predictors averaged over the other predictors
 included in the model. This is called a partial dependence plot.
 As an alternative to the perspective (3D) plot, a 2D heat plot can be obtained directly
-using \code{?plot.gbm}.
+using \code{?plot.GBMFit}.
 }
 \seealso{
-\code{plot.gbm}, \code{plot.mvtb}, \code{mvtb.heat}
+\code{plot.GBMFit}, \code{plot.mvtb}, \code{mvtb.heat}
 }
 
