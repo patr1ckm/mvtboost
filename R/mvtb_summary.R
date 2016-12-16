@@ -86,14 +86,14 @@ summary.mvtb <- function(object, print = TRUE, n.trees = NULL, relative = "col",
 #' @importFrom stats hclust dist as.dendrogram order.dendrogram
 mvtb.cluster <- function(x, clust.method = "complete", dist.method = "euclidean", plot=FALSE, ...) {
     if(nrow(x) > 1) { 
-      hcr <- hclust(dist(x,method=dist.method),method=clust.method)
+      hcr <- hclust(dist(x, method=dist.method), method=clust.method)
       ddr <- as.dendrogram(hcr)
       rowInd <- order.dendrogram(ddr)
     } else {
         rowInd <- 1
     }
     if(nrow(t(x)) > 1) {
-      hcc <- hclust(dist(t(x),method=dist.method),method=clust.method)
+      hcc <- hclust(dist(t(x), method=dist.method), method=clust.method)
       ddc <- as.dendrogram(hcc)
       colInd <- order.dendrogram(ddc)
     } else {
@@ -102,7 +102,7 @@ mvtb.cluster <- function(x, clust.method = "complete", dist.method = "euclidean"
     x <- x[rowInd,colInd,drop=FALSE]
     x <- zapsmall(x)
     if(plot){
-      mvtb.heat(x,clust.method=clust.method,dist.method=dist.method,...)
+      mvtb.heat(x, clust.method=clust.method, dist.method=dist.method,...)
     }
     return(x)
 }
@@ -119,21 +119,5 @@ mvtb.uncomp <- function(object) {
 }
 
 
-# If \code{"weighted"=TRUE}, the influence is weighted by the covariance explained in all pairs of outcomes by that predictor. 
-# This allows predictor selection to be informed by the covariance explained. 
-# Different weighting types are possible, see \code{?mvtb}.
-#weighted.ri <- function(object,Y,X){
-  #weights <- mvtb.covex(object,iter.details=T)$weights
-  
-  #  for(m in 1:k) {
-  #rel.infl[,m] <- relative.influence(models[[m]],n.trees=i,scale=FALSE)
-  #    w.rel.infl[,m,i] <- rel.infl[,m,i]*wm.rel[i,m]
-  #  }
-  #  if(relative == "col"){
-  #    ri <- matrix(apply(ri,2,function(col){col/sum(col)})*100,nrow=nrow(ri),ncol=ncol(ri))
-  #  } else if (relative=="tot") {
-  #    ri <- ri/sum(ri)*100
-  #  }
 
-#}
 

@@ -36,16 +36,17 @@ test_that("summary",{
 })
 
 test_that("mvtb.cluster",{
-  covex <- mvtb.covex(out, Y=Y,X=X)
+  covex <- mvtb.covex(out, Y=Y, X=X)
   expect_output(print(mvtb.cluster(covex)))
   
   # test dimensions
-  expect_equal(dim(mvtb.cluster(covex)),c(ncovs,p))
+  expect_equal(dim(mvtb.cluster(covex)), c(ncovs,p))
   
   # run plot
-  expect_output(mvtb.cluster(covex,plot=TRUE))
+  cluster.covex <- mvtb.cluster(covex, plot=TRUE)
   
-  cluster.covex <- mvtb.cluster(covex,dist.method="manhattan",clust.method="complete")
+  cluster.covex <- mvtb.cluster(covex, dist.method="manhattan", 
+                                clust.method="complete")
   expect_output(print(cluster.covex))
   
   # test clustering influences
@@ -65,7 +66,8 @@ test_that("influence",{
     expect_equivalent(sum(influence(mods[[i]],relative = "tot")),100)
     
     # testthat sum of each column is 100
-    expect_equal(sum(colSums(influence(mods[[i]],relative = "col")))-q*100,0,tolerance=1E-12)
+    expect_equal(sum(colSums(influence(mods[[i]],relative = "col")))-q*100,
+                 0,tolerance=1E-12)
     
     # should produce raw
     expect_output(print(influence(mods[[i]],relative = "n")))
