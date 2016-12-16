@@ -21,10 +21,11 @@ mvtb.ri <- function(model, n.trees=NULL, relative="col", sort = FALSE, ...){
   ri <- matrix(0,nrow=length(model$xnames),ncol=k)
   for(i in 1:k) {
     gbm.obj <- model$models[[i]]
-    ri[,i] <- gbm::relative_influence(gbm.obj,n.trees=n.trees[i], sort.=sort, ...)
+    ri[,i] <- gbm::relative_influence(gbm.obj,num_trees=n.trees[i], sort_it=sort, ...)
   }
   if(relative == "col"){
-    ri <- matrix(apply(ri,2,function(col){col/sum(col)})*100,nrow=nrow(ri),ncol=ncol(ri))
+    ri <- matrix(apply(ri,2,function(col){col/sum(col)})*100, 
+                 nrow=nrow(ri),ncol=ncol(ri))
   } else if (relative=="tot") {
     ri <- ri/sum(ri)*100
   }
@@ -47,7 +48,7 @@ influence.mvtb <- mvtb.ri
 #' @export
 influence.twostage <- function(model, n.trees = NULL, relative = TRUE, sort = FALSE, ...){
   if(is.null(n.trees)){ n.trees = model$tr}
-  inf <- gbm::relative_influence(model$o.gbm, n.trees = n.trees, scale. = FALSE, sort. = sort)
+  inf <- gbm::relative_influence(model$o.gbm, num_trees = n.trees, rescale = FALSE, sort_it = sort)
   if(relative){
     inf <- inf / sum(inf) * 100
   }
