@@ -19,7 +19,7 @@ b <- rnorm(ncol(xx), 0, 1)
 y <- xx %*% b + rnorm(n)
 X <- data.frame(x, xc, id)
 
-oo <- gbm::gbm(y~., data=data.frame(y, X), distribution="Gaussian")
+#oo <- gbm::gbm(y~., data=data.frame(y, X), distribution="Gaussian")
 
 tol = 1E-6
 
@@ -272,12 +272,12 @@ test_that("lmerboost cv params", {
 test_that("lmerboost err", {
   # error in lmerboost.fit
   y[56] <- NA
-  msg <- capture_messages(
+  msg <- capture_output(
     expect_error(o1 <- lmerboost(y = y, X = X, id="id", n.trees=5,
                                  cv.folds = 1, shrinkage = .1, verbose=F))
   )
   
-  msg <- capture.output(
+  msg <- capture_output(
     o1 <- lmerboost(y = y, X = X, id="id", n.trees = 5, cv.folds = 3,
                     shrinkage = .1, mc.cores=3, verbose=F)
   )
