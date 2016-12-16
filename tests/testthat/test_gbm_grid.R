@@ -37,11 +37,13 @@ dots <- list(interaction.depth=1:3, n.trees=500, distribution="gaussian", verbos
 test_that("gbm_grid parallel", {
   system.time(o <- gbm_grid(y=y, x=x, cv.folds=3, 
                             interaction.depth=1:3, shrinkage=c(.1,.5,.8),
-                            n.trees=500, distribution="gaussian", verbose=FALSE, mc.cores=6))
+                            n.trees=500, distribution="gaussian",
+                            verbose=FALSE, mc.cores=6))
   expect_named(o)
   system.time(o <- gbm_grid(y=y, x=x, cv.folds=3, 
                             interaction.depth=1:3, shrinkage=c(.1, .5, .8),
-                            n.trees=500, distribution="gaussian", verbose=FALSE, mc.cores=1))  
+                            n.trees=500, distribution="gaussian",
+                            verbose=FALSE, mc.cores=1))  
   expect_named(o)
 })
 
@@ -70,15 +72,20 @@ test_that("gbm_grid do_one_fold", {
   for(k in 1:3){
     s <- train[folds != k]
     set.seed(102)
-    o <- gbm::gbm.fit(y=y[s], x=x[s, ,drop=F], distribution="gaussian", verbose=FALSE,n.trees=5)
-    yhat <- predict(o, newdata=data.frame(y=y, x=x), n.trees=1:5)
+    o <- gbm::gbm.fit(y=y[s], x=data.frame(x[s, ,drop=F]), 
+                      distribution="gaussian", 
+                      verbose=FALSE, n.trees=5)
+    yhat <- predict(o, newdata=data.frame(x), n.trees=1:5)
     test_err <- rep(0, 5)
     for(i in 1:5){
       test_err[i] <- mean((y[-s] - yhat[-s,i])^2)
     }
     set.seed(102)
-    one_fold <- mvtboost:::do_one_fold(k=k, folds=folds, train=1:n, y=y, x=x, distribution="gaussian", verbose=FALSE, n.trees=5)
-    expect_equal(unname(test_err), unname(one_fold), info=paste0("k = ",k), tolerance=tol, check.attributes=F)
+    one_fold <- mvtboost:::do_one_fold(k=k, folds=folds, train=1:n, y=y, x=x, 
+                                       distribution="gaussian", verbose=FALSE, 
+                                       n.trees=5)
+    expect_equal(unname(test_err), unname(one_fold), info=paste0("k = ",k), 
+                 tolerance=tol, check.attributes=F)
   }
 })
 
@@ -92,7 +99,8 @@ test_that("gbm_grid do_one_row", {
                                      distribution="gaussian", verbose=FALSE)
                                       
   set.seed(101)
-  one_row <- mvtboost:::do_one_row(1, args=args.ls, train=train, folds=folds, Xm=x, y=y)
+  one_row <- mvtboost:::do_one_row(1, args=args.ls, train=train, 
+                                   folds=folds, Xm=x, y=y)
   expect_equal(one_fold, one_row)
   
 })

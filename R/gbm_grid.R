@@ -57,7 +57,9 @@ gbm_grid <- function(y, x, cv.folds, mc.cores=1, subset=NULL, ...){
   
   d <- data.frame()
   
-  out <- do.call(gbm::gbm.fit, append(list(y=y[train], x=x[train, ,drop=F]), best_args))
+  out <- do.call(gbm::gbm.fit, append(list(y=y[train], 
+                                           x=data.frame(x[train, ,drop=F])),
+                                      best_args))
   out$cv.error <- cv_err[[best_arg_idx]]
   # todo: out$valid.error
   return(list(gbm=out, best_args=best_args, args=args))
@@ -72,8 +74,9 @@ aggregate_cv_err <- function(ocv, unique_args){
 do_one_fold <- function(k, folds, train, y, x, ...){
   s <- train[folds != k]
   if(length(s) == 0){ s <- train}
-  o <- gbm::gbm.fit(y=y[s], x=x[s, ,drop=F], ...)
-  yhat <- as.matrix(predict(o, newdata=data.frame(x[-s,,drop=F]), n.trees=1:o$n.trees))
+  o <- gbm::gbm.fit(y=y[s], x=data.frame(x[s, ,drop=F]), ...)
+  nt <- 1:o$params$num_trees
+  yhat <- as.matrix(predict(o, newdata=data.frame(x[-s,,drop=F]), n.trees=nt))
   test_err <- apply(yhat, 2, function(yh, y){mean((yh-y)^2)}, y=y[-s])
   return(test_err)
 }
