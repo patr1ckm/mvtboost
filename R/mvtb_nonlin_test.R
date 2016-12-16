@@ -40,7 +40,7 @@
 #' A final option is to use \code{gbm::interact.gbm} from the \code{gbm} package to detect interactions. It can be used directly on individual \code{mvtb} output models from \code{object$models}.
 #'
 #' These methods are not necessarily overlapping, and can produce different results. We suggest using several approaches, followed by plotting the model implied effects of the two predictors.
-#' @seealso \code{interact.gbm}, \code{mvtb.perspec}, \code{plot.gbm}
+#' @seealso \code{interact.gbm}, \code{mvtb.perspec}, \code{plot.GBMFit}
 #' @references 
 #' Miller P.J., Lubke G.H, McArtor D.B., Bergeman C.S. (Submitted) Finding structure in data: A data mining alternative to multivariate multiple regression. Psychological Methods.
 #' 
@@ -82,13 +82,19 @@ mvtb.nonlin <-function(object, Y, X, n.trees=NULL,detect="grid",scale=TRUE) {
     detect.function <- 2
   }
   
-  doone <- function(which.y,mvtb.object,detect.function=1,data=data,n.preds=n.preds,pred.names=pred.names,n.trees=n.trees,scale=scale) {
+  doone <- function(which.y ,mvtb.object, detect.function=1, data=data, 
+                    n.preds=n.preds, pred.names=pred.names, n.trees=n.trees,
+                    scale=scale) {
     if(detect.function==1) {
-      cross.tab <- intx.grid(mvtb.object,num.pred=n.preds,k=which.y, n.trees=n.trees[which.y])
+      cross.tab <- intx.grid(mvtb.object, num.pred=n.preds, k=which.y, 
+                             n.trees=n.trees[which.y])
     } else if (detect.function==2) {
-      cross.tab <- intx.lm(mvtb.object,n.trees=n.trees[which.y],which.y=which.y,data=data,n.preds=n.preds,pred.names=pred.names)
+      cross.tab <- intx.lm(mvtb.object, n.trees=n.trees[which.y], 
+                           which.y=which.y, data=data, n.preds=n.preds,
+                           pred.names=pred.names)
     } else {
-      cross.tab <- intx.influence(mvtb.object,k=which.y,n.trees=n.trees[which.y],scale=scale)
+      cross.tab <- intx.influence(mvtb.object, k=which.y, 
+                                  n.trees=n.trees[which.y], scale=scale)
     }
     dimnames(cross.tab) <- list(pred.names,pred.names)
     
@@ -134,7 +140,8 @@ intx.grid <- function(mvtb.object,num.pred,k=1,n.trees) {
   #dimnames(cross.tab) <- list(pred.names,pred.names)
   for(i in 1:(num.pred-1)) {
     for(j in (i+1):num.pred) {
-      grid <- gbm::plot.gbm(gbm.obj,i.var=c(i,j),n.trees=n.trees,return.grid=TRUE)
+      grid <- plot(gbm.obj, var_index=c(i,j), num_trees=n.trees,
+                        return_grid=TRUE)
       cross.tab[i,j] <- mean(residuals(lm(y~.,data=grid))^2)*1000
       #fi <- rep(tapply(grid$y,list(factor(grid[,1])),mean),times=2)
       #fj <- rep(tapply(grid$y,list(factor(grid[,2])),mean),each=2)
@@ -216,17 +223,17 @@ intx.lm <- function (object,n.trees,which.y,data,n.preds,pred.names) {
 ##   reduction in sums of squared errors attributable to splitting on variables in the row
 ##   AFTER the first split on the variable in the column. 
 
-intx.influence <- function(object,k=1,n.trees,scale=TRUE) {
+intx.influence <- function(object, k=1, n.trees, scale=TRUE) {
   #do.one <- function(k,mvtb.obj,scale) {
   #gbm.object <- convert.mvtb.gbm(mvtb.obj,k)
   mvtb.obj <- object
   gbm.object <- mvtb.obj$models[[k]]
   trees <- gbm.object$trees
-  pred.names <- gbm.object$var.names
+  pred.names <- gbm.object$variables$var_names
   get.intx.sse <- function(t) {
     intx_sse <- lapply(split(t[[6]][-1], t[[1]][-1]), sum)
   }
-  intx.tab <- matrix(0,nrow=length(pred.names),ncol=length(pred.names))
+  intx.tab <- matrix(0, nrow=length(pred.names), ncol=length(pred.names))
   rownames(intx.tab) <- colnames(intx.tab) <- pred.names
   for(m in 1:n.trees) {
     var <- trees[[m]][[1]][1] + 1

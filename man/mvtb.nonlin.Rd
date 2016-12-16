@@ -49,6 +49,6 @@ Elith, J., Leathwick, J. R., & Hastie, T. (2008). A working guide to boosted reg
 Friedman, J. H., & Meulman, J. J. (2003). Multiple additive regression trees with application in epidemiology. Statistics in medicine, 22(9), 1365-1381.
 }
 \seealso{
-\code{interact.gbm}, \code{mvtb.perspec}, \code{plot.gbm}
+\code{interact.gbm}, \code{mvtb.perspec}, \code{plot.GBMFit}
 }
 
