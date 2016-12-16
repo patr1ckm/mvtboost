@@ -313,7 +313,6 @@ mvtbCV <- function(Y, X, n.trees, cv.folds, save.cv, s, mc.cores, ...) {
     return(l)
 }
 
-#' @importFrom gbm predict.gbm
 predict.mvtb.array <- function(object, newdata, n.trees, drop=TRUE, ...) {
 
   if(any(unlist(lapply(object,function(li){is.raw(li)})))){
@@ -325,7 +324,7 @@ predict.mvtb.array <- function(object, newdata, n.trees, drop=TRUE, ...) {
   Pred <- array(0,dim=c(nrow(newdata),K,treedim))  
   for(k in 1:K) {                                     
     p <- rep(0,nrow(newdata))        
-    p <- predict.gbm(object$models[[k]],n.trees=n.trees,newdata=newdata)    
+    p <- predict(object$models[[k]],n.trees=n.trees, newdata=data.frame(newdata))
     Pred[,k,] <- p
   }
 
@@ -342,7 +341,6 @@ predict.mvtb.array <- function(object, newdata, n.trees, drop=TRUE, ...) {
 #' @param ... not used
 #' @return Returns a matrix or vector of predictions for all outcomes. 
 #' @export
-#' @importFrom gbm predict.gbm
 predict.mvtb <- function(object, newdata, n.trees=NULL, ...) {
   if(any(unlist(lapply(object,function(li){is.raw(li)})))){
     object <- mvtb.uncomp(object)
@@ -354,7 +352,7 @@ predict.mvtb <- function(object, newdata, n.trees=NULL, ...) {
   Pred <- matrix(0,nrow(newdata),K)
   for(k in 1:K) {                                     
     p <- rep(0,nrow(newdata))        
-    p <- predict.gbm(object$models[[k]],n.trees=n.trees[k],newdata=newdata)    
+    p <- predict(object$models[[k]],n.trees=n.trees[k],newdata=data.frame(newdata))
     Pred[,k] <- p
   }
   return(drop(Pred))

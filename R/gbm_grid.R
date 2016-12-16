@@ -73,7 +73,7 @@ do_one_fold <- function(k, folds, train, y, x, ...){
   s <- train[folds != k]
   if(length(s) == 0){ s <- train}
   o <- gbm::gbm.fit(y=y[s], x=x[s, ,drop=F], ...)
-  yhat <- as.matrix(predict(o, newdata=x[-s,,drop=F], n.trees=1:o$n.trees))
+  yhat <- as.matrix(predict(o, newdata=data.frame(x[-s,,drop=F]), n.trees=1:o$n.trees))
   test_err <- apply(yhat, 2, function(yh, y){mean((yh-y)^2)}, y=y[-s])
   return(test_err)
 }

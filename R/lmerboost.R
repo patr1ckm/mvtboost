@@ -240,6 +240,7 @@ lmerboost.fit <- function(y, X, id,
   sigma <- rep(0, n.trees)
   train.err <- oob.err <- test.err <- rep(NA, n.trees)
   trees <- mods <- c.split <- list()
+  pb <- txtProgressBar(min=0, max=n.trees, width=10, style=3)
   
   for(i in 1:n.trees){
     # s = training, s.oob = oob, -train = test
@@ -266,7 +267,7 @@ lmerboost.fit <- function(y, X, id,
     pt <- gbm::pretty.gbm.tree(tree, 1)
     
     # get gbm predictions for whole sample
-    gbm_pred <- predict(tree, newdata = X[,-id,drop=F], n.trees = 1) 
+    gbm_pred <- predict(tree, newdata = data.frame(X[,-id,drop=F]), n.trees = 1) 
     
     
     # list terminal nodes (-1) first; rownames are are terminal node ids
@@ -336,7 +337,6 @@ lmerboost.fit <- function(y, X, id,
     
     r <- r - yhatm * shrinkage
     
-    if(verbose && (i %% 10 == 0)) cat(i, "")
     if(i==1){ 
       train.err[i] <- mean((y[s] - init)^2)
       oob.err[i]   <- mean((y[s.oob] - init)^2)
@@ -345,7 +345,7 @@ lmerboost.fit <- function(y, X, id,
     train.err[i] <- mean((yhat[s,i] - (y[s] - init))^2)
     oob.err[i]   <- mean((yhat[s.oob,i] - (y[s.oob] - init))^2)
     test.err[i]  <- mean((yhat[-train,i] - (y[-train] - init))^2)
-    
+    setTxtProgressBar(pb, i)
     # 2016-10-19: This was removed because it can stop too early and becomes 
     # yet another tuning parameter.
     #if((i %% lag == 0) && (abs(test.err[i] - test.err[i - (lag - 1)]) < stop.threshold)){
@@ -403,7 +403,8 @@ predict.lmerboost <- function(object, newdata, id, n.trees=NULL, ...){
     class(gbm.obj) <- "gbm"
     
     # note: when single.tree=TRUE, initF is not included in gbm predicted values
-    gbm_pred <- predict(gbm.obj, n.trees=i, single.tree=TRUE, newdata=newdata) 
+    gbm_pred <- predict(gbm.obj, n.trees=i, single.tree=TRUE, 
+                        newdata=data.frame(newdata))
     
     
     # list terminal nodes (-1) first; rownames are are terminal node ids

@@ -36,7 +36,7 @@ mvtb_sep <- function(Y,X,n.trees=100,
   do.one <- function(y, x, s, ...){ gbm::gbm.fit(y=y[s], x=as.data.frame(x[s,]), ...) }
   
   get.pred.err <- function(o, y, x, n.trees){
-    yhat.iter <- as.matrix(gbm::predict.gbm(o, newdata=x, n.trees=1:n.trees))
+    yhat.iter <- as.matrix(predict(o, newdata=data.frame(x), n.trees=1:n.trees))
     apply(yhat.iter, 2, function(yhat, y){
       var(y - yhat)
     }, y=y)
