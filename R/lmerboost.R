@@ -203,7 +203,6 @@ lmerboost_cv <- function(k, folds, y, x, id, train, ...){
 
 
 #' @describeIn lmerboost Fitting function for \code{lmerboost}
-#' @param calc.derivs whether to calculate derivatives at each iteration with \code{lmer} (only assesses convergence)
 #' @export
 #' @importFrom stats predict
 lmerboost.fit <- function(y, X, id, 
