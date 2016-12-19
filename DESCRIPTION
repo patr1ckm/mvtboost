@@ -20,7 +20,6 @@ Suggests:
     knitr,
     rmarkdown
 Imports:
-    gbm,
     RColorBrewer,
     stats,
     graphics,
@@ -28,6 +27,9 @@ Imports:
     utils,
     lme4,
     methods,
-Remotes: gbm-developers/gbm
+Remotes: 
+  gbm-developers/gbm
+r_github_packages:
+  gbm-developers/gbm
 VignetteBuilder: knitr
 RoxygenNote: 5.0.1
