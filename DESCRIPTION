@@ -10,17 +10,16 @@ License: GPL (>= 2) | file LICENSE
 URL: https://github.com/patr1ckm/mvtboost
 BugReports: https://github.com/patr1ckm/mvtboost/issues
 Depends:
-    R (>= 3.0.0),
-    gbm (>= 2.2)
+    R (>= 3.0.0)
 Suggests:
     testthat,
     plyr,
     MASS,
     parallel,
-    lars,
     knitr,
     rmarkdown
 Imports:
+    gbm (>= 2.2),
     RColorBrewer,
     stats,
     graphics,

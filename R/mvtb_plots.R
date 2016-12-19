@@ -190,7 +190,9 @@ mvtb.heat <- function(x,clust.method="ward.D",dist.method="manhattan",dec=2,numf
   nc <- nrow(x) # final number of columns (usually predictors)
   nr <- ncol(x) # final number of rows    (usually dvs)
   if(is.null(col)) { 
-    col <- colorRampPaletteAlpha(RColorBrewer::brewer.pal(9,"Greys"),100)
+    greys <- c("#FFFFFF", "#F0F0F0", "#D9D9D9", "#BDBDBD", "#969696", "#737373", 
+      "#525252", "#252525", "#000000")
+    col <- colorRampPaletteAlpha(greys, 100)
   }
   image(x=1:nc,y=1:nr,abs(x),xlim = 0.5 + c(0, nc), ylim = 0.5 + c(0, nr),
         ylab="",xlab="",axes=F,col=col)
