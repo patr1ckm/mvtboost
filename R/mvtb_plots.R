@@ -162,7 +162,9 @@ mvtb.perspec <- function(object,response.no=1,predictor.no=1:2,n.trees=NULL,
 #' par(mar=c(4,7,1,1))
 #' mvtb.heat(covex,cexRow=.8)
 #' 
-#' col <- colorRampPaletteAlpha(RColorBrewer::brewer.pal(9,"Greys"),100)
+#' greys <- c("#FFFFFF", "#F0F0F0", "#D9D9D9", "#BDBDBD", "#969696", "#737373", 
+#'   "#525252", "#252525", "#000000")
+#' col <- colorRampPaletteAlpha(greys, 100)
 #' mvtb.heat(covex, Y=Ys, X=Xs, col=col, cexRow=.8)
 #' 
 #' par(mar=c(5,5,1,1))

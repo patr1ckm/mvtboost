@@ -15,7 +15,7 @@ mvtb.ri(model, n.trees = NULL, relative = "col", sort = FALSE, ...)
 
 \item{sort}{whether or not results should be (reverse) sortd. Defaults to FALSE.}
 
-\item{...}{Additional arguments passed to \code{gbm:::relative_influence}}
+\item{...}{Additional arguments passed to \code{gbm::relative_influence}}
 }
 \value{
 Matrix of (relative) influences.
