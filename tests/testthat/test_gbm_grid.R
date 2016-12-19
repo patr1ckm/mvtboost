@@ -36,10 +36,10 @@ dots <- list(interaction.depth=1:3, n.trees=500, distribution="gaussian", verbos
 
 test_that("gbm_grid parallel", {
   skip_on_cran()
-  system.time(o <- gbm_grid(y=y, x=x, cv.folds=3, 
+  msg <- capture.output(system.time(o <- gbm_grid(y=y, x=x, cv.folds=3, 
                             interaction.depth=1:3, shrinkage=c(.1,.5,.8),
                             n.trees=500, distribution="gaussian",
-                            verbose=FALSE, mc.cores=6))
+                            verbose=FALSE, mc.cores=6)))
   expect_named(o)
   system.time(o <- gbm_grid(y=y, x=x, cv.folds=3, 
                             interaction.depth=1:3, shrinkage=c(.1, .5, .8),
@@ -68,8 +68,9 @@ test_that("gbm_grid cv.folds=1", {
   o <- gbm_grid(y=y, x=x[,1,drop=F], cv.folds=1, mc.cores=1, subset=1:250,
                 distribution="gaussian", verbose=FALSE)
   expect_named(o)
-  o <- gbm_grid(y=y, x=x[,1,drop=F], cv.folds=1, mc.cores=3, subset=1:250,
-                distribution="gaussian", verbose=FALSE)
+  msg <- capture.output(
+    o <- gbm_grid(y=y, x=x[,1,drop=F], cv.folds=1, mc.cores=3, subset=1:250,
+                distribution="gaussian", verbose=FALSE))
   expect_named(o)
 })
 
