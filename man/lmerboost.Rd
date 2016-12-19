@@ -56,8 +56,6 @@ will perform cross-validation over a grid of meta-parameters (see details).}
 \item{verbose}{In the final model fit, will print every `10` trees/iterations.}
 
 \item{...}{arguments passed to gbm.fit}
-
-\item{calc.derivs}{whether to calculate derivatives at each iteration with \code{lmer} (only assesses convergence)}
 }
 \value{
 An \code{lmerboost} object consisting of the following list elements:

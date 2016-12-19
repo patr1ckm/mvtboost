@@ -63,10 +63,13 @@ test_that("gbm_grid grid", {
 
 test_that("gbm_grid cv.folds=1", {
   skip_on_cran()
-  expect_error(o <- gbm_grid(y=y, x=x[,1], cv.folds=1, mc.cores=1, distribution="gaussian"))
-  o <- gbm_grid(y=y, x=x[,1,drop=F], cv.folds=1, mc.cores=1, subset=1:250, distribution="gaussian", verbose=FALSE)
+  expect_error(o <- gbm_grid(y=y, x=x[,1], cv.folds=1, mc.cores=1,
+                             distribution="gaussian"))
+  o <- gbm_grid(y=y, x=x[,1,drop=F], cv.folds=1, mc.cores=1, subset=1:250,
+                distribution="gaussian", verbose=FALSE)
   expect_named(o)
-  o <- gbm_grid(y=y, x=x[,1,drop=F], cv.folds=1, mc.cores=3, subset=1:250, distribution="gaussian", verbose=FALSE)
+  o <- gbm_grid(y=y, x=x[,1,drop=F], cv.folds=1, mc.cores=3, subset=1:250,
+                distribution="gaussian", verbose=FALSE)
   expect_named(o)
 })
 
