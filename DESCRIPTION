@@ -28,6 +28,6 @@ Imports:
     utils,
     lme4,
     methods,
-    ggplot2
+Remotes: gbm-developers/gbm
 VignetteBuilder: knitr
 RoxygenNote: 5.0.1
