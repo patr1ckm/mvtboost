@@ -284,7 +284,7 @@ test_that("lmerboost err", {
     o1 <- lmerboost(y = y, X = X, id="id", n.trees = 5, cv.folds = 3,
                     shrinkage = .1, mc.cores=3, verbose=F)
   , type="message")
-  expect_true(all(sapply(o1, function(o){is(o, "try-error")})))
+  expect_true(all(sapply(o1, function(o){class(o) == "try-error"})))
   
 })
 
