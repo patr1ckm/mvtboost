@@ -4,5 +4,6 @@
 .RData
 .Rprofile
 .Rbuildignore
+.DS_Store
 mvtboost.Rproj
 inst/doc
