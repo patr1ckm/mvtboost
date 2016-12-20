@@ -26,16 +26,16 @@ tol = 1E-6
 context("lmerboost.fit")
 
 test_that("lmerboost runs", {
-  o1 <- lmerboost(y = y, X = X, id="id", n.trees=5, cv.folds=1, shrinkage=.1,
+  o1 <- lmerboost(y = y, X = X, id="id", n.trees=2, cv.folds=1, shrinkage=.1,
                   verbose=F)
-  o2 <- lmerboost(y = y, X = X, id="id", n.trees=5, cv.folds=1, shrinkage=.1,
+  o2 <- lmerboost(y = y, X = X, id="id", n.trees=2, cv.folds=1, shrinkage=.1,
                   verbose=F)
-  o3 <- lmerboost(y = y, X = X, id="id", n.trees=5, cv.folds=1, shrinkage=.1,
+  o3 <- lmerboost(y = y, X = X, id="id", n.trees=2, cv.folds=1, shrinkage=.1,
                  subset = train, verbose=F)
-  o <- lmerboost(y = y, X = X, id="id", n.trees=3, cv.folds=3, verbose=F)
+  o <- lmerboost(y = y, X = X, id="id", n.trees=2, cv.folds=3, verbose=F)
   Xmis <- X
   Xmis[sample(1:n, size = n/2, replace = FALSE),] <- NA
-  o <- lmerboost(y = y, X = Xmis, id="id", n.trees = 3, cv.folds = 3, verbose=F)
+  o <- lmerboost(y = y, X = Xmis, id="id", n.trees = 2, cv.folds = 3, verbose=F)
   expect_is(o, "lmerboost")
 })
 
@@ -44,18 +44,18 @@ test_that("lmerboost.fit bag.fraction, shrinkage, subset, train/oob/test err", {
   bag.fraction = .5
   shrinkage <- .5
   n <- length(y)
+  n.trees <- 5
 
   set.seed(104)
   o <- lmerboost.fit(y = y, X = X, id="id", subset = train,
                      bag.fraction = bag.fraction,  indep = TRUE, verbose = FALSE,
-                     n.trees = 10, shrinkage = shrinkage, interaction.depth = 5,
+                     n.trees = n.trees, shrinkage = shrinkage, interaction.depth = 5,
                      n.minobsinnode = 10)
 
 
   set.seed(104)
   idx <- 3
   id <- X[,idx]
-  n.trees <- 10
   zuhat <- fixed <- yhat <- matrix(0, n, n.trees)
   train_err <- oob_err <- test_err <- rep(0, n.trees)
   init <- mean(y)
@@ -216,14 +216,14 @@ test_that("lmerboost_cv", {
   set.seed(104)
   ocv <- lapply(1:cv.folds, function(k, folds, train){
     ss <- train[folds != k]
-    lmerboost.fit(y = y, X = X, id="id", subset = ss, n.trees = 5, 
+    lmerboost.fit(y = y, X = X, id="id", subset = ss, n.trees = 2, 
                   verbose = F, shrinkage = .5)
   }, folds = folds, train=1:n)
   
   set.seed(104)
   o <- lapply(1:cv.folds, mvtboost:::lmerboost_cv, 
            folds = folds, train = 1:n, y = y, x = X, 
-           id="id", n.trees = 5, shrinkage = .5, verbose=F)
+           id="id", n.trees = 2, shrinkage = .5, verbose=F)
   
   expect_equivalent(o, ocv)
 })
@@ -233,7 +233,7 @@ test_that("lmerboost cv params", {
   set.seed(104)
   cv.folds = 3
   folds <- sample(1:cv.folds, size=n, replace=TRUE)
-  paramscv <- expand.grid(k = 1:cv.folds, n.trees = 5, shrinkage = c(.2, .5), interaction.depth = c(3, 5), indep = TRUE, n.minobsinnode=20)
+  paramscv <- expand.grid(k = 1:cv.folds, n.trees = 2, shrinkage = c(.2, .5), interaction.depth = c(3, 5), indep = TRUE, n.minobsinnode=20)
   params <- expand.grid(n.trees = 5, shrinkage = c(.2, .5), interaction.depth = c(3, 5), indep = TRUE, n.minobsinnode=20)
   paramscv$id <- factor(rep(1:nrow(params), each = cv.folds))
   paramscv.ls <- split(paramscv, 1:nrow(paramscv))

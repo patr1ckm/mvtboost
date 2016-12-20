@@ -13,6 +13,9 @@ Y <- X %*% B
 test_that("mvtb.covex", {
   
   out <- mvtb(Y=Y, X=X)
+  y <- Y[,1]
+  x <- X[,1]
+  o   <- mvtb(Y=y, X=x)
   covex <- mvtb.covex(out, Y=Y, X=X)
   
   expect_output(print(covex),"")
@@ -31,7 +34,6 @@ test_that("covex-exact", {
   
   out <- mvtb(Y=Y, X=Xb, shrinkage=1, n.trees=100)
   covex <- mvtb.covex(Y=Y,X=Xb,out)
-  # expect_equal(out$covex[c(2,4,5)],rep(0,3))
   expect_equal(covex[covex > .01],rep(a,3), tolerance=1E-10)
 })
 
