@@ -268,25 +268,22 @@ test_that("lmerboost cv params", {
   
 })
 
-# test_that("lmerboost err", {
-#   skip_if_not(interactive())
-#   # error in lmerboost.fit
-#   
-#   y[56] <- NA
-#   msg <- capture_output(
-#     expect_error(o1 <- lmerboost(y = y, X = X, id="id", n.trees=5,
-#                                  cv.folds = 1, shrinkage = .1, verbose=F))
-#   )
-#   
-#   # this correctly captures the output to sterr, so 
-#   # that error messages don't print in overall package test
-#   msg <- capture.output(
-#     o1 <- lmerboost(y = y, X = X, id="id", n.trees = 5, cv.folds = 3,
-#                     shrinkage = .1, mc.cores=3, verbose=F)
-#   , type="message")
-#   expect_true(all(sapply(o1, function(o){class(o) == "try-error"})))
-#   
-# })
+
+test_that("lmerboost err", {
+  # error in lmerboost.fit
+  y[56] <- NA
+  msg <- capture_output(
+    expect_error(o1 <- lmerboost(y = y, X = X, id="id", n.trees=5,
+                                 cv.folds = 1, shrinkage = .1, verbose=F))
+  )
+
+  #msg <- capture.output(
+  #  o1 <- lmerboost(y = y, X = X, id="id", n.trees = 5, cv.folds = 3,
+  #                  shrinkage = .1, mc.cores=3, verbose=F)
+  #, type="message")
+  #expect_true(all(sapply(o1, function(o){class(o) == "try-error"})))
+
+})
 
 test_that("lmerboost_cv train", {
   # for now, just test that they run
