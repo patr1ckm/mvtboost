@@ -6,12 +6,16 @@
 #' @param y vector of observations of length \code{n}
 #' @param X matrix or data frame of predictors
 #' @param id name or index of grouping variable in x (can have missing values)
+#' @param ... arguments passed to \code{gbm_grid}. Arguments can be passed as vectors as in  
+#' @param cv.folds number of cross validation folds
+#' @param mc.cores number of cores to use in \code{mclapply}
 #' @param subset subset of observations
-#' @param ... arguments passed to gbm. Arguments can be passed as vectors, and 
 #' tuning by cross validation will be carried out over expand.grid(...)
 #' @export
 #' @seealso \link{gbm_grid} 
 #' @importFrom lme4 lmer
+#' @importFrom gbm gbm.perf
+#' @importFrom stats as.formula
 #' @details The gbm model is cross-validated over a grid of all meta-parameters, 
 #' as in \code{gbm_grid}. The model is fit to all predictors, except the grouping 
 #' variable. Subsequently, a simple random intercept model (from \code{lmer}) is
@@ -34,7 +38,7 @@ twostage <- function(y, X, id, ..., cv.folds=3, mc.cores=1, subset = NULL){
   
   o.grid <- gbm_grid(y=y, x=x[,-id, drop=FALSE], ..., 
                      subset=subset, 
-                     cv.folds = cv.folds,
+                     cv.folds=cv.folds,
                      mc.cores=mc.cores)
   o.gbm <- o.grid$gbm
   tr <- gbm.perf(o.gbm, plot.it=FALSE, method="cv")

@@ -13,10 +13,14 @@ twostage(y, X, id, ..., cv.folds = 3, mc.cores = 1, subset = NULL)
 
 \item{id}{name or index of grouping variable in x (can have missing values)}
 
-\item{...}{arguments passed to gbm. Arguments can be passed as vectors, and 
-tuning by cross validation will be carried out over expand.grid(...)}
+\item{...}{arguments passed to \code{gbm_grid}. Arguments can be passed as vectors as in}
 
-\item{subset}{subset of observations}
+\item{cv.folds}{number of cross validation folds}
+
+\item{mc.cores}{number of cores to use in \code{mclapply}}
+
+\item{subset}{subset of observations
+tuning by cross validation will be carried out over expand.grid(...)}
 }
 \description{
 Fits a random intercept model with the grouping variable \code{id} to the residuals
