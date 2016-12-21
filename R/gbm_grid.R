@@ -54,13 +54,10 @@ gbm_grid <- function(y, x, cv.folds, mc.cores=1, subset=NULL, ...){
   best_arg_idx <- which.min(min_cv_err)
   best_args <- args[best_arg_idx, ]
   args$err <- min_cv_err
-  
-  d <- data.frame()
-  
-  out <- do.call(gbm::gbm.fit, append(list(y=y[train], 
-                                           x=data.frame(x[train, ,drop=F])),
-                                      best_args))
-  out$cv.error <- cv_err[[best_arg_idx]]
+
+  out <- do.call(gbm::gbm.fit,
+                 append(list(y=y[train], x=data.frame(x[train, ,drop=F])), best_args))
+  out$cv_error <- cv_err[[best_arg_idx]]
   # todo: out$valid.error
   return(list(gbm=out, best_args=best_args, args=args))
 }

@@ -8,6 +8,7 @@ B[1,1] <- .5
 X <- matrix(rbinom(n*nrow(B), size=1, prob=.5), n, nrow(B))
 E <- MASS::mvrnorm(n, rep(0,4), Sigma=diag(4))
 Y <- X %*% B + E
+mvtb(Y=Y, X=X)
 
 test_that("n.trees", {
   r <- mvtb(X=X, Y=Y, n.trees=50)

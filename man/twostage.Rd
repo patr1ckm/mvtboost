@@ -4,7 +4,7 @@
 \alias{twostage}
 \title{Two stage lmer boost}
 \usage{
-twostage(y, x, id, subset = NULL, ...)
+twostage(y, x, id, ..., cv.folds = 3, mc.cores = 1, subset = NULL)
 }
 \arguments{
 \item{y}{outcome}
@@ -13,9 +13,9 @@ twostage(y, x, id, subset = NULL, ...)
 
 \item{id}{grouping variable}
 
-\item{subset}{subset of observations}
-
 \item{...}{arguments passed to gbm}
+
+\item{subset}{subset of observations}
 }
 \description{
 Two stage lmer boost
