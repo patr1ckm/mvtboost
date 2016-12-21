@@ -35,15 +35,18 @@ args <- expand.grid(
 
 args.ls <- split(args_cv, 1:nrow(args_cv))
 
-dots <- list(interaction.depth=1:2, distribution="gaussian", n.trees=5, verbose=FALSE)
+dots <- list(interaction.depth=1:2, 
+             distribution="gaussian",
+             n.trees=5, 
+             verbose=FALSE)
 
-test_that("gbm_grid parallel", {
+#test_that("gbm_grid parallel", {
   # msg <- capture.output(o <- gbm_grid(y=y, x=x, cv.folds=3, 
   #                           interaction.depth=1:2, shrinkage=c(.1,.5,.8),
   #                           distribution="gaussian", n.trees=5, 
   #                           verbose=FALSE, mc.cores=6))
   #expect_named(o)
-})
+#})
 
 test_that("gbm_grid grid", {
   o <- gbm_grid(y=y, x=x, cv.folds=3, 

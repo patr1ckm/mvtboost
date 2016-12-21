@@ -4,14 +4,14 @@
 \alias{twostage}
 \title{Two stage lmer boost}
 \usage{
-twostage(y, x, id, ..., cv.folds = 3, mc.cores = 1, subset = NULL)
+twostage(y, X, id, ..., cv.folds = 3, mc.cores = 1, subset = NULL)
 }
 \arguments{
-\item{y}{outcome}
+\item{y}{vector of observations of length \code{n}}
 
-\item{x}{predictor}
+\item{X}{matrix or data frame of predictors}
 
-\item{id}{name or index of grouping variable in x}
+\item{id}{name or index of grouping variable in x (can have missing values)}
 
 \item{...}{arguments passed to gbm. Arguments can be passed as vectors, and 
 tuning by cross validation will be carried out over expand.grid(...)}
@@ -19,7 +19,16 @@ tuning by cross validation will be carried out over expand.grid(...)}
 \item{subset}{subset of observations}
 }
 \description{
-Two stage lmer boost
+Fits a random intercept model with the grouping variable \code{id} to the residuals
+of \code{gbm} fit to the remaining predictors.
+}
+\details{
+The gbm model is cross-validated over a grid of all meta-parameters, 
+as in \code{gbm_grid}. The model is fit to all predictors, except the grouping 
+variable. Subsequently, a simple random intercept model (from \code{lmer}) is
+fit to the residuals, using \code{id} as a grouping variable, with the formula
+\code{r ~ 1 + (1|id)}. A \code{predict}, and \code{influence} methods are provided
+for computing predictions and influence of predictors.
 }
 \seealso{
 \link{gbm_grid}

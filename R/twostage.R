@@ -1,16 +1,27 @@
 #' Two stage lmer boost
-#' @param y outcome
-#' @param x predictor
-#' @param id name or index of grouping variable in x
+#' 
+#' Fits a random intercept model with the grouping variable \code{id} to the residuals
+#' of \code{gbm} fit to the remaining predictors.
+#' 
+#' @param y vector of observations of length \code{n}
+#' @param X matrix or data frame of predictors
+#' @param id name or index of grouping variable in x (can have missing values)
 #' @param subset subset of observations
 #' @param ... arguments passed to gbm. Arguments can be passed as vectors, and 
 #' tuning by cross validation will be carried out over expand.grid(...)
 #' @export
-#' @seealso \link{gbm_grid}
+#' @seealso \link{gbm_grid} 
 #' @importFrom lme4 lmer
-twostage <- function(y, x, id, ..., cv.folds=3, mc.cores=1, subset = NULL){
+#' @details The gbm model is cross-validated over a grid of all meta-parameters, 
+#' as in \code{gbm_grid}. The model is fit to all predictors, except the grouping 
+#' variable. Subsequently, a simple random intercept model (from \code{lmer}) is
+#' fit to the residuals, using \code{id} as a grouping variable, with the formula
+#' \code{r ~ 1 + (1|id)}. A \code{predict}, and \code{influence} methods are provided
+#' for computing predictions and influence of predictors.
+#' 
+twostage <- function(y, X, id, ..., cv.folds=3, mc.cores=1, subset = NULL){
 
-  x <- as.data.frame(x)
+  x <- as.data.frame(X)
   if(is.null(subset)){ 
     s <- 1:nrow(x)
   } else {
