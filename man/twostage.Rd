@@ -11,13 +11,17 @@ twostage(y, x, id, ..., cv.folds = 3, mc.cores = 1, subset = NULL)
 
 \item{x}{predictor}
 
-\item{id}{grouping variable}
+\item{id}{name or index of grouping variable in x}
 
-\item{...}{arguments passed to gbm}
+\item{...}{arguments passed to gbm. Arguments can be passed as vectors, and 
+tuning by cross validation will be carried out over expand.grid(...)}
 
 \item{subset}{subset of observations}
 }
 \description{
 Two stage lmer boost
+}
+\seealso{
+\link{gbm_grid}
 }
 

@@ -1,10 +1,13 @@
 #' Two stage lmer boost
 #' @param y outcome
 #' @param x predictor
-#' @param id grouping variable
+#' @param id name or index of grouping variable in x
 #' @param subset subset of observations
-#' @param ... arguments passed to gbm
+#' @param ... arguments passed to gbm. Arguments can be passed as vectors, and 
+#' tuning by cross validation will be carried out over expand.grid(...)
 #' @export
+#' @seealso \link{gbm_grid}
+#' @importFrom lme4 lmer
 twostage <- function(y, x, id, ..., cv.folds=3, mc.cores=1, subset = NULL){
 
   x <- as.data.frame(x)
@@ -13,14 +16,23 @@ twostage <- function(y, x, id, ..., cv.folds=3, mc.cores=1, subset = NULL){
   } else {
     s <- subset
   }
-  d <- data.frame(y, x)
-  o.grid <- gbm_grid(y=y, x=x, ..., subset=subset, cv.folds = cv.folds,
+  if(is.character(id)){
+    id <- match(id, colnames(x))
+  }
+  idname <- colnames(x)[id]
+  
+  o.grid <- gbm_grid(y=y, x=x[,-id, drop=FALSE], ..., 
+                     subset=subset, 
+                     cv.folds = cv.folds,
                      mc.cores=mc.cores)
   o.gbm <- o.grid$gbm
   tr <- gbm.perf(o.gbm, plot.it=FALSE, method="cv")
-  res <- y - predict(o.gbm, newdata = x, n.trees = tr)
-  df <- data.frame(y=res, x, id=id)
-  ol <- lme4::lmer(y ~ 1 + (1 | id), data=df, subset = s)
+  
+  res <- y - predict(o.gbm, newdata=x[,-id, drop=FALSE], n.trees = tr)
+  
+  df <- data.frame(y=res, x)
+  form <- as.formula(paste0("y ~ 1 + (1|", idname, ")"))
+  ol <- lme4::lmer(form, data=df, subset = s)
   res <- list(o.lmer=ol, o.gbm=o.gbm, tr=tr)
   class(res) <-  "twostage"
   return(res)

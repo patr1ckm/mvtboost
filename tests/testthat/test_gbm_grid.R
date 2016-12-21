@@ -2,14 +2,15 @@
 context("test_gbm_grid")
 
 n <- 1000
-x <- matrix(rnorm(n))
-colnames(x) <- "x"
+x <- rnorm(n)
+xc <- cut(x, 3)
 y <- x*.5
 n <- length(y)
 cv.folds <- 3
 train <- seq_along(y)
 folds <- sample(1:cv.folds, size=length(train), replace=TRUE)
 tol = 1E-4
+x <- data.frame(x, xc)
 
 args_cv <- expand.grid(
   k=1:3,
