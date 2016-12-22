@@ -18,6 +18,7 @@ xx <- model.matrix(~x*id+xc)
 b <- rnorm(ncol(xx), 0, 1)
 y <- xx %*% b + rnorm(n)
 X <- data.frame(x, xc, id)
+id <- 3
 
 #oo <- gbm::gbm(y~., data=data.frame(y, X), distribution="Gaussian")
 
@@ -29,47 +30,44 @@ test_that("lmerboost runs", {
   o1 <- lmerboost(y = y, X = X, id="id", n.trees=2, cv.folds=1, shrinkage=.1,
                   verbose=F)
   o2 <- lmerboost(y = y, X = X, id="id", n.trees=2, cv.folds=1, shrinkage=.1,
-                  verbose=F)
-  o3 <- lmerboost(y = y, X = X, id="id", n.trees=2, cv.folds=1, shrinkage=.1,
                  subset = train, verbose=F)
-  o <- lmerboost(y = y, X = X, id="id", n.trees=2, cv.folds=3, verbose=F)
   Xmis <- X
   Xmis[sample(1:n, size = n/2, replace = FALSE),] <- NA
-  o <- lmerboost(y = y, X = Xmis, id="id", n.trees = 2, cv.folds = 3, verbose=F)
-  expect_is(o, "lmerboost")
+  o3 <- lmerboost(y = y, X = Xmis, id="id", n.trees = 2, cv.folds = 3, verbose=F)
+  expect_is(o3, "lmerboost")
 })
 
-
 test_that("lmerboost.fit bag.fraction, shrinkage, subset, train/oob/test err", {
-  bag.fraction = .5
+  bag.fraction = 1
   shrinkage <- .5
   n <- length(y)
-  n.trees <- 5
-
+  n.trees <- 2
+  depth <- 5
+  
   set.seed(104)
   o <- lmerboost.fit(y = y, X = X, id="id", subset = train,
                      bag.fraction = bag.fraction,  indep = TRUE, verbose = FALSE,
-                     n.trees = n.trees, shrinkage = shrinkage, interaction.depth = 5,
+                     n.trees = n.trees, shrinkage = shrinkage, interaction.depth = depth,
                      n.minobsinnode = 10)
-
-
+  
+  
   set.seed(104)
   idx <- 3
   id <- X[,idx]
   zuhat <- fixed <- yhat <- matrix(0, n, n.trees)
   train_err <- oob_err <- test_err <- rep(0, n.trees)
   init <- mean(y)
-  r <- y - mean(y)
+  r <- y - init
   for(i in 1:n.trees){
-
+    
     # the only change is to subsample from train rather than 1:n, and to subset on id
     # note that s is always an index to observations in the  original data
     s <- sample(train, size=ceiling(length(train)*bag.fraction), replace=FALSE)
     s.oob <- setdiff(train, s)
-
-    o.gbm <- gbm::gbm.fit(y = r[s], x = X[s, -idx, drop = F], n.trees = 1,
-                          shrinkage=1, bag.fraction = 1, keep.data=F,
-                          distribution = "gaussian", interaction.depth=5, 
+    
+    o.gbm <- gbm::gbm.fit(y = r[train], x = X[train, -idx, drop = F], n.trees = 1,
+                          shrinkage=1, bag.fraction = bag.fraction, keep.data=F,
+                          distribution = "gaussian", interaction.depth=depth, 
                           verbose = F)
     pt <- gbm::pretty_gbm_tree(o.gbm, 1)
     gbm_pred <- predict(o.gbm, newdata=X[,-idx, drop=F], n.trees=1)
@@ -94,7 +92,7 @@ test_that("lmerboost.fit bag.fraction, shrinkage, subset, train/oob/test err", {
     new_re <- as.data.frame(matrix(0, nrow = length(unique(id)), ncol = ncol(re)))
     new_re[rownames(re), ] <- re
     new_re <- as.matrix(new_re)
-
+    
     zuhatm <- drop(Zm %*% c(new_re))
     fixedm <- drop(cbind(1, mm) %*% lme4::fixef(o.lmer))
     fixedm[dropped_obs] <- gbm_pred[dropped_obs]
@@ -116,13 +114,10 @@ test_that("lmerboost.fit bag.fraction, shrinkage, subset, train/oob/test err", {
   }
   yhat <- yhat + init
   fixed <- fixed + init
-
-  expect_equal(yhat[train, ], o$yhat[train, ])
-  expect_equal(zuhat[train, ], o$ranef[train, ])
-  expect_equal(fixed[train, ], o$fixed[train, ])
-  expect_equal(yhat[-train, ], o$yhat[-train, ])
-  expect_equal(zuhat[-train, ], o$ranef[-train, ])
-  expect_equal(fixed[-train, ], o$fixed[-train, ])
+  
+  expect_equal(yhat, o$yhat)
+  expect_equal(zuhat, o$ranef)
+  expect_equal(fixed, o$fixed)
   expect_equal(train_err, o$train.err)  
   expect_equal(oob_err, o$oob.err)  
   expect_equal(test_err, o$test.err)  
@@ -142,29 +137,53 @@ test_that("lmerboost.fit drops rank deficient cols", {
   
   # However, this means that the model matrix of the full data and of training
   # don't have the same dimensions; which breaks predictions.
-  
+
   # Test case that demonstrates missing nodes
+  
   set.seed(104)
   x <- rep(0:1, each = 10)
   x2 <- sample(x)
-  y <- x + rnorm(20)   # will split on x1, not x2
+  y <- x + rnorm(length(x), 0, .01)    # will split on x1, not x2
   x[c(10, 20)] <- NA   # will use x2 for a surrogate for these obs
   train <- c(1:9, 11:19)   # training set does not have missing values
   id <- factor(rep(1:5, each=4))
   shrinkage = 1
   bag.fraction=1
   i <- 1
-  X <- cbind(x, x2)
+  idx <- 3
+  
+  
+  set.seed(104)
+  X <- data.frame(x, x2, id)
+  lb <- lmerboost.fit(y=y, X=X, id="id", shrinkage=1, n.trees=1,
+                      interaction.depth=1, bag.fraction=1,
+                      n.minobsinnode=1, subset=train, verbose=F)
+  
+  set.seed(104)
   s <- sample(train, size = ceiling(length(train)*bag.fraction), replace = FALSE)
   s.oob <- setdiff(train, s)
   
   init <- mean(y)  
   r <- y - init
-  d <- data.frame(r, x, x2)
-  og <- gbm::gbm(r ~ ., data=d[s,], n.minobsinnode=1, shrinkage=1, n.trees=1, 
-           distribution="gaussian", interaction.depth=1, bag.fraction=1)
-  gbm_pred <- predict(og, n.trees=1, newdata=d)
-  mm <- model.matrix(~factor(gbm_pred))[,-1,drop=F]
+  tp <- training_params(num_trees=1, interaction_depth=1, min_num_obs_in_node = 1,
+                        shrinkage=1, bag_fraction=1, num_train=length(train))
+  gbmPrep <- gbmt_data(y=r[train], x=data.frame(X[train,-idx, drop=F]), train_params=tp,
+                       par_details=gbmParallel(num_threads = 1))
+  og <- gbm::gbmt_fit_(gbmPrep)
+  gbm_pred <- predict(og, n.trees=1, newdata=X[,-idx, drop=F])
+  
+  # this forces node factor order to have a terminal node as reference, not surrogate
+  pt <- gbm::pretty_gbm_tree(og, 1)
+  pt <- pt[order(pt$SplitVar), ]
+  
+  # prediction determines into which node observations fall
+  # factor labels correspond to terminal node id (rows of pt)
+  nodes <- droplevels(factor(gbm_pred, 
+                             levels=as.character(pt$Prediction+og$initF), 
+                             labels=rownames(pt)))
+  
+  
+  mm <- model.matrix(~nodes)[,-1,drop=F]
   
   keep_cols <- colSums(mm[s,,drop=FALSE ]) > 0
   dropped_obs <- rowSums(mm[,!keep_cols,drop=FALSE]) > 0
@@ -187,12 +206,6 @@ test_that("lmerboost.fit drops rank deficient cols", {
   yhatm <- yhatm + init
   fixedm <- fixedm + init
    
-  set.seed(104)
-  
-  X <- data.frame(x, x2, id)
-  lb <- lmerboost.fit(y=y, X=X, id="id", shrinkage=1, n.trees=1,
-                      interaction.depth=1, bag.fraction=1,
-                      n.minobsinnode=1, subset=train, verbose=F)
   expect_equal(lb$yhat[train], unname(yhatm[train]))
   expect_equal(lb$ranef[train], unname(zuhat[train]))
   expect_equal(lb$fixed[train], unname(fixedm[train]))

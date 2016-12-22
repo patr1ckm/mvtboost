@@ -12,8 +12,8 @@ lmerboost(y, X, id, n.trees = 5, interaction.depth = 3,
 
 lmerboost.fit(y, X, id, n.trees = 5, interaction.depth = 3,
   n.minobsinnode = 20, shrinkage = 0.01, bag.fraction = 0.5,
-  train.fraction = NULL, subset = NULL, indep = TRUE, save.mods = FALSE,
-  verbose = TRUE, ...)
+  train.fraction = NULL, subset = NULL, indep = TRUE, num_threads = 1,
+  save.mods = FALSE, verbose = TRUE, ...)
 }
 \arguments{
 \item{y}{outcome vector (continuous)}

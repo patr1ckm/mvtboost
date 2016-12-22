@@ -215,6 +215,7 @@ lmerboost.fit <- function(y, X, id,
                           train.fraction=NULL,
                           subset=NULL,
                           indep=TRUE, 
+                          num_threads=1,
                           save.mods=FALSE,
                           verbose = TRUE, ...){
 
@@ -242,6 +243,14 @@ lmerboost.fit <- function(y, X, id,
   trees <- mods <- c.split <- list()
   if(verbose) pb <- txtProgressBar(min=0, max=n.trees, width=10, style=3)
   
+  tp <- training_params(num_trees=1, interaction_depth=interaction.depth,
+                        min_num_obs_in_node=n.minobsinnode, shrinkage=1,
+                        bag_fraction=bag.fraction, num_train=length(train),
+                        num_features=ncol(X)-1, ...)
+  
+  gbmPrep <- gbmt_data(x=data.frame(X[train, -id, drop=F]), y=r[train], train_params=tp,
+                       par_details=gbmParallel(num_threads = num_threads))
+  
   for(i in 1:n.trees){
     # s = training, s.oob = oob, -train = test
     # 2016-10-19: DO NOT STRATIFY SUBSAMPLES BY GROUPS.
@@ -251,15 +260,10 @@ lmerboost.fit <- function(y, X, id,
     s.oob <- setdiff(train, s)
     
     # fit a tree
-    tree <- gbm::gbm.fit(y = r[s], x=X[s, -id, drop=F],
-                         interaction.depth=interaction.depth,
-                         shrinkage=1,
-                         n.minobsinnode=n.minobsinnode,
-                         bag.fraction=1,
-                         distribution="gaussian",
-                         verbose=FALSE,
-                         keep.data = F,
-                         n.trees = 1, ...)
+    gbmPrep$y <- r
+    gbmPrep$original_data$y <- r
+    tree <- gbmt_fit_(gbmPrep)
+    
     if(i == 1){
       var.type = tree$variables$var_type
     }
@@ -268,7 +272,7 @@ lmerboost.fit <- function(y, X, id,
     pt <- gbm::pretty_gbm_tree(tree, 1)
     
     # get gbm predictions for whole sample
-    gbm_pred <- predict(tree, newdata = data.frame(X[,-id,drop=F]), n.trees = 1) 
+    gbm_pred <- predict(tree, newdata = data.frame(X[,-id, drop=F]), n.trees = 1) 
     
     
     # list terminal nodes (-1) first; rownames are are terminal node ids
@@ -347,6 +351,7 @@ lmerboost.fit <- function(y, X, id,
     oob.err[i]   <- mean((yhat[s.oob,i] - (y[s.oob] - init))^2)
     test.err[i]  <- mean((yhat[-train,i] - (y[-train] - init))^2)
     if(verbose) setTxtProgressBar(pb, i)
+    
     # 2016-10-19: This was removed because it can stop too early and becomes 
     # yet another tuning parameter.
     #if((i %% lag == 0) && (abs(test.err[i] - test.err[i - (lag - 1)]) < stop.threshold)){
