@@ -26,6 +26,6 @@ Imports:
     methods,
     ggplot2
 Remotes: 
-  gbm-developers/gbm
+  patr1ckm/gbm
 VignetteBuilder: knitr
 RoxygenNote: 5.0.1
