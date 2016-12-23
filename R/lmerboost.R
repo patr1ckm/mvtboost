@@ -37,6 +37,7 @@
 #' @param save.mods whether the \code{lmer} models fit at each iteration are saved
 #'  (required to use \code{predict})
 #' @param mc.cores number of parallel cores
+#' @param num_threads number of threads
 #' @param verbose In the final model fit, will print every `10` trees/iterations.
 #' @param ... arguments passed to gbm.fit
 #' @return An \code{lmerboost} object consisting of the following list elements:
@@ -76,6 +77,7 @@ lmerboost <- function(y, X, id,
                       indep=TRUE, 
                       save.mods=FALSE,
                       mc.cores=1, 
+                      num_threads=1,
                       verbose = TRUE, ...){
 
   n <- length(y)
@@ -149,7 +151,8 @@ lmerboost <- function(y, X, id,
           shrinkage = best.params$shrinkage, 
           interaction.depth=best.params$interaction.depth, 
           indep = best.params$indep,
-          n.minobsinnode = best.params$n.minobsinnode)
+          n.minobsinnode = best.params$n.minobsinnode,
+          num_threads=num_threads)
     
   } else { # cv.folds = 1
     cv.err <- rep(NA, n.trees)
@@ -167,6 +170,7 @@ lmerboost <- function(y, X, id,
                        interaction.depth=interaction.depth, 
                        indep = indep, 
                        n.minobsinnode = n.minobsinnode,
+                       num_threads = num_threads,
                        verbose = verbose, save.mods=save.mods)
   }
   if(all(is.na(o$test.err))){ 

@@ -8,7 +8,7 @@
 lmerboost(y, X, id, n.trees = 5, interaction.depth = 3,
   n.minobsinnode = 20, shrinkage = 0.01, bag.fraction = 0.5,
   train.fraction = NULL, cv.folds = 1, subset = NULL, indep = TRUE,
-  save.mods = FALSE, mc.cores = 1, verbose = TRUE, ...)
+  save.mods = FALSE, mc.cores = 1, num_threads = 1, verbose = TRUE, ...)
 
 lmerboost.fit(y, X, id, n.trees = 5, interaction.depth = 3,
   n.minobsinnode = 20, shrinkage = 0.01, bag.fraction = 0.5,
@@ -52,6 +52,8 @@ will perform cross-validation over a grid of meta-parameters (see details).}
 (required to use \code{predict})}
 
 \item{mc.cores}{number of parallel cores}
+
+\item{num_threads}{number of threads}
 
 \item{verbose}{In the final model fit, will print every `10` trees/iterations.}
 
