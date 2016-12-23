@@ -18,7 +18,6 @@ xx <- model.matrix(~x*id+xc)
 b <- rnorm(ncol(xx), 0, 1)
 y <- xx %*% b + rnorm(n)
 X <- data.frame(x, xc, id)
-id <- 3
 
 #oo <- gbm::gbm(y~., data=data.frame(y, X), distribution="Gaussian")
 
@@ -42,12 +41,13 @@ test_that("lmerboost.fit bag.fraction, shrinkage, subset, train/oob/test err", {
   shrinkage <- .5
   n <- length(y)
   n.trees <- 2
-  depth <- 5
+  interaction.depth <- 5
   
   set.seed(104)
   o <- lmerboost.fit(y = y, X = X, id="id", subset = train,
                      bag.fraction = bag.fraction,  indep = TRUE, verbose = FALSE,
-                     n.trees = n.trees, shrinkage = shrinkage, interaction.depth = depth,
+                     n.trees = n.trees, shrinkage = shrinkage, 
+                     interaction.depth = interaction.depth,
                      n.minobsinnode = 10)
   
   
@@ -56,8 +56,17 @@ test_that("lmerboost.fit bag.fraction, shrinkage, subset, train/oob/test err", {
   id <- X[,idx]
   zuhat <- fixed <- yhat <- matrix(0, n, n.trees)
   train_err <- oob_err <- test_err <- rep(0, n.trees)
-  init <- mean(y)
+  init <- mean(y[train])
   r <- y - init
+  
+  tp <- training_params(num_trees=1, interaction_depth=interaction.depth,
+                        min_num_obs_in_node=10, shrinkage=1,
+                        bag_fraction=bag.fraction, num_train=length(train),
+                        num_features=ncol(X)-1)
+  
+  gbmPrep <- gbmt_data(x=data.frame(X[train, -idx, drop=F]), y=r[train],
+                       train_params=tp)
+  
   for(i in 1:n.trees){
     
     # the only change is to subsample from train rather than 1:n, and to subset on id
@@ -65,10 +74,10 @@ test_that("lmerboost.fit bag.fraction, shrinkage, subset, train/oob/test err", {
     s <- sample(train, size=ceiling(length(train)*bag.fraction), replace=FALSE)
     s.oob <- setdiff(train, s)
     
-    o.gbm <- gbm::gbm.fit(y = r[train], x = X[train, -idx, drop = F], n.trees = 1,
-                          shrinkage=1, bag.fraction = bag.fraction, keep.data=F,
-                          distribution = "gaussian", interaction.depth=depth, 
-                          verbose = F)
+    gbmPrep$y <- r[train]
+    gbmPrep$original_data$y <- r[train]
+    o.gbm <- gbmt_fit_(gbmPrep)
+    
     pt <- gbm::pretty_gbm_tree(o.gbm, 1)
     gbm_pred <- predict(o.gbm, newdata=X[,-idx, drop=F], n.trees=1)
     nodes <- droplevels(factor(gbm_pred, 
@@ -304,6 +313,7 @@ test_that("lmerboost_cv train", {
                  subset=1:(n/2), n.trees=3, verbose=F)
   o <- lmerboost(y=y, X=X, id="id", cv.folds=3, bag.fraction=.5,
                  subset=1:(n/2), n.trees=3, verbose=F)
+  expect_true(class(o) == "lmerboost")
 })
 
 ## TODO: combinations of params

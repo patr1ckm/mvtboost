@@ -219,8 +219,6 @@ lmerboost.fit <- function(y, X, id,
                           save.mods=FALSE,
                           verbose = TRUE, ...){
 
-  init <- mean(y)
-  r <- y - init
   n <- length(y)
   
   if(is.null(subset)) {
@@ -236,6 +234,8 @@ lmerboost.fit <- function(y, X, id,
     id <- match(id, colnames(X))
   }
   
+  init <- mean(y[train])
+  r <- y - init
   
   yhat <- ranef <- fixed <- matrix(0, n, n.trees)
   sigma <- rep(0, n.trees)
@@ -246,9 +246,10 @@ lmerboost.fit <- function(y, X, id,
   tp <- training_params(num_trees=1, interaction_depth=interaction.depth,
                         min_num_obs_in_node=n.minobsinnode, shrinkage=1,
                         bag_fraction=bag.fraction, num_train=length(train),
-                        num_features=ncol(X)-1, ...)
+                        num_features=ncol(X)-1)
   
-  gbmPrep <- gbmt_data(x=data.frame(X[train, -id, drop=F]), y=r[train], train_params=tp,
+  gbmPrep <- gbmt_data(x=data.frame(X[train, -id, drop=F]), y=r[train],
+                       train_params=tp,
                        par_details=gbmParallel(num_threads = num_threads))
   
   for(i in 1:n.trees){
@@ -260,8 +261,8 @@ lmerboost.fit <- function(y, X, id,
     s.oob <- setdiff(train, s)
     
     # fit a tree
-    gbmPrep$y <- r
-    gbmPrep$original_data$y <- r
+    gbmPrep$y <- r[train]
+    gbmPrep$original_data$y <- r[train]
     tree <- gbmt_fit_(gbmPrep)
     
     if(i == 1){
