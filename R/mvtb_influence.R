@@ -64,7 +64,6 @@ influence.lmerboost <- function(model, n.trees = NULL, relative = TRUE, sort = F
   }
   inf <- influence_from_tree_list(model$trees, n.trees = n.trees, 
                                              var.names = model$xnames)
-  inf <- inf[-model$id]
   if(relative) { inf <- (inf / sum(inf)) * 100 }
   if(sort) { inf <- sort(inf, decreasing = TRUE) }
   inf

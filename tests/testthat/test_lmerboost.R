@@ -319,12 +319,16 @@ test_that("lmerboost_cv train", {
 ## TODO: combinations of params
 
 test_that("lmerboost influence", {
-  X <- data.frame(X1 = x, X2 = rnorm(n), id=id)
+  X <- data.frame(id,  X2 = rnorm(n), X1 = x)
   ob <- lmerboost(y = y, X = X, id="id", n.trees = 3, cv.folds = 1,
                   shrinkage = .5, verbose=F)
   inf <- influence(ob)
-  expect_gt(inf[1], 0)
+  expect_gt(inf["X1"], 0)
   expect_equal(length(inf), 2)
+  expect_equal(sum(inf), 100)
+  
+  infs <- influence(ob, sort=TRUE)
+  expect_equal(infs, inf[order(inf, decreasing = T)])
 })
 
 test_that("lmerboost predict", {
