@@ -61,7 +61,7 @@ test_that("lmerboost.fit bag.fraction, shrinkage, subset, train/oob/test err", {
   
   tp <- training_params(num_trees=1, interaction_depth=interaction.depth,
                         min_num_obs_in_node=10, shrinkage=1,
-                        bag_fraction=bag.fraction, num_train=length(train),
+                        bag_fraction=1, num_train=length(train),
                         num_features=ncol(X)-1)
   
   gbmPrep <- gbmt_data(x=data.frame(X[train, -idx, drop=F]), y=r[train],
@@ -76,6 +76,7 @@ test_that("lmerboost.fit bag.fraction, shrinkage, subset, train/oob/test err", {
     
     gbmPrep$y <- r[train]
     gbmPrep$original_data$y <- r[train]
+    gbmPrep$weights <- as.numeric(train %in% s)
     o.gbm <- gbmt_fit_(gbmPrep)
     
     pt <- gbm::pretty_gbm_tree(o.gbm, 1)

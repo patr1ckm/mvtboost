@@ -249,7 +249,7 @@ lmerboost.fit <- function(y, X, id,
   
   tp <- training_params(num_trees=1, interaction_depth=interaction.depth,
                         min_num_obs_in_node=n.minobsinnode, shrinkage=1,
-                        bag_fraction=bag.fraction, num_train=length(train),
+                        bag_fraction=1, num_train=length(train),
                         num_features=ncol(X)-1)
   
   gbmPrep <- gbmt_data(x=data.frame(X[train, -id, drop=F]), y=r[train],
@@ -267,6 +267,7 @@ lmerboost.fit <- function(y, X, id,
     # fit a tree
     gbmPrep$y <- r[train]
     gbmPrep$original_data$y <- r[train]
+    gbmPrep$weights <- as.numeric(train %in% s)
     tree <- gbmt_fit_(gbmPrep)
     
     if(i == 1){
