@@ -24,7 +24,8 @@ Imports:
     utils,
     lme4,
     methods,
-    ggplot2
+    ggplot2,
+    pbmcapply
 Remotes: 
   patr1ckm/gbm
 VignetteBuilder: knitr
