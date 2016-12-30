@@ -286,8 +286,8 @@ test_that("lmerboost cv params", {
                 shrinkage=c(.2, .5), interaction.depth=c(3, 5), n.trees=5,
                 mc.cores = 1, verbose=F)
   
-  expect_identical(bc, o$best.params)
-  expect_identical(params, o$params)
+  expect_equal(bc, o$best.params)
+  expect_equal(params, o$params)
   
 })
 

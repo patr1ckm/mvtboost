@@ -65,6 +65,7 @@
 #' }
 #' @export
 #' @importFrom utils txtProgressBar setTxtProgressBar
+#' @importFrom pbmcapply pbmclapply
 lmerboost <- function(y, X, id, 
                       n.trees=5,
                       interaction.depth=3,
@@ -119,7 +120,7 @@ lmerboost <- function(y, X, id,
     conds.ls <- split(conds, 1:nrow(conds))
     conds$id <- rep(1:nrow(params), each = cv.folds)
     
-    cv.mods <- parallel::mclapply(conds.ls, function(args, ...){ 
+    cv.mods <- pbmcapply::pbmclapply(conds.ls, function(args, ...){ 
       try(do.call(lmerboost_cv, append(args, list(...))))
     }, y=y, x=X, id=id, train=train, folds=folds, 
       bag.fraction=bag.fraction,  
