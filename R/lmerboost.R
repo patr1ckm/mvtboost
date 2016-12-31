@@ -254,7 +254,8 @@ lmerboost.fit <- function(y, X, id,
                         num_features=ncol(X)-1)
   
   gbmPrep <- gbmt_data(x=data.frame(X[train, -id, drop=F]), y=r[train],
-                       train_params=tp,
+                       train_params=tp, 
+                       distribution=gbm_dist("Gaussian"),
                        par_details=gbmParallel(num_threads = num_threads))
   
   for(i in 1:n.trees){
@@ -330,8 +331,8 @@ lmerboost.fit <- function(y, X, id,
     
     yhatm <- predict(o, newdata=d, allow.new.levels = TRUE)
     fixedm <- cbind(1, mm) %*% o@beta
-      
     zuhat <- yhatm - fixedm
+    
     fixedm[dropped_obs,] <- gbm_pred[dropped_obs]
     yhatm[dropped_obs] <- gbm_pred[dropped_obs]
 
