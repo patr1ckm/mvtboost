@@ -267,8 +267,8 @@ lmerboost.fit <- function(y, X, id,
     s.oob <- setdiff(train, s)
     
     # fit a tree
-    gbmPrep$y <- r[train]
-    gbmPrep$original_data$y <- r[train]
+    gbmPrep$gbm_data_obj$y <- r[train]
+    gbmPrep$gbm_data_obj$original_data$y <- r[train]
     gbmPrep$weights <- as.integer(train %in% s)
     tree <- gbmt_fit_(gbmPrep)
     
