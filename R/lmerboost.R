@@ -269,7 +269,7 @@ lmerboost.fit <- function(y, X, id,
     # fit a tree
     gbmPrep$y <- r[train]
     gbmPrep$original_data$y <- r[train]
-    gbmPrep$weights <- as.numeric(train %in% s)
+    gbmPrep$weights <- as.integer(train %in% s)
     tree <- gbmt_fit_(gbmPrep)
     
     if(i == 1){
