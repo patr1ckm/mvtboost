@@ -74,9 +74,9 @@ test_that("lmerboost.fit bag.fraction, shrinkage, subset, train/oob/test err", {
     s <- sample(train, size=ceiling(length(train)*bag.fraction), replace=FALSE)
     s.oob <- setdiff(train, s)
     
-    gbmPrep$y <- r[train]
-    gbmPrep$original_data$y <- r[train]
-    gbmPrep$weights <- as.numeric(train %in% s)
+    gbmPrep$gbm_data_obj$y <- r[train]
+    gbmPrep$gbm_data_obj$original_data$y <- r[train]
+    gbmPrep$gbm_data_obj$weights <- as.integer(train %in% s)
     o.gbm <- gbmt_fit_(gbmPrep)
     
     pt <- gbm::pretty_gbm_tree(o.gbm, 1)
@@ -286,8 +286,8 @@ test_that("lmerboost cv params", {
                 shrinkage=c(.2, .5), interaction.depth=c(3, 5), n.trees=5,
                 mc.cores = 1, verbose=F)
   
-  expect_equal(bc, o$best.params)
-  expect_equal(params, o$params)
+  expect_equal(bc, o$best.params, tol=5E-8)
+  expect_equal(params, o$params, tol=5E-8)
   
 })
 
