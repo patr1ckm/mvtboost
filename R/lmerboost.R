@@ -210,7 +210,7 @@ lmerboost_cv <- function(k, folds, y, x, id, train, ...){
 #' @describeIn lmerboost Fitting function for \code{lmerboost}
 #' @export
 #' @importFrom stats predict
-#' @importFrom gbm gbmt_fit_ gbmt_data gbmParallel training_params
+#' @importFrom gbm gbmt_fit_ gbmt_data gbmParallel training_params gbm_dist
 lmerboost.fit <- function(y, X, id, 
                           n.trees=5,
                           interaction.depth=3,
