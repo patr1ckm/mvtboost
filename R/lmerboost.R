@@ -463,6 +463,16 @@ predict.lmerboost <- function(object, newdata, id, n.trees=NULL, ...){
   return(list(yhat=yhat[,n.trees], ranef=ranef[,n.trees], fixed=fixed[,n.trees]))
 }
 
+#' Reports the relative influence of each predictor in an lmerboost models
+#' 
+#' @param object lmerboost object
+#' @param ... arguments passed to \code{influence}, e.g. \code{n.trees},
+#'  \code{relative}
+#' @export
+summary.lmerboost <- function(object, ...){
+  influence(object, ...)
+}
+
 sigma_merMod <- function (object, ...) {
   dc <- object@devcomp
   dd <- dc$dims
