@@ -38,7 +38,7 @@
 #' }
 #' 
 #' @usage 
-#' mvtb_joint(Y, X, 
+#' mvtb(Y, X, 
 #'      n.trees = 100,
 #'      shrinkage = 0.01, 
 #'      interaction.depth = 1,
@@ -58,32 +58,46 @@
 #' @details 
 #' 
 #' This function selects predictors that explain covariance in multivariate outcomes. 
-#' This is done efficiently by fitting separate gbm models for each outcome (contained in \code{$models}). 
+#' This is done efficiently by fitting separate gbm models for each outcome 
+#' (contained in \code{$models}). 
 #' 
-#' (Relative) influences can be retrieved using \code{summary} or \code{mvtb.ri}, which are the usual reductions in SSE due to splitting on each predictor.
-#' The covariance explained in pairs of outcomes by each predictor can be computed using \code{mvtb.covex}. 
+#' (Relative) influences can be retrieved using \code{summary} or \code{mvtb.ri}, which are the usual 
+#' reductions in SSE due to splitting on each predictor.
+#' The covariance explained in pairs of outcomes by each predictor can be computed using 
+#' \code{mvtb.covex}. 
 #' Partial dependence plots can be obtained from \code{mvtb.plot}.
 #' 
-#' The model is tuned jointly by selecting the number of trees that minimize multivariate mean squared error in a test set (by setting \code{train.fraction}) or averaged over k folds in k-fold cross-validation (by setting \code{cv.folds > 1}).
+#' The model is tuned by selecting the number of trees that minimize the mean squared error in a test set
+#' for each outcome (by setting \code{train.fraction}) or averaged over k folds in k-fold 
+#' cross-validation (by setting \code{cv.folds > 1}).
 #' The best number of trees is available via \code{$best.trees}.  
-#' If both \code{cv.folds} and \code{train.fraction} is specified, cross-validation is carried out within the training set.
-#' If \code{s} is specified, \code{train.fraction} is ignored but cross-validation will be carried out for observations in \code{s}.
+#' If both \code{cv.folds} and \code{train.fraction} is specified, cross-validation is carried out 
+#' within the training set.
+#' If \code{s} is specified, \code{train.fraction} is ignored but cross-validation will be carried out
+#'  for observations in \code{s}.
 #' 
-#' Cross-validation models are usually discarded but can be saved by setting \code{save.cv = TRUE}. CV models can be accessed from \code{$ocv} of the 
-#' output object. Observations can be specifically set for inclusion in the training set by passing a vector of integers indexing the rows to include to \code{s}.
-#' Multivariate mean squared training, test, and cv error are available from \code{$train.error, $test.error, $cverr} from the output object 
-#' when \code{iter.details = TRUE}.
+#' Cross-validation models are usually discarded but can be saved by setting \code{save.cv = TRUE}. 
+#' CV models can be accessed from \code{$ocv} of the 
+#' output object. Observations can be specifically set for inclusion in the training set by passing
+#'  a vector of integers indexing the rows to include to \code{s}.
+#' Multivariate mean squared training, test, and cv error are available from \code{$train.error, 
+#' $test.error, $cverr} from the output object when \code{iter.details = TRUE}.
 #' 
-#' Since the output objects can be large, automatic compression is available by setting \code{compress=TRUE}. 
+#' Since the output objects can be large, automatic compression is available by setting 
+#' \code{compress=TRUE}. 
 #' All methods that use the \code{mvtb} object automatically uncompress this object if necessary. 
 #' The function \code{mvtb.uncomp} is available to manually decompress the object.
 #' 
 #' Note that trees are grown until a minimum number of observations in each node is reached. 
-#' If the number of \code{training samples}*\code{bag.fraction} is less the minimum number of observations, (which can occur with small data sets), this will cause an error. 
+#' If the number of \code{training samples}*\code{bag.fraction} is less the minimum number of 
+#' observations, (which can occur with small data sets), this will cause an error. 
 #' Adjust the \code{n.minobsinnode}, \code{train.fraction}, or \code{bag.fraction}.
 #' 
-#' Cross-validation can be parallelized by setting mc.cores > 1. Parallel cross-validation is carried out using \code{parallel::mclapply}, which makes \code{mc.cores} copies of the original environment.
-#' For models with many trees (> 100K), memory limits can be reached rapidly. \code{mc.cores} will not work on Windows. 
+#' Cross-validation can be parallelized by setting mc.cores > 1. Parallel cross-validation is 
+#' carried out using \code{parallel::mclapply}, which makes \code{mc.cores} copies of the
+#' original environment.
+#' For models with many trees (> 100K), memory limits can be reached rapidly.
+#' \code{mc.cores} will not work on Windows. 
 #' 
 #' @seealso \code{summary.mvtb}, \code{predict.mvtb}
 #' 
@@ -234,5 +248,29 @@ mvtb <- function(Y,X,n.trees=100,
 
   class(fl) <- "mvtb"
   return(fl)
+}
+
+#' Predicted values
+#' @param object \code{mvtb} object
+#' @param newdata matrix of predictors. 
+#' @param n.trees (vector) of the number of trees for each outcome. Defaults to the minimum number of trees by CV, test, or training error for each outcome.
+#' @param ... not used
+#' @return Returns a matrix or vector of predictions for all outcomes. 
+#' @export
+predict.mvtb <- function(object, newdata, n.trees=NULL, ...) {
+  if(any(unlist(lapply(object,function(li){is.raw(li)})))){
+    object <- mvtb.uncomp(object)
+  }
+  K <- length(object$models)
+  if(is.null(n.trees)) { n.trees <- apply(object$best.trees, 1, min, na.rm=T) }
+  if(length(n.trees) == 1){ n.trees <- rep(n.trees, K)}
+  
+  Pred <- matrix(0,nrow(newdata),K)
+  for(k in 1:K) {                                     
+    p <- rep(0,nrow(newdata))        
+    p <- predict(object$models[[k]],n.trees=n.trees[k],newdata=data.frame(newdata))
+    Pred[,k] <- p
+  }
+  return(drop(Pred))
 }
 
