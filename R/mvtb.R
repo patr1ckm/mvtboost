@@ -38,7 +38,7 @@
 #' }
 #' 
 #' @usage 
-#' mvtb(Y, X, 
+#' mvtb_joint(Y, X, 
 #'      n.trees = 100,
 #'      shrinkage = 0.01, 
 #'      interaction.depth = 1,
@@ -119,6 +119,7 @@
 #' predict(res,newdata=Xs)
 #' mvtb.cluster(covex)
 #' mvtb.heat(t(mvtb.ri(res)),cexRow=.8,cexCol=1,dec=0)
+#' @inheritParams  mvtb_joint
 #' @export
 mvtb <- function(Y,X,n.trees=100,
                  shrinkage=.01,
@@ -133,230 +134,105 @@ mvtb <- function(Y,X,n.trees=100,
                  compress=FALSE,
                  save.cv=FALSE,
                  iter.details=TRUE,
-                 verbose=FALSE,
-                 mc.cores=1,...) {
-
+                 verbose=FALSE, 
+                 mc.cores=1, ...) {
+  # Gives Y and X different automatic names. Y and X need to be data frames b/c loops over columns.
+  if(!is.data.frame(Y)) Y <- data.frame(Y)  
+  if(!is.data.frame(X)) X <- as.data.frame(X)
   n <- nrow(X)
-  if(class(Y) != "matrix") { Y <- as.matrix(Y) }
-  if(is.null(ncol(X))){ X <- as.matrix(X)}
-
+  
   params <- c(as.list(environment()),list(...)) # this won't copy y and x
-  
-  if(!is.null(seednum)) set.seed(seednum)
-
-  stopifnot(nrow(X) == nrow(Y))
-  
-  n <- nrow(X); k <- ncol(Y); p <- ncol(X);
-  if(is.null(colnames(X))) { colnames(X) <- paste("X",1:p,sep="") }
-  if(is.null(colnames(Y))) { colnames(Y) <- paste("Y",1:k,sep="") } 
-  xnames <- colnames(X)
-  ynames <- colnames(Y)
-  
-  ## sampling
-  if(is.null(s)){
-    s <- sample(1:n, floor(n*train.fraction), replace=F) #force round down if odd
-  } 
-  
   ## Checks
   if(shrinkage > 1 | shrinkage <= 0){ stop("shrinkage should be > 0, < 1")}
   if(train.fraction > 1 | train.fraction <= 0){ stop("train.fraction should be > 0, < 1")}
   if(bag.fraction > 1 | bag.fraction <= 0){ stop("bag.fraction should be > 0, < 1")}
+
   
-  ## Iterations
-  train.error <- test.error <- vector(length=n.trees)
-  
-  ## 0. CV?
-  if(cv.folds > 1) {
-    cv.mods <- mvtbCV(Y=Y, X=X, cv.folds=cv.folds, s=s, save.cv=save.cv, mc.cores=mc.cores,
-                  n.trees=n.trees, shrinkage=shrinkage, interaction.depth=interaction.depth, 
-                  distribution=distribution, bag.fraction=bag.fraction, verbose=verbose,
-                  keep.data=keep.data, seednum=seednum)
-    best.iters.cv <- cv.mods$best.iters.cv
-    cv.err <- cv.mods$cv.err
-    out.fit <- cv.mods$models.k[[cv.folds+1]]
-   } else {
-    out.fit <- mvtb.fit(Y=Y, X=X,
-                        n.trees=n.trees, shrinkage=shrinkage, interaction.depth=interaction.depth,
-                        distribution=distribution, bag.fraction=bag.fraction, verbose=verbose,
-                        s=s, keep.data=keep.data, seednum=seednum,...)
-    best.iters.cv <- NULL
-    cv.err <- NULL
-    cv.mods <- NULL
+  if(!is.null(seednum)) set.seed(seednum)
+  if(is.null(s)) { 
+    s <- sample(1:n, floor(n*train.fraction), replace=F) #force round down if odd
   }
-  models <-  out.fit$models
-  train.err <- out.fit$train.error
-  test.err <- out.fit$test.error
-  cv <- ifelse(is.null(best.iters.cv), NA, best.iters.cv)
-  test <- ifelse(all(is.nan(test.error)), NA, which.min(test.err))
 
-  # can't do oob
-  best.trees <- list(train=which.min(train.err), test=test, oob=NA, cv=cv)
-  best.trees <- do.call(rbind, lapply(1:k, function(i){data.frame(best.trees)}))
+  do.one <- function(y, x, s, ...){ gbm::gbm.fit(y=y[s], x=as.data.frame(x[s,]), ...) }
+  
+  get.pred.err <- function(o, y, x, n.trees){
+    yhat.iter <- as.matrix(predict(o, newdata=data.frame(x), n.trees=1:n.trees))
+    apply(yhat.iter, 2, function(yhat, y){
+      var(y - yhat)
+    }, y=y)
+  }
+  get.test.err <- function(oL, Y, x, s, n.trees){
+    test.err <- vector(mode = "list", length=ncol(Y))
+    names(test.err) <- colnames(Y)
+    for(i in 1:ncol(Y)){
+      test.err[[i]] <- get.pred.err(o=oL[[i]], y=Y[-s, i], x=x[-s,], n.trees=n.trees)
+    }
+    return(test.err)
+  }
+  
+  cv.mods <- cv.mod.err <- vector(mode="list", length(ncol(Y)))
+  
+  if(cv.folds > 1){
+    folds <- sample(1:cv.folds, size=length(s), replace=T)
+    for(i in 1:cv.folds){
+      train <- s[folds != i]
+      test <- s[folds == i]
+      cv.mods[[i]] <- parallel::mclapply(Y, FUN=do.one, x=X, n.trees=n.trees, shrinkage=shrinkage, 
+                             interaction.depth=interaction.depth, distribution=distribution,
+                             bag.fraction=bag.fraction, s=s, 
+                             keep.data=keep.data, verbose=verbose, mc.cores=mc.cores,...)
+      cv.mod.err[[i]] <- get.test.err(cv.mods[[i]], Y=Y, x=X, n.trees=n.trees, s=test)
+    }
+  }
+  
+  models <- parallel::mclapply(Y, FUN=do.one, x=X, n.trees=n.trees, shrinkage=shrinkage, 
+                 interaction.depth=interaction.depth, distribution=distribution,
+                 bag.fraction=bag.fraction, s=s, 
+                 keep.data=keep.data, verbose=verbose, mc.cores=mc.cores,...)
+  
+  train.err <- lapply(models, function(o){ o$train.error})
+  oob.err <- lapply(models, function(o){ -cumsum(o$oobag.improve)})
+  if(cv.folds > 1) {
+    cv.err <- lapply(1:ncol(Y), function(i) { rowMeans(sapply(cv.mod.err, "[[", i)) })
+  } else {
+    cv.err <- lapply(1:ncol(Y), function(i){ rep(NaN, n.trees) })
+  }
+  names(cv.err) <- colnames(Y)
+  if(all(1:n %in% s)){
+    test.err <- lapply(models, function(m){ m$valid.error})
+  } else {
+    test.err <- get.test.err(models, Y=Y, x=X, s=s, n.trees=n.trees)
+  }
+  
+  # which.min can return length 0, return NA instead
+  which.min.na <- function(x){
+    res <- which.min(x)
+    if(length(res) == 0){
+      res <- NA
+    }
+    res
+  }
+  
+  best.trees <- data.frame(train = sapply(train.err, which.min.na), 
+                     test = sapply(test.err, which.min.na),
+                     oob = sapply(oob.err, which.min.na), 
+                     cv = sapply(cv.err, which.min.na))
   rownames(best.trees) <- colnames(Y)
-
+  
   if(!save.cv){cv.mods <- NULL}
   if(!iter.details){train.err <- NULL; test.err <- NULL; cv.err = NULL}
-  
+
   fl <- list(models=models, best.trees=best.trees, params=params,
              train.err=train.err, test.err=test.err, cv.err=cv.err,
              cv.mods=cv.mods,
              s=s,n=nrow(X), xnames=colnames(X), ynames=colnames(Y))
-  
+
   if(compress) {
     # compress each element using bzip2
     fl <- lapply(fl,comp)
   }
+
   class(fl) <- "mvtb"
   return(fl)
 }
-
-#' @describeIn mvtb 
-#' @usage 
-#' mvtb.fit(Y,X,
-#'          n.trees=100,
-#'          shrinkage=.01,
-#'          interaction.depth=1,
-#'          bag.fraction=1,
-#'          s=1:nrow(X),
-#'          seednum=NULL,...)
-#' @export
-mvtb.fit <- function(Y,X,
-                     n.trees=100,
-                     shrinkage=.01,
-                     interaction.depth=1,
-                     bag.fraction=1,
-                     s=1:nrow(X),
-                     seednum=NULL,...) {
-    if(!is.null(seednum)){
-      #print(c("mvtboost: seednum ",seednum));
-      set.seed(seednum)
-    }
-    
-    n <- nrow(X) 
-    q <- ncol(Y)
-
-    ## 2. Fit the models
-    models <- pred <- list()
-    for(m in 1:q) {
-      models[[m]] <- gbm::gbm.fit(y=matrix(Y[s,m,drop=FALSE]), 
-                                  x=as.data.frame(X[s,,drop=FALSE]),
-                                  n.trees=n.trees, 
-                                  interaction.depth=interaction.depth, 
-                                  shrinkage=shrinkage,
-                                  bag.fraction=bag.fraction,
-                                  ...)
-    }
-    yhat <- predict.mvtb.array(list(models=models),n.trees=1:n.trees,newdata=X,drop=FALSE)
-    test.error <- train.error <- rep(0,length=n.trees)
-    for(i in 1:n.trees){
-      R <- Y-yhat[,,i]
-      train.error[i] <- mean((as.matrix(R[s,]))^2,na.rm=TRUE)
-      test.error[i] <- mean((as.matrix(R[-s,]))^2,na.rm=TRUE)
-    }
-    
-    ## 3. Compute multivariate MSE
-    fl <- list(models=models, train.error=train.error, test.error=test.error, s=s)
-    return(fl)
-}
-
-
-## generalized least squares. requires precomputed inverse of the sample covariance matrix of the responses.
-#gls <- function(Sd,Sinv) { .5 * sum(diag( (Sd %*% Sinv) %*% t(Sd %*% Sinv) ),na.rm=TRUE) }
-
-comp <- function(obj) { memCompress(serialize(obj,NULL),"bzip2") }
-uncomp <-function(obj){ unserialize(memDecompress(obj,type="bzip2"))}
-
-## the only tricky thing here is that some models can stop at earlier iterations than others.
-## The default error for each is NA, and the average error (rowMeans over k) is computed with na.rm=TRUE.
-## Thus the error estimate at later iterations may not be based on all folds.
-mvtbCV <- function(Y, X, n.trees, cv.folds, save.cv, s, mc.cores, ...) {
-    n <- nrow(X)
-    
-    cv.groups <- sample(rep(1:cv.folds,length=length(s)))
-    
-    test.error.k <- matrix(NA,nrow=n.trees,ncol=cv.folds)
-    out.k <- list()
-
-    runone <- function(k,cv.groups,sorig, x, ...){
-      if(any(k %in% cv.groups)) {
-        s <- sorig[which(cv.groups != k)]
-      } else { 
-        # since we already subsetted on s, fit to entire training sample
-        s <- sorig
-      }
-      out <- mvtb.fit(s=s, X=x, ...) # the only thing that changes is s. everything is passed via ..., including Y and X
-      return(out)
-    }
-    
-    # Last fold contains the full sample
-    ## The 'if' notation is just to make sure it works on windows.
-    if(.Platform$OS.type == "unix") { 
-      out.k <- parallel::mclapply(1:(cv.folds + 1), FUN=runone, cv.groups=cv.groups, sorig=s, Y=Y, x=X, n.trees=n.trees, ..., mc.cores=mc.cores)
-    } else {
-      out.k <- parallel::mclapply(1:(cv.folds + 1), FUN=runone, cv.groups=cv.groups, sorig=s, Y=Y, x=X, n.trees=n.trees, ..., mc.cores=1)
-    }
-        
-    for(k in 1:cv.folds) {
-      test.error.k[,k] <- out.k[[k]]$test.error
-    }
-  
-    cv.err <- rowMeans(test.error.k,na.rm=TRUE)
-    best.iters.cv <- which.min(cv.err)
-    
-    if(save.cv) {
-        l <- list(models.k=out.k,best.iters.cv=best.iters.cv,cv.err=cv.err,cv.groups=cv.groups)
-    } else {
-        out.k[1:cv.folds] <- NULL
-        models.k <- c(lapply(1:cv.folds,list),out.k)
-        l <- list(models.k=models.k,best.iters.cv=best.iters.cv,cv.err=cv.err)
-    }
-    return(l)
-}
-
-predict.mvtb.array <- function(object, newdata, n.trees, drop=TRUE, ...) {
-
-  if(any(unlist(lapply(object,function(li){is.raw(li)})))){
-    object <- mvtb.uncomp(object)
-  }
-
-  K <- length(object$models)
-  treedim <- ifelse(length(n.trees) > 1,max(n.trees),1)
-  Pred <- array(0,dim=c(nrow(newdata),K,treedim))  
-  for(k in 1:K) {                                     
-    p <- rep(0,nrow(newdata))        
-    p <- predict(object$models[[k]],n.trees=n.trees, newdata=data.frame(newdata))
-    Pred[,k,] <- p
-  }
-
-  if(drop){
-    Pred <- drop(Pred)
-  }
-  return(Pred)
-}
-
-#' Predicted values
-#' @param object \code{mvtb} object
-#' @param newdata matrix of predictors. 
-#' @param n.trees (vector) of the number of trees for each outcome. Defaults to the minimum number of trees by CV, test, or training error for each outcome.
-#' @param ... not used
-#' @return Returns a matrix or vector of predictions for all outcomes. 
-#' @export
-predict.mvtb <- function(object, newdata, n.trees=NULL, ...) {
-  if(any(unlist(lapply(object,function(li){is.raw(li)})))){
-    object <- mvtb.uncomp(object)
-  }
-  K <- length(object$models)
-  if(is.null(n.trees)) { n.trees <- apply(object$best.trees, 1, min, na.rm=T) }
-  if(length(n.trees) == 1){ n.trees <- rep(n.trees, K)}
-  
-  Pred <- matrix(0,nrow(newdata),K)
-  for(k in 1:K) {                                     
-    p <- rep(0,nrow(newdata))        
-    p <- predict(object$models[[k]],n.trees=n.trees[k],newdata=data.frame(newdata))
-    Pred[,k] <- p
-  }
-  return(drop(Pred))
-}
-
-
 
