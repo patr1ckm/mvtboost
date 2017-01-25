@@ -193,10 +193,12 @@ mvtb <- function(Y,X,n.trees=100,
       test <- s[folds == i]
       cv.mods[[i]] <- parallel::mclapply(Y, FUN=do.one, x=X, n.trees=n.trees, shrinkage=shrinkage, 
                              interaction.depth=interaction.depth, distribution=distribution,
-                             bag.fraction=bag.fraction, s=s, 
+                             bag.fraction=bag.fraction, s=train, 
                              keep.data=keep.data, verbose=verbose, mc.cores=mc.cores,...)
       cv.mod.err[[i]] <- get.test.err(cv.mods[[i]], Y=Y, x=X, n.trees=n.trees, s=test)
     }
+  } else {
+    folds <- list()
   }
   
   models <- parallel::mclapply(Y, FUN=do.one, x=X, n.trees=n.trees, shrinkage=shrinkage, 
@@ -233,12 +235,12 @@ mvtb <- function(Y,X,n.trees=100,
                      cv = sapply(cv.err, which.min.na))
   rownames(best.trees) <- colnames(Y)
   
-  if(!save.cv){cv.mods <- NULL}
+  if(!save.cv){cv.mods <- NULL; folds <- NULL}
   if(!iter.details){train.err <- NULL; test.err <- NULL; cv.err = NULL}
 
   fl <- list(models=models, best.trees=best.trees, params=params,
              train.err=train.err, test.err=test.err, cv.err=cv.err,
-             cv.mods=cv.mods,
+             cv.mods=cv.mods, folds=folds,
              s=s,n=nrow(X), xnames=colnames(X), ynames=colnames(Y))
 
   if(compress) {
@@ -249,6 +251,10 @@ mvtb <- function(Y,X,n.trees=100,
   class(fl) <- "mvtb"
   return(fl)
 }
+
+comp <- function(obj) { memCompress(serialize(obj,NULL),"bzip2") }
+uncomp <-function(obj){ unserialize(memDecompress(obj,type="bzip2"))}
+
 
 #' Predicted values
 #' @param object \code{mvtb} object
