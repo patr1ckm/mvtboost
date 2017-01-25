@@ -19,44 +19,22 @@ s <- 1:500
 cv.folds <- 3
 save.cv=TRUE
 
-check.samp <- function(ocv,s=1:500,folds=cv.folds,n=1000) {
-  ## get the training sample used in every fold
-  fold.obs <- lapply(ocv$models.k[1:folds],function(out){unique(out$s)})
-  ## check which obs in s (1:500) are in each f. The row sums of the resulting matrix should be k-1
-  expect_true(all(rowSums(t(plyr::laply(fold.obs,function(f){matrix(s %in% f)})))==(folds-1)))
-  expect_equal(sum(sapply(fold.obs,length)),n)
-  for(k in 1:cv.folds) {
-    expect_true(!any(intersect(which(ocv$cv.groups==k),fold.obs[[k]])))
-  }
-}
-
 test_that("mvtb - CV param", {
-# 4. check an initial split of training and test, with CV only in the training set
-out <- mvtb(X=X,Y=Y,s=1:500,n.trees=n.trees,shrinkage=.5,cv.folds=3,save.cv=TRUE)
-out2 <- mvtb(X=X,Y=Y,n.trees=n.trees,train.fraction=.5,shrinkage=.5,cv.folds=3,s=NULL,save.cv=TRUE)
-check.samp(out$cv.mods,s=out$params$s,folds=3)
-s <- out2$s
-fold.obs <- lapply(out2$cv.mods$models.k[1:3],function(out){unique(out$s)})
-expect_true(all(unique(unlist(fold.obs)) %in% s))
-expect_true(all(s %in% unique(unlist(fold.obs))))
 
-expect_true(all(!unlist(lapply(out$cv.mods$models.k,function(m){any(m$s > 500)})))) # expect that not any observation numbers > 500 (s was 500)
-
-# 5. check that setting the seed obtains the same observations in each fold 
-out1 <- mvtb(X=X,Y=Y,s=1:500,n.trees=n.trees,shrinkage=.5,cv.folds=3,seednum=1)
-out2 <- mvtb(X=X,Y=Y,s=1:500,n.trees=n.trees,shrinkage=.5,cv.folds=3,seednum=1)
-
-expect_equal(out1,out2)
-
-out1 <- mvtb(X=X,Y=Y,train.fraction=.5,n.trees=n.trees,shrinkage=.5,cv.folds=3,seednum=1)
-out2 <- mvtb(X=X,Y=Y,train.fraction=.5,n.trees=n.trees,shrinkage=.5,cv.folds=3,seednum=1)
-
-expect_equal(out1,out2)
-
-out1 <- mvtb(X=X,Y=Y,train.fraction=.5,n.trees=n.trees,shrinkage=.5,cv.folds=3,bag.frac=.5,seednum=1)
-out2 <- mvtb(X=X,Y=Y,train.fraction=.5,n.trees=n.trees,shrinkage=.5,cv.folds=3,bag.frac=.5,seednum=1)
-
-expect_equal(out1,out2)
+  out1 <- mvtb(X=X,Y=Y,s=1:500,n.trees=n.trees,shrinkage=.5,cv.folds=3,seednum=1)
+  out2 <- mvtb(X=X,Y=Y,s=1:500,n.trees=n.trees,shrinkage=.5,cv.folds=3,seednum=1)
+  
+  expect_equal(out1,out2)
+  
+  out1 <- mvtb(X=X,Y=Y,train.fraction=.5,n.trees=n.trees,shrinkage=.5,cv.folds=3,seednum=1)
+  out2 <- mvtb(X=X,Y=Y,train.fraction=.5,n.trees=n.trees,shrinkage=.5,cv.folds=3,seednum=1)
+  
+  expect_equal(out1,out2)
+  
+  out1 <- mvtb(X=X,Y=Y,train.fraction=.5,n.trees=n.trees,shrinkage=.5,cv.folds=3,bag.frac=.5,seednum=1)
+  out2 <- mvtb(X=X,Y=Y,train.fraction=.5,n.trees=n.trees,shrinkage=.5,cv.folds=3,bag.frac=.5,seednum=1)
+  
+  expect_equal(out1,out2)
 })
 
 ## 6. Final model in cv.folds=3 should be the same as cv.folds =1

@@ -172,7 +172,7 @@ mvtb <- function(Y,X,n.trees=100,
   get.pred.err <- function(o, y, x, n.trees){
     yhat.iter <- as.matrix(predict(o, newdata=data.frame(x), n.trees=1:n.trees))
     apply(yhat.iter, 2, function(yhat, y){
-      var(y - yhat)
+      mean((y - yhat)^2)
     }, y=y)
   }
   get.test.err <- function(oL, Y, x, s, n.trees){
