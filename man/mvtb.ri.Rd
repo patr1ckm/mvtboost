@@ -2,7 +2,7 @@
 % Please edit documentation in R/mvtb_influence.R
 \name{mvtb.ri}
 \alias{mvtb.ri}
-\title{Computes the relative influence of each predictor for each outcome}
+\title{Computes the relative importance of each predictor for each outcome}
 \usage{
 mvtb.ri(model, n.trees = NULL, relative = "col", sort = FALSE, ...)
 }
@@ -11,17 +11,17 @@ mvtb.ri(model, n.trees = NULL, relative = "col", sort = FALSE, ...)
 
 \item{n.trees}{number of trees to use. Defaults to the minimum number of trees by CV, test, or training error for each outcome.}
 
-\item{relative}{How to scale the multivariate influences. If \code{"col"}, each column sums to 100. If \code{"tot"}, the whole matrix sums to 100 (a percent). Otherwise, the raw reductions in SSE are returned.}
+\item{relative}{How to scale the multivariate importances. If \code{"col"}, each column sums to 100. If \code{"tot"}, the whole matrix sums to 100 (a percent). Otherwise, the raw reductions in SSE are returned.}
 
-\item{sort}{whether or not results should be (reverse) sortd. Defaults to FALSE.}
+\item{sort}{whether or not results should be (reverse) sorted. Defaults to FALSE.}
 
-\item{...}{Additional arguments passed to \code{gbm::relative_influence}}
+\item{...}{Additional arguments passed to \code{gbm::relative_importance}}
 }
 \value{
-Matrix of (relative) influences.
+Matrix of (relative) importances.
 }
 \description{
-The relative influence of a predictor is the reduction in sums of squares attributable to splits on individual predictors.
+The relative importance of a predictor is the reduction in sums of squares attributable to splits on individual predictors.
 It is often expressed as a percent (sums to 100).
 }
 
