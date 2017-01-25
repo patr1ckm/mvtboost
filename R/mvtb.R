@@ -13,7 +13,6 @@
 #' @param cv.folds   number of cross validation folds. Default: 1. Runs k + 1 models, where the k models are run in parallel and the final model is run on the entire sample. If larger than 1, the number of trees that minimize the multivariate MSE averaged over k-folds is reported in \code{object$best.trees}
 #' @param keep.data a logical variable indicating whether to keep the data stored with the object.
 #' @param s vector of indices denoting observations to be used for the training sample. If \code{s} is given, \code{train.fraction} is ignored.
-#' @param seednum integer passed to \code{set.seed}
 #' @param compress \code{TRUE/FALSE}. Compress output results list using bzip2 (approx 10\% of original size). Default is \code{FALSE}.
 #' @param save.cv  \code{TRUE/FALSE}. Save all k-fold cross-validation models. Default is \code{FALSE}.
 #' @param iter.details \code{TRUE/FALSE}. Return training, test, and cross-validation error at each iteration. Default is \code{FALSE}.
@@ -48,7 +47,6 @@
 #'      cv.folds = 1, 
 #'      keep.data = FALSE,
 #'      s = NULL, 
-#'      seednum = NULL, 
 #'      compress = FALSE, 
 #'      save.cv = FALSE,
 #'      iter.details = TRUE,
@@ -144,7 +142,6 @@ mvtb <- function(Y,X,n.trees=100,
                  cv.folds=1,
                  keep.data=FALSE,
                  s=NULL,
-                 seednum=NULL,
                  compress=FALSE,
                  save.cv=FALSE,
                  iter.details=TRUE,
@@ -162,7 +159,6 @@ mvtb <- function(Y,X,n.trees=100,
   if(bag.fraction > 1 | bag.fraction <= 0){ stop("bag.fraction should be > 0, < 1")}
 
   
-  if(!is.null(seednum)) set.seed(seednum)
   if(is.null(s)) { 
     s <- sample(1:n, floor(n*train.fraction), replace=F) #force round down if odd
   }

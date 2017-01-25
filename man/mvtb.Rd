@@ -14,7 +14,6 @@ mvtb(Y, X,
      cv.folds = 1, 
      keep.data = FALSE,
      s = NULL, 
-     seednum = NULL, 
      compress = FALSE, 
      save.cv = FALSE,
      iter.details = TRUE,
@@ -43,8 +42,6 @@ mvtb(Y, X,
 \item{keep.data}{a logical variable indicating whether to keep the data stored with the object.}
 
 \item{s}{vector of indices denoting observations to be used for the training sample. If \code{s} is given, \code{train.fraction} is ignored.}
-
-\item{seednum}{integer passed to \code{set.seed}}
 
 \item{compress}{\code{TRUE/FALSE}. Compress output results list using bzip2 (approx 10\% of original size). Default is \code{FALSE}.}
 

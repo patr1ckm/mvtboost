@@ -33,8 +33,6 @@ pcb(Y, X, n.trees = 100, shrinkage = 0.01, interaction.depth = 1,
 
 \item{s}{vector of indices denoting observations to be used for the training sample. If \code{s} is given, \code{train.fraction} is ignored.}
 
-\item{seednum}{integer passed to \code{set.seed}}
-
 \item{compress}{\code{TRUE/FALSE}. Compress output results list using bzip2 (approx 10\% of original size). Default is \code{FALSE}.}
 
 \item{save.cv}{\code{TRUE/FALSE}. Save all k-fold cross-validation models. Default is \code{FALSE}.}
