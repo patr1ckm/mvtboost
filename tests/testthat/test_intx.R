@@ -14,14 +14,9 @@ E <- matrix(rnorm(n*4),nrow=n,ncol=4)
 Y <- X %*% B + E
 
 out <- mvtb(Y=Y, X=X[,1:3], n.trees=50,interaction.depth = 5, shrinkage = .5)
-out2 <- mvtb_sep(Y=Y, X=X[,1:3], n.trees=50, interaction.depth = 5, shrinkage = .5)
 
 test_that("intx runs", {
   expect_is(mvtb.nonlin(out, X=X[,1:3], Y=Y, n.trees=50, detect = "grid"), "list")
   expect_is(mvtb.nonlin(out, X=X[,1:3], Y=Y, n.trees=50, detect = "influence"), "list")
   expect_is(mvtb.nonlin(out, X=X[,1:3], Y=Y, n.trees=50, detect = "lm"), "list")
-  expect_is(mvtb.nonlin(out2, X=X[,1:3], Y=Y, n.trees=50, detect = "grid"), "list")
-  expect_is(mvtb.nonlin(out2, X=X[,1:3], Y=Y, n.trees=50, detect = "influence"), "list")
-  expect_is(mvtb.nonlin(out2, X=X[,1:3], Y=Y, n.trees=50, detect = "lm"), "list")
-  
 })

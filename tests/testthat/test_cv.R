@@ -30,26 +30,6 @@ check.samp <- function(ocv,s=1:500,folds=cv.folds,n=1000) {
   }
 }
 
-
-test_that("mvtbCV", {
-  ocv <- mvtboost:::mvtbCV(Y=Y, X=X, distribution="gaussian", n.trees=n.trees, cv.folds=3, s=s, save.cv=TRUE, mc.cores=1, verbose=F)
-  # 1. check that each observation is left out once.
-  check.samp(ocv)
-  
-  # 2. check that observations in k are not in training set
-
-  ocv <- mvtboost:::mvtbCV(Y=Y, X=X, distribution="gaussian", n.trees=n.trees, cv.folds=3, s=s, save.cv=TRUE, mc.cores=1, verbose=F)
-  k.obs <- lapply(1:3,function(k){which(ocv$cv.groups==k)})
-  fold.obs <- lapply(ocv$models.k[1:3],function(out){unique(out$s)})
-  expect_true(length(unlist(mapply(intersect,k.obs,fold.obs))) < 1)
-  
-  # 3. no intersection between the observations supposed to be in the kth fold, and in the training set
-  # observations in a training fold are only from s at each iteration
-  expect_true(all(unlist(lapply(fold.obs,function(f){
-      all(unlist(lapply(f,function(col){col %in% s})))
-  }))))
-})
-
 test_that("mvtb - CV param", {
 # 4. check an initial split of training and test, with CV only in the training set
 out <- mvtb(X=X,Y=Y,s=1:500,n.trees=n.trees,shrinkage=.5,cv.folds=3,save.cv=TRUE)
