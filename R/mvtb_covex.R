@@ -171,3 +171,24 @@ cor.red <- function(Rm,D) {
 ## Some covariance discrepancy functions, motivated from SEM.
 ## 1/2 the ||R||_F, the frobenius norm of the  covariance discrepancy matrix
 uls <- function(Sd) { .5 * sum(diag(Sd %*% t(Sd))) }
+
+predict.mvtb.array <- function(object, newdata, n.trees, drop=TRUE, ...) {
+  
+  if(any(unlist(lapply(object,function(li){is.raw(li)})))){
+    object <- mvtb.uncomp(object)
+  }
+  
+  K <- length(object$models)
+  treedim <- ifelse(length(n.trees) > 1,max(n.trees),1)
+  Pred <- array(0,dim=c(nrow(newdata),K,treedim))  
+  for(k in 1:K) {                                     
+    p <- rep(0,nrow(newdata))        
+    p <- predict(object$models[[k]],n.trees=n.trees, newdata=data.frame(newdata))
+    Pred[,k,] <- p
+  }
+  
+  if(drop){
+    Pred <- drop(Pred)
+  }
+  return(Pred)
+}
