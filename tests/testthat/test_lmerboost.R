@@ -247,7 +247,7 @@ test_that("runs if tree doesn't split", {
 context("lmerboost")
 
 set.seed(104)
-ngroups <- 25
+ngroups <- 50
 group_size <- 2
 n <- ngroups * group_size
 id <- factor(rep(1:ngroups, each = group_size))
@@ -338,9 +338,10 @@ test_that("lmerboost cv params", {
 
 test_that("lmerboost err", {
   # error in lmerboost.fit
-  y[56] <- NA
+  y2 <- y
+  y2[56] <- NA
   msg <- capture_output(
-    expect_error(o1 <- lmerboost(y = y, X = X, id="id", n.trees=5,
+    expect_error(o1 <- lmerboost(y = y2, X = X, id="id", n.trees=5,
                                  cv.folds = 1, shrinkage = .1, verbose=F))
   )
 
@@ -352,16 +353,8 @@ test_that("lmerboost err", {
 
 })
 
-test_that("lmerboost_cv train", {
-  # for now, just test that they run
-  o <- lmerboost(y=y, X=X, id="id", cv.folds=3, bag.fraction=1,
-                 subset=1:(n/2), n.trees=3, verbose=F)
-  o <- lmerboost(y=y, X=X, id="id", cv.folds=3, bag.fraction=.5,
-                 subset=1:(n/2), n.trees=3, verbose=F)
-  expect_true(class(o) == "lmerboost")
-})
-
 ## TODO: combinations of params
+
 
 test_that("lmerboost importance", {
   X <- data.frame(id,  X2 = rnorm(n), X1 = x)
@@ -379,8 +372,8 @@ test_that("lmerboost importance", {
 test_that("lmerboost predict", {
   n.trees = 5
   lb <- lmerboost(y = y, X = X, id="id", n.trees = n.trees, cv.folds = 3,
-                  shrinkage = c(.5, 1), verbose=F,
-                 bag.fraction=.5, subset=1:500, save.mods=TRUE)
+                  shrinkage = c(.5, 1), verbose=F, n.minobsinnode = 1,
+                 bag.fraction=1, subset=1:(n/2), save.mods=TRUE)
   yh <- predict(lb, newdata=X, id="id", n.trees=min(lb$best.trees, na.rm=T))
   expect_equal(lb$yhat, yh$yhat)
   expect_equal(lb$fixed, yh$fixed)
