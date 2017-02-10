@@ -275,11 +275,7 @@ lmerboost.fit <- function(y, X, id,
     if(i == 1){
       var.type = tree$variables$var_type
     }
-    #### !!!!
-    if(i == 69){
-      #browser()
-    }
-    #### !!!!
+
     trees[[i]] <- tree$trees[[1]]
     c.split[[i]] <- tree$c.splits
     pt <- gbm::pretty_gbm_tree(tree, 1)
@@ -293,7 +289,6 @@ lmerboost.fit <- function(y, X, id,
     
     # prediction determines into which node observations fall
     # factor labels correspond to terminal node id (rows of pt)
-    # Check to make sure the tree has split on something, if not, use a column of 1s
     if(nrow(pt) > 1){
       nodes <- droplevels(factor(gbm_pred, 
                       levels=as.character(pt$Prediction+tree$initF), 
@@ -303,6 +298,7 @@ lmerboost.fit <- function(y, X, id,
       mm <- stats::model.matrix(~nodes)[,-1, drop=FALSE]
       colnames(mm) <- gsub("nodes", "X", colnames(mm))
     } else {
+      # if no split, ncol(mm)==0
       mm <- matrix(1, nrow(X), 1)[,-1, drop=FALSE]
     }
     
@@ -326,7 +322,8 @@ lmerboost.fit <- function(y, X, id,
     if(!indep) bars <- "|"
     
     # This check is for testing whether the tree has split on anything or not
-    if(ncol(mm) > 1){
+    # if no split, ncol(mm)==0
+    if(ncol(mm) > 0){
       form <- stats::as.formula(paste0("r ~ 1 + ", addx, " + (1 + ",addx, " ", bars," id)"))
     } else {
       # use a random intercept model and delete column of 1s

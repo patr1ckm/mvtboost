@@ -48,7 +48,7 @@ test_that("lmerboost.fit bag.fraction, shrinkage, subset, train/oob/test err", {
                      bag.fraction = bag.fraction,  indep = TRUE, verbose = FALSE,
                      n.trees = n.trees, shrinkage = shrinkage, 
                      interaction.depth = interaction.depth,
-                     n.minobsinnode = 10)
+                     n.minobsinnode = 10, verbose=FALSE)
   
   
   set.seed(104)
