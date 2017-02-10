@@ -225,6 +225,20 @@ test_that("lmerboost.fit drops rank deficient cols", {
   expect_equal(lb$fixed[-train], unname(fixedm[-train]))
   
 })
+
+test_that("runs if tree doesn't split", {
+  ## WTF
+  nsub <- 3
+  age <- rep(c(15, 25, 50, 73), times=nsub)
+  sq <- (age-mean(age))^2
+  id <- factor(rep(1:nsub, each=4))
+  mm <- model.matrix(~id+sq:id-1)
+  b <- rep(0, ncol(mm)) 
+  y <- mm %*% b #+ rnorm(length(id), 0, .001)
+  om3 <- lmerboost(y=y, X=data.frame(age, id), id="id", interaction.depth=10, 
+                  n.minobsinnode=1, n.trees=1, shrinkage=1, bag.fraction=.85)
+  
+})
 ## TODO: lmerboost.fit logical subset
 
 ## TODO: lmerboost.fit train.fraction, interaction.depth, indep

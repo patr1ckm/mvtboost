@@ -21,48 +21,53 @@ save.cv=TRUE
 
 test_that("mvtb - CV param", {
 
-  out1 <- mvtb(X=X,Y=Y,s=1:500,n.trees=n.trees,shrinkage=.5,cv.folds=3,seednum=1)
-  out2 <- mvtb(X=X,Y=Y,s=1:500,n.trees=n.trees,shrinkage=.5,cv.folds=3,seednum=1)
+  set.seed(1)
+  out1 <- mvtb(X=X,Y=Y,s=1:500,n.trees=n.trees,shrinkage=.5,cv.folds=3)
+  set.seed(1)
+  out2 <- mvtb(X=X,Y=Y,s=1:500,n.trees=n.trees,shrinkage=.5,cv.folds=3)
   
   expect_equal(out1,out2)
   
-  out1 <- mvtb(X=X,Y=Y,train.fraction=.5,n.trees=n.trees,shrinkage=.5,cv.folds=3,seednum=1)
-  out2 <- mvtb(X=X,Y=Y,train.fraction=.5,n.trees=n.trees,shrinkage=.5,cv.folds=3,seednum=1)
+  set.seed(1)
+  out1 <- mvtb(X=X,Y=Y,train.fraction=.5,n.trees=n.trees,shrinkage=.5,cv.folds=3)
+  set.seed(1)
+  out2 <- mvtb(X=X,Y=Y,train.fraction=.5,n.trees=n.trees,shrinkage=.5,cv.folds=3)
   
   expect_equal(out1,out2)
   
-  out1 <- mvtb(X=X,Y=Y,train.fraction=.5,n.trees=n.trees,shrinkage=.5,cv.folds=3,bag.frac=.5,seednum=1)
-  out2 <- mvtb(X=X,Y=Y,train.fraction=.5,n.trees=n.trees,shrinkage=.5,cv.folds=3,bag.frac=.5,seednum=1)
+  set.seed(1)
+  out1 <- mvtb(X=X,Y=Y,train.fraction=.5,n.trees=n.trees,shrinkage=.5,cv.folds=3,bag.frac=.5)
+  set.seed(1)
+  out2 <- mvtb(X=X,Y=Y,train.fraction=.5,n.trees=n.trees,shrinkage=.5,cv.folds=3,bag.frac=.5)
   
   expect_equal(out1,out2)
 })
 
-## 6. Final model in cv.folds=3 should be the same as cv.folds =1
 ## This should be true for all combinations of train.fraction, and s
 test_that("final_model", {
-  out <- mvtb(X=X,Y=Y,n.trees=n.trees,shrinkage=.5,cv.folds=3,compress=F,s=1:1000,seednum=1)
-  out2 <- mvtb(X=X,Y=Y,n.trees=n.trees,shrinkage=.5,cv.folds=1,compress=F,s=1:1000,seednum=1)
+  out <- mvtb(X=X,Y=Y,n.trees=n.trees,shrinkage=.5,cv.folds=3,compress=F,s=1:1000)
+  out2 <- mvtb(X=X,Y=Y,n.trees=n.trees,shrinkage=.5,cv.folds=1,compress=F,s=1:1000)
   out$params <- out2$params
   out$best.trees <- out2$best.trees
   out$cv.err <- out2$cv.err <- NULL
   expect_equal(out,out2) 
   
-  out <- mvtb(X=X,Y=Y,n.trees=n.trees,shrinkage=.5,cv.folds=3,compress=F,seednum=1)
-  out2 <- mvtb(X=X,Y=Y,n.trees=n.trees,shrinkage=.5,cv.folds=1,compress=F,seednum=1)
+  out <- mvtb(X=X,Y=Y,n.trees=n.trees,shrinkage=.5,cv.folds=3,compress=F)
+  out2 <- mvtb(X=X,Y=Y,n.trees=n.trees,shrinkage=.5,cv.folds=1,compress=F)
   out$params <- out2$params
   out$best.trees <- out2$best.trees
   out$cv.err <- out2$cv.err <- NULL
   expect_equal(out,out2)
   
-  out <- mvtb(X=X,Y=Y,n.trees=n.trees,shrinkage=.5,train.fraction=.5,cv.folds=3,compress=F,seednum=1)
-  out2 <- mvtb(X=X,Y=Y,n.trees=n.trees,shrinkage=.5,train.fraction=.5,cv.folds=1,compress=F,seednum=1)
+  out <- mvtb(X=X,Y=Y,n.trees=n.trees,shrinkage=.5,train.fraction=.5,cv.folds=3,compress=F)
+  out2 <- mvtb(X=X,Y=Y,n.trees=n.trees,shrinkage=.5,train.fraction=.5,cv.folds=1,compress=F)
   out$params <- out2$params
   out$best.trees <- out2$best.trees
   out$cv.err <- out2$cv.err <- NULL
   expect_equal(out,out2)
   
-  out <- mvtb(X=X,Y=Y,n.trees=n.trees,shrinkage=.5,cv.folds=3,compress=F,seednum=1,s=1:500)
-  out2 <- mvtb(X=X,Y=Y,n.trees=n.trees,shrinkage=.5,cv.folds=1,compress=F,seednum=1,s=1:500)
+  out <- mvtb(X=X,Y=Y,n.trees=n.trees,shrinkage=.5,cv.folds=3,compress=F,s=1:500)
+  out2 <- mvtb(X=X,Y=Y,n.trees=n.trees,shrinkage=.5,cv.folds=1,compress=F,s=1:500)
   out$params <- out2$params
   out$best.trees <- out2$best.trees
   out$cv.err <- out2$cv.err <- NULL

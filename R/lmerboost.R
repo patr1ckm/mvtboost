@@ -275,27 +275,36 @@ lmerboost.fit <- function(y, X, id,
     if(i == 1){
       var.type = tree$variables$var_type
     }
+    #### !!!!
+    if(i == 69){
+      #browser()
+    }
+    #### !!!!
     trees[[i]] <- tree$trees[[1]]
     c.split[[i]] <- tree$c.splits
     pt <- gbm::pretty_gbm_tree(tree, 1)
     
     # get gbm predictions for whole sample
     gbm_pred <- predict(tree, newdata = data.frame(X[,-id, drop=F]), n.trees = 1) 
-    
-    
+      
     # list terminal nodes (-1) first; rownames are are terminal node ids
     # this forces node factor order to have a terminal node as reference, not surrogate
     pt <- pt[order(pt$SplitVar), ]
     
     # prediction determines into which node observations fall
     # factor labels correspond to terminal node id (rows of pt)
-    nodes <- droplevels(factor(gbm_pred, 
-                    levels=as.character(pt$Prediction+tree$initF), 
-                    labels=rownames(pt)))
-    
-    # design matrix - add intercept via lmer. 
-    mm <- stats::model.matrix(~nodes)[,-1, drop=FALSE]
-    colnames(mm) <- gsub("nodes", "X", colnames(mm))
+    # Check to make sure the tree has split on something, if not, use a column of 1s
+    if(nrow(pt) > 1){
+      nodes <- droplevels(factor(gbm_pred, 
+                      levels=as.character(pt$Prediction+tree$initF), 
+                      labels=rownames(pt)))
+      
+      # design matrix - add intercept via lmer. 
+      mm <- stats::model.matrix(~nodes)[,-1, drop=FALSE]
+      colnames(mm) <- gsub("nodes", "X", colnames(mm))
+    } else {
+      mm <- matrix(1, nrow(X), 1)[,-1, drop=FALSE]
+    }
     
     # Have to handle missinginess on id as a special case
     # observations that are missing on id will receive gbm predictions
@@ -315,7 +324,14 @@ lmerboost.fit <- function(y, X, id,
     addx <- paste0(colnames(mm), collapse = " + ")
     bars <- "||"
     if(!indep) bars <- "|"
-    form <- stats::as.formula(paste0("r ~ ", addx, " + (",addx, " ", bars," id)"))
+    
+    # This check is for testing whether the tree has split on anything or not
+    if(ncol(mm) > 1){
+      form <- stats::as.formula(paste0("r ~ 1 + ", addx, " + (1 + ",addx, " ", bars," id)"))
+    } else {
+      # use a random intercept model and delete column of 1s
+      form <- stats::as.formula("r ~ 1 + (1 | id)")
+    }
     e <- new.env(parent=globalenv()) 
     e$s <- s
     environment(form) <- e
