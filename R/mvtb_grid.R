@@ -37,7 +37,7 @@ mvtb_grid <- function(Y,X,n.trees=100,
   do_one <- function(args, folds, train, x, ...){
     new_args <- append(args, list(s=train[folds != args$k], X=x, ...))
     new_args$k <- NULL
-    do.call(mvtb_sep, new_args)
+    do.call(mvtb, new_args)
   }
   mods <- parallel::mclapply(grid_ls, FUN=do_one, folds=folds, train=train, 
                              Y=Y, x=X, distribution=distribution,

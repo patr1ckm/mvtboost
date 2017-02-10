@@ -1,5 +1,5 @@
 ---
-title: "mvtboost example 2: Well-being"
+title: "mvtboost example: Well-being"
 author: "Patrick Miller"
 date: "`r Sys.Date()`"
 output: 
