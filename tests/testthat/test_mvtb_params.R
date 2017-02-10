@@ -8,7 +8,7 @@ B[1,1] <- .5
 X <- matrix(rbinom(n*nrow(B), size=1, prob=.5), n, nrow(B))
 E <- MASS::mvrnorm(n, rep(0,4), Sigma=diag(4))
 Y <- X %*% B + E
-mvtb(Y=Y, X=X)
+o <- mvtb(Y=Y, X=X)
 
 test_that("n.trees", {
   r <- mvtb(X=X, Y=Y, n.trees=50)
@@ -54,13 +54,13 @@ test_that("compress", {
 })
 
 test_that("mvtb.uncomp", {
-  for(f in c(mvtb)){
-    rc <- f(X=X,Y=Y,n.trees=5,  compress=TRUE)
-    r  <- f(X=X,Y=Y,n.trees=5,  compress=FALSE)
-    r2 <- mvtb.uncomp(rc)
-    r$params$compress <- TRUE # set to TRUE so that the comparison is legitimate
-    expect_equal(r,r2)
-  }
+  set.seed(104)
+  rc <- mvtb(X=X,Y=Y,n.trees=5,  compress=TRUE)
+  set.seed(104)
+  r  <- mvtb(X=X,Y=Y,n.trees=5,  compress=FALSE)
+  r2 <- mvtb.uncomp(rc)
+  r$params$compress <- TRUE # set to TRUE so that the comparison is legitimate
+  expect_equal(r,r2)
 })
 
 test_that("iter.details", {
