@@ -171,7 +171,13 @@ mvtb.perspec <- function(object,response.no=1,predictor.no=1:2,n.trees=NULL,
 #' mvtb.heat(t(mvtb.ri(res)),cexRow=.8,cexCol=1,dec=0)
 #' @seealso \code{plot.mvtb}, \code{mvtb.perspec}
 #' @importFrom graphics image axis text
-mvtb.heat <- function(x,clust.method="ward.D",dist.method="manhattan",dec=2,numformat=NULL,col=NULL,cexRow=NULL,cexCol=NULL,...) {
+mvtb.heat <- function(x, clust.method="ward.D",
+                      dist.method="manhattan",
+                      dec=2,
+                      numformat=NULL,
+                      col=NULL,
+                      cexRow=NULL,
+                      cexCol=NULL,...) {
   #if(class(x) %in% "mvtb"){
   #  if(any(unlist(lapply(x,function(li){is.raw(li)})))){
   #    x <- mvtb.uncomp(x)

@@ -16,7 +16,8 @@ Suggests:
     testthat,
     parallel,
     knitr,
-    rmarkdown
+    rmarkdown,
+    ggplot2
 Imports:
     stats,
     graphics,
