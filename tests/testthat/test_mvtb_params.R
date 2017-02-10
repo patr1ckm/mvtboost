@@ -66,16 +66,14 @@ test_that("mvtb.uncomp", {
 test_that("iter.details", {
     r <- mvtb(X=X,Y=Y,n.trees=5,  compress=FALSE, cv.folds=3, save.cv=T, iter.details = T)
     expect_true(all(c("train.err", "test.err", "cv.err", "cv.mods") %in% names(r)))
-    expect_length(r$test.err, r$best.trees$train[1])
-    expect_length(r$train.err, r$best.trees$train[1])
-    expect_length(r$cv.err, r$best.trees$train[1])
+    expect_length(r$test.err[[1]], r$best.trees$train[1])
+    expect_length(r$train.err[[1]], r$best.trees$train[1])
+    expect_length(r$cv.err[[1]], r$best.trees$train[1])
     
-    for(f in c(mvtb)){
-      r <- f(X=X,Y=Y,n.trees=5,  compress=FALSE, cv.folds=3, save.cv=F, iter.details = F)
-      expect_null(r$cv.mods)
-      r <- f(X=X,Y=Y,n.trees=5,  compress=FALSE, cv.folds=3, save.cv=T, iter.details = F)
-      expect_true(!is.null(r$cv.mods))
-    }
+    r <- mvtb(X=X,Y=Y,n.trees=5,  compress=FALSE, cv.folds=3, save.cv=F, iter.details = F)
+    expect_null(r$cv.mods)
+    r <- mvtb(X=X,Y=Y,n.trees=5,  compress=FALSE, cv.folds=3, save.cv=T, iter.details = F)
+    expect_true(!is.null(r$cv.mods))
   
 })
 
