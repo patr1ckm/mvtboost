@@ -1,61 +1,61 @@
 
-#' Marginal plots for lmerboost objects
-#' 
-#' The fitted values are plotted against one or two predictors. Note that
-#' that this is not a partial dependence plot.
-#' 
-#' @param x lmerboost object
-#' @param X matrix of predictors
-#' @param id name or index of grouping variable
-#' @param i.var index or names of variables to plot over (can include id index)
-#' @param n.trees nubmer of trees (default min(x$best.trees))
-#' @param ... unused
-#' @export
-#' @importFrom ggplot2 ggplot geom_line geom_point aes_string xlab ylab geom_tile facet_wrap
-plot.lmerboost <- function(x, X, id, i.var, n.trees=min(x$best.trees), ...){
-  
-  if(all(is.character(i.var))){
-    i.var <- match(i.var, colnames(X))
-  }
-  if(is.character(id)){
-    id <- match(id, colnames(X))
-  }
-  
-  # use yhat from x at n.trees?
-  yhat <- x$yhat[, n.trees]
-  Xnew <- X[, i.var]
-  var.names <- colnames(Xnew)[i.var]
-  d <- data.frame(y=yhat, Xnew)
-  f.factor <- sapply(Xnew, is.factor)
-  
-  if(length(i.var) == 1){
-    g <- ggplot(d, aes_string(y="y", x=var.names)) +
-      geom_point() + geom_line()
-  } else if(length(i.var) == 2){
-    if(!f.factor[1] && !f.factor[2]){
-      g <- ggplot(d, aes_string(x=var.names[1], y=var.names[2], z="y")) + 
-        geom_tile(aes_string(fill="y")) +
-        xlab(var.names[i.var[1]]) +
-        ylab(var.names[i.var[2]])
-    }
-    if(f.factor[2]){
-      g <- ggplot(d, aes_string(y="y", x=var.names[1])) +
-        geom_point() + geom_line() +
-        facet_wrap(var.names[2]) + 
-        ylab(paste("f(", var.names[i.var[1]], ",",var.names[i.var[2]], ")", sep = ""))
-    }
-    if(f.factor[1]){
-      g <- ggplot(d, aes_string(y="y", x=var.names[2])) +
-        geom_point() + geom_line() +
-        facet_wrap(var.names[1]) + 
-        ylab(paste("f(", var.names[i.var[1]], ",",var.names[i.var[2]], ")", sep = ""))
-    }
-  } else {
-    stop("set return.grid=TRUE to make a custom graph")
-  }
-  print(g)
-  return(g)
-}
+#' #' Marginal plots for lmerboost objects
+#' #' 
+#' #' The fitted values are plotted against one or two predictors. Note that
+#' #' that this is not a partial dependence plot.
+#' #' 
+#' #' @param x lmerboost object
+#' #' @param X matrix of predictors
+#' #' @param id name or index of grouping variable
+#' #' @param i.var index or names of variables to plot over (can include id index)
+#' #' @param n.trees nubmer of trees (default min(x$best.trees))
+#' #' @param ... unused
+#' #' @export
+#' #' @importFrom ggplot2 ggplot geom_line geom_point aes_string xlab ylab geom_tile facet_wrap
+#' plot.lmerboost <- function(x, X, id, i.var, n.trees=min(x$best.trees), ...){
+#'   
+#'   if(all(is.character(i.var))){
+#'     i.var <- match(i.var, colnames(X))
+#'   }
+#'   if(is.character(id)){
+#'     id <- match(id, colnames(X))
+#'   }
+#'   
+#'   # use yhat from x at n.trees?
+#'   yhat <- x$yhat[, n.trees]
+#'   Xnew <- X[, i.var]
+#'   var.names <- colnames(Xnew)[i.var]
+#'   d <- data.frame(y=yhat, Xnew)
+#'   f.factor <- sapply(Xnew, is.factor)
+#'   
+#'   if(length(i.var) == 1){
+#'     g <- ggplot(d, aes_string(y="y", x=var.names)) +
+#'       geom_point() + geom_line()
+#'   } else if(length(i.var) == 2){
+#'     if(!f.factor[1] && !f.factor[2]){
+#'       g <- ggplot(d, aes_string(x=var.names[1], y=var.names[2], z="y")) + 
+#'         geom_tile(aes_string(fill="y")) +
+#'         xlab(var.names[i.var[1]]) +
+#'         ylab(var.names[i.var[2]])
+#'     }
+#'     if(f.factor[2]){
+#'       g <- ggplot(d, aes_string(y="y", x=var.names[1])) +
+#'         geom_point() + geom_line() +
+#'         facet_wrap(var.names[2]) + 
+#'         ylab(paste("f(", var.names[i.var[1]], ",",var.names[i.var[2]], ")", sep = ""))
+#'     }
+#'     if(f.factor[1]){
+#'       g <- ggplot(d, aes_string(y="y", x=var.names[2])) +
+#'         geom_point() + geom_line() +
+#'         facet_wrap(var.names[1]) + 
+#'         ylab(paste("f(", var.names[i.var[1]], ",",var.names[i.var[2]], ")", sep = ""))
+#'     }
+#'   } else {
+#'     stop("set return.grid=TRUE to make a custom graph")
+#'   }
+#'   print(g)
+#'   return(g)
+#' }
 
 
 # grid.lmerboost <- function(x, X, id, i.var=1,

@@ -24,7 +24,6 @@ Imports:
     utils,
     lme4,
     methods,
-    ggplot2,
     pbmcapply
 Remotes: 
   patr1ckm/gbm
