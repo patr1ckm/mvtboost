@@ -237,6 +237,7 @@ test_that("runs if tree doesn't split", {
   y <- mm %*% b #+ rnorm(length(id), 0, .001)
   om3 <- lmerboost(y=y, X=data.frame(age, id), id="id", interaction.depth=10, 
                   n.minobsinnode=1, n.trees=1, shrinkage=1, bag.fraction=.85)
+  expect_equal(om3, class("lmerboost"))
   
 })
 ## TODO: lmerboost.fit logical subset

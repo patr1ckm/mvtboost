@@ -52,7 +52,9 @@ test_that("final_model", {
   out$cv.err <- out2$cv.err <- NULL
   expect_equal(out,out2) 
   
+  set.seed(104)
   out <- mvtb(X=X,Y=Y,n.trees=n.trees,shrinkage=.5,cv.folds=3,compress=F)
+  set.seed(104)
   out2 <- mvtb(X=X,Y=Y,n.trees=n.trees,shrinkage=.5,cv.folds=1,compress=F)
   out$params <- out2$params
   out$best.trees <- out2$best.trees
