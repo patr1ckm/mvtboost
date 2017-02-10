@@ -18,18 +18,15 @@ ncovs <- 10
 q <- 4
 
 out <- mvtb(Y=Y, X=X, shrinkage=.1, n.trees=100)
-out2 <- mvtb_sep(Y=Y, X=X, shrinkage=.1, n.trees=100)
 outpc <- pcb(Y=Y, X=X, shrinkage=.1, n.trees=100)
 out.comp <- mvtb(Y=Y, X=X, shrinkage=.1, n.trees=100, compress=TRUE)
-out2.comp <- mvtb_sep(Y=Y, X=X, shrinkage=.1, n.trees=100, compress=TRUE)
-outpc.comp <- mvtb_sep(Y=Y, X=X, shrinkage=.1, n.trees=100, compress=TRUE)
-mods <- list(out, out2, outpc, out.comp, out2.comp, outpc.comp)
+mods <- list(out, outpc, out.comp)
 
 test_that("summary",{ 
   ## Tests just to make sure that they run
   for(i in seq_along(mods)){
     expect_output(print(summary(mods[[i]])),"trees")
-    expect_output(summary(mods[[i]]),"influence")
+    expect_output(summary(mods[[i]]),"importance")
     suminf <- sum(summary(mods[[i]], print=FALSE, relative="tot")$relative.influence)
     expect_equal(suminf, 100)
   }
@@ -49,28 +46,28 @@ test_that("mvtb.cluster",{
                                 clust.method="complete")
   expect_output(print(cluster.covex))
   
-  # test clustering influences
+  # test clustering importances
   for(i in seq_along(mods)){
-    expect_output(print(mvtb.cluster(influence(mods[[i]]))))
+    expect_output(print(mvtb.cluster(importance(mods[[i]]))))
   }
 })
 
-test_that("influence",{
+test_that("importance",{
   for(i in seq_along(mods)){
-    expect_output(print(influence(mods[[i]])))
+    expect_output(print(importance(mods[[i]])))
     
     # dimensions
-    expect_equal(dim(influence(mods[[i]])),c(p,q))
+    expect_equal(dim(importance(mods[[i]])),c(p,q))
     
-    # testthat sums of influence correctly equal 100 
-    expect_equivalent(sum(influence(mods[[i]],relative = "tot")),100)
+    # testthat sums of importance correctly equal 100 
+    expect_equivalent(sum(importance(mods[[i]],relative = "tot")),100)
     
     # testthat sum of each column is 100
-    expect_equal(sum(colSums(influence(mods[[i]],relative = "col")))-q*100,
+    expect_equal(sum(colSums(importance(mods[[i]],relative = "col")))-q*100,
                  0,tolerance=1E-12)
     
     # should produce raw
-    expect_output(print(influence(mods[[i]],relative = "n")))
+    expect_output(print(importance(mods[[i]],relative = "n")))
     
     # verifies that print.mvtb is being called
     expect_output(print(mods[[i]]), "List of ")
