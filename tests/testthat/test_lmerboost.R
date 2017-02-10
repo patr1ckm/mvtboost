@@ -356,16 +356,16 @@ test_that("lmerboost err", {
 ## TODO: combinations of params
 
 
-test_that("lmerboost importance", {
+test_that("lmerboost influence", {
   X <- data.frame(id,  X2 = rnorm(n), X1 = x)
   ob <- lmerboost(y = y, X = X, id="id", n.trees = 3, cv.folds = 1,
                   shrinkage = .5, verbose=F)
-  inf <- importance(ob)
+  inf <- influence(ob)
   expect_gt(inf["X1"], 0)
   expect_equal(length(inf), 2)
   expect_equal(sum(inf), 100)
   
-  infs <- importance(ob, sort=TRUE)
+  infs <- influence(ob, sort=TRUE)
   expect_equal(infs, inf[order(inf, decreasing = T)])
 })
 

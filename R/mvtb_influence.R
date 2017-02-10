@@ -1,13 +1,13 @@
-#' Computes the relative importance of each predictor for each outcome
+#' Computes the relative influence of each predictor for each outcome
 #' 
-#' The relative importance of a predictor is the reduction in sums of squares attributable to splits on individual predictors.
+#' The relative influence of a predictor is the reduction in sums of squares attributable to splits on individual predictors.
 #' It is often expressed as a percent (sums to 100).
 #' @param model \code{mvtb} output model
 #' @param n.trees number of trees to use. Defaults to the minimum number of trees by CV, test, or training error for each outcome.
-#' @param relative How to scale the multivariate importances. If \code{"col"}, each column sums to 100. If \code{"tot"}, the whole matrix sums to 100 (a percent). Otherwise, the raw reductions in SSE are returned.
+#' @param relative How to scale the multivariate influences. If \code{"col"}, each column sums to 100. If \code{"tot"}, the whole matrix sums to 100 (a percent). Otherwise, the raw reductions in SSE are returned.
 #' @param sort whether or not results should be (reverse) sorted. Defaults to FALSE.
-#' @param ... Additional arguments passed to \code{gbm::relative_importance}
-#' @return Matrix of (relative) importances.
+#' @param ... Additional arguments passed to \code{gbm::relative_influence}
+#' @return Matrix of (relative) influences.
 #' @export 
 mvtb.ri <- function(model, n.trees=NULL, relative="col", sort = FALSE, ...){
   if(any(unlist(lapply(model,function(li){is.raw(li)})))){
@@ -33,27 +33,27 @@ mvtb.ri <- function(model, n.trees=NULL, relative="col", sort = FALSE, ...){
   return(ri)  
 }
 
-#' Compute variable importance (influence) scores from \code{mvtboost} models.
+#' Compute variable influence (influence) scores from \code{mvtboost} models.
 #' @param model object from \code{mvtb, lmerboost, pcb, twostage}
 #' @param n.trees number of trees to use. Defaults to the minimum number of trees by CV, test, or training error for each outcome.
-#' @param relative How to scale the multivariate importances. If \code{"col"}, each column sums to 100. If \code{"tot"}, the whole matrix sums to 100 (a percent). Otherwise, the raw reductions in SSE are returned.
+#' @param relative How to scale the multivariate influences. If \code{"col"}, each column sums to 100. If \code{"tot"}, the whole matrix sums to 100 (a percent). Otherwise, the raw reductions in SSE are returned.
 #' @param sort whether or not results should be (reverse) sorted. Defaults to FALSE.
 #' @param ... not used
 #' @export
-importance <- function(model, n.trees=NULL, relative=TRUE, sort=TRUE, ...){
-  UseMethod("importance")
+influence <- function(model, n.trees=NULL, relative=TRUE, sort=TRUE, ...){
+  UseMethod("influence")
 }
 
 
 #' @inheritParams mvtb.ri
 #' @export
-#' @describeIn importance mvtb
-importance.mvtb <- mvtb.ri
+#' @describeIn influence mvtb
+influence.mvtb <- mvtb.ri
 
 #' @inheritParams mvtb.ri
 #' @export
-#' @describeIn importance twostage
-importance.twostage <- function(model, n.trees = NULL, relative = TRUE, sort = FALSE, ...){
+#' @describeIn influence twostage
+influence.twostage <- function(model, n.trees = NULL, relative = TRUE, sort = FALSE, ...){
   if(is.null(n.trees)){ n.trees = model$tr}
   inf <- gbm::relative_influence(model$o.gbm, num_trees = n.trees, rescale = FALSE, sort_it = sort)
   if(relative){
@@ -64,12 +64,12 @@ importance.twostage <- function(model, n.trees = NULL, relative = TRUE, sort = F
 
 #' @inheritParams mvtb.ri
 #' @export
-#' @describeIn importance lmerboost
-importance.lmerboost <- function(model, n.trees = NULL, relative = TRUE, sort = FALSE, ...){
+#' @describeIn influence lmerboost
+influence.lmerboost <- function(model, n.trees = NULL, relative = TRUE, sort = FALSE, ...){
   if(is.null(n.trees)){ 
     n.trees <- min(model$best.trees, na.rm = TRUE)
   }
-  inf <- importance_from_tree_list(model$trees, n.trees = n.trees, 
+  inf <- influence_from_tree_list(model$trees, n.trees = n.trees, 
                                              var.names = model$xnames)
   if(relative) { inf <- (inf / sum(inf)) * 100 }
   if(sort) { inf <- sort(inf, decreasing = TRUE) }
@@ -78,9 +78,9 @@ importance.lmerboost <- function(model, n.trees = NULL, relative = TRUE, sort = 
 
 #' @inheritParams mvtb.ri
 #' @export
-#' @describeIn importance pcb
-importance.pcb <- function(model, n.trees = NULL, relative = "col", sort = FALSE, ...){
-  ri <- importance.mvtb(model = model, n.trees=n.trees, relative = FALSE, sort=sort) 
+#' @describeIn influence pcb
+influence.pcb <- function(model, n.trees = NULL, relative = "col", sort = FALSE, ...){
+  ri <- influence.mvtb(model = model, n.trees=n.trees, relative = FALSE, sort=sort) 
   ri <- data.frame(ri %*% t(model$ev$vectors))
   
   if(relative == "col"){
@@ -94,7 +94,7 @@ importance.pcb <- function(model, n.trees = NULL, relative = "col", sort = FALSE
   return(ri)
 }
 
-importance_from_tree_list <- function(model, n.trees=1, var.names) {
+influence_from_tree_list <- function(model, n.trees=1, var.names) {
   get.rel.inf <- function(obj) {
     lapply(split(obj[[6]], obj[[1]]), sum)
   }

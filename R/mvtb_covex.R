@@ -69,7 +69,7 @@ mvtb.covex <- function(object,Y,X,n.trees=NULL,iter.details=FALSE) {
     for(m in 1:k) {            
       ## For each model compute predicted values and influence
       tree.i <- finaltree[[m]][i]
-      rel.infl[,m,i] <- importance_from_tree_list(tree.i, n.trees=1, object$xnames)
+      rel.infl[,m,i] <- influence_from_tree_list(tree.i, n.trees=1, object$xnames)
       
       ## Replace mth outcome with its residual, compute covariance           
       Rm <- D

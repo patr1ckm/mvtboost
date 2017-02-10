@@ -26,7 +26,7 @@ test_that("summary",{
   ## Tests just to make sure that they run
   for(i in seq_along(mods)){
     expect_output(print(summary(mods[[i]])),"trees")
-    expect_output(summary(mods[[i]]),"importance")
+    expect_output(summary(mods[[i]]),"influence")
     suminf <- sum(summary(mods[[i]], print=FALSE, relative="tot")$relative.influence)
     expect_equal(suminf, 100)
   }
@@ -46,28 +46,28 @@ test_that("mvtb.cluster",{
                                 clust.method="complete")
   expect_output(print(cluster.covex))
   
-  # test clustering importances
+  # test clustering influences
   for(i in seq_along(mods)){
-    expect_output(print(mvtb.cluster(importance(mods[[i]]))))
+    expect_output(print(mvtb.cluster(influence(mods[[i]]))))
   }
 })
 
-test_that("importance",{
+test_that("influence",{
   for(i in seq_along(mods)){
-    expect_output(print(importance(mods[[i]])))
+    expect_output(print(influence(mods[[i]])))
     
     # dimensions
-    expect_equal(dim(importance(mods[[i]])),c(p,q))
+    expect_equal(dim(influence(mods[[i]])),c(p,q))
     
-    # testthat sums of importance correctly equal 100 
-    expect_equivalent(sum(importance(mods[[i]],relative = "tot")),100)
+    # testthat sums of influence correctly equal 100 
+    expect_equivalent(sum(influence(mods[[i]],relative = "tot")),100)
     
     # testthat sum of each column is 100
-    expect_equal(sum(colSums(importance(mods[[i]],relative = "col")))-q*100,
+    expect_equal(sum(colSums(influence(mods[[i]],relative = "col")))-q*100,
                  0,tolerance=1E-12)
     
     # should produce raw
-    expect_output(print(importance(mods[[i]],relative = "n")))
+    expect_output(print(influence(mods[[i]],relative = "n")))
     
     # verifies that print.mvtb is being called
     expect_output(print(mods[[i]]), "List of ")
