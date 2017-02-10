@@ -120,11 +120,19 @@ lmerboost <- function(y, X, id,
     conds.ls <- split(conds, 1:nrow(conds))
     conds$id <- rep(1:nrow(params), each = cv.folds)
     
-    cv.mods <- pbmcapply::pbmclapply(conds.ls, function(args, ...){ 
-      try(do.call(lmerboost_cv, append(args, list(...))))
-    }, y=y, x=X, id=id, train=train, folds=folds, 
+    if(verbose){
+      cv.mods <- pbmcapply::pbmclapply(conds.ls, function(args, ...){ 
+        try(do.call(lmerboost_cv, append(args, list(...))))
+      }, y=y, x=X, id=id, train=train, folds=folds, 
+        bag.fraction=bag.fraction,  
+        verbose=FALSE, save.mods=save.mods, mc.cores = mc.cores)
+    } else {
+      cv.mods <- parallel::mclapply(conds.ls, function(args, ...){ 
+        try(do.call(lmerboost_cv, append(args, list(...))))
+      }, y=y, x=X, id=id, train=train, folds=folds, 
       bag.fraction=bag.fraction,  
       verbose=FALSE, save.mods=save.mods, mc.cores = mc.cores)
+    }
 
     # average over cv folds for each condition
     if(any(sapply(cv.mods, function(x){methods::is(x, "try-error")}))){
