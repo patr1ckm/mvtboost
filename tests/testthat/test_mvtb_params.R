@@ -34,30 +34,19 @@ test_that("subsetting", {
 
 })
 
-test_that("seednum", {
-  for(f in c(mvtb)){
-    r <- f(X=X,Y=Y,n.trees=5, train.fraction=.5, bag.fraction=.5,s=1:500,seednum=8)
-    expect_equal(r$params$seednum,8)
-    r2 <- f(X=X,Y=Y,n.trees=5, train.fraction=.5, bag.fraction=.5,s=1:500,seednum=8)
-    expect_equal(r,r2)
-    r3 <- f(X=X,Y=Y,n.trees=5, train.fraction=.5, bag.fraction=.5,s=1:500,seednum=9)
-    expect_true(!identical(r,r3))
-  }
-})
-
 test_that("compress", {
   for(f in c(mvtb)){
-    r <- f(X=X,Y=Y,n.trees=5, train.fraction=.5, bag.fraction=.5,s=1:500,seednum=8, compress=FALSE)
+    r <- f(X=X,Y=Y,n.trees=5, train.fraction=.5, bag.fraction=.5,s=1:500, compress=FALSE)
     expect_true(all(!(sapply(r,class) %in% "raw"))) # none of the objects are raw
     
-    r <- f(X=X,Y=Y,n.trees=5, train.fraction=.5, bag.fraction=.5,s=1:500,seednum=8, compress=TRUE)
+    r <- f(X=X,Y=Y,n.trees=5, train.fraction=.5, bag.fraction=.5,s=1:500, compress=TRUE)
     expect_true(all(sapply(r,class) == "raw")) # all of the objects are raw
   
-    r <- f(X=X,Y=Y,n.trees=5, train.fraction=.5, bag.fraction=.5,s=1:500,seednum=8, compress=FALSE, cv.folds=3, save.cv=T)
+    r <- f(X=X,Y=Y,n.trees=5, train.fraction=.5, bag.fraction=.5,s=1:500, compress=FALSE, cv.folds=3, save.cv=T)
     expect_true(all(!(sapply(r,class)) %in% "raw")) # none of the objects are raw
     expect_true(all(!(sapply(r$cv.mods,class) %in% "raw"))) # none of the cv objects are raw
   
-    r1 <- f(X=X,Y=Y,n.trees=5, train.fraction=.5, bag.fraction=.5,s=1:500,seednum=8, compress=TRUE, cv.folds=3, save.cv=T)
+    r1 <- f(X=X,Y=Y,n.trees=5, train.fraction=.5, bag.fraction=.5,s=1:500, compress=TRUE, cv.folds=3, save.cv=T)
     expect_true(all(sapply(r1,class) == "raw")) # all of the objects are raw
     expect_equal(class(r1$cv.mods),"raw") # the cv.mods object is raw
     expect_lt(object.size(r1), object.size(r)) # just verify that the object sizes are as they should be
@@ -66,8 +55,8 @@ test_that("compress", {
 
 test_that("mvtb.uncomp", {
   for(f in c(mvtb)){
-    rc <- f(X=X,Y=Y,n.trees=5, seednum=8, compress=TRUE)
-    r  <- f(X=X,Y=Y,n.trees=5, seednum=8, compress=FALSE)
+    rc <- f(X=X,Y=Y,n.trees=5,  compress=TRUE)
+    r  <- f(X=X,Y=Y,n.trees=5,  compress=FALSE)
     r2 <- mvtb.uncomp(rc)
     r$params$compress <- TRUE # set to TRUE so that the comparison is legitimate
     expect_equal(r,r2)
@@ -75,16 +64,16 @@ test_that("mvtb.uncomp", {
 })
 
 test_that("iter.details", {
-    r <- mvtb(X=X,Y=Y,n.trees=5, seednum=8, compress=FALSE, cv.folds=3, save.cv=T, iter.details = T)
+    r <- mvtb(X=X,Y=Y,n.trees=5,  compress=FALSE, cv.folds=3, save.cv=T, iter.details = T)
     expect_true(all(c("train.err", "test.err", "cv.err", "cv.mods") %in% names(r)))
     expect_length(r$test.err, r$best.trees$train[1])
     expect_length(r$train.err, r$best.trees$train[1])
     expect_length(r$cv.err, r$best.trees$train[1])
     
     for(f in c(mvtb)){
-      r <- f(X=X,Y=Y,n.trees=5, seednum=8, compress=FALSE, cv.folds=3, save.cv=F, iter.details = F)
+      r <- f(X=X,Y=Y,n.trees=5,  compress=FALSE, cv.folds=3, save.cv=F, iter.details = F)
       expect_null(r$cv.mods)
-      r <- f(X=X,Y=Y,n.trees=5, seednum=8, compress=FALSE, cv.folds=3, save.cv=T, iter.details = F)
+      r <- f(X=X,Y=Y,n.trees=5,  compress=FALSE, cv.folds=3, save.cv=T, iter.details = F)
       expect_true(!is.null(r$cv.mods))
     }
   
@@ -92,14 +81,14 @@ test_that("iter.details", {
 
 test_that("verbose", {
   for(f in c(mvtb)){
-    expect_silent(f(X=X,Y=Y,n.trees=5, train.fraction=.5, bag.fraction=.5,s=1:500,seednum=8, compress=FALSE, cv.folds=3, save.cv=T, verbose = F))
-    expect_output(f(X=X,Y=Y,n.trees=5, train.fraction=.5, bag.fraction=.5,s=1:500,seednum=8, compress=FALSE, cv.folds=3, save.cv=T, verbose = T))
+    expect_silent(f(X=X,Y=Y,n.trees=5, train.fraction=.5, bag.fraction=.5,s=1:500, compress=FALSE, cv.folds=3, save.cv=T, verbose = F))
+    expect_output(f(X=X,Y=Y,n.trees=5, train.fraction=.5, bag.fraction=.5,s=1:500, compress=FALSE, cv.folds=3, save.cv=T, verbose = T))
   }
 })
 
 #context("parallel")
 
-# r <- mvtb(X=X,Y=Y,n.trees=500, train.fraction=.5, bag.fraction=.5,s=1:500,seednum=8, compress=FALSE, cv.folds=3, save.cv=T, mc.cores=3)
+# r <- mvtb(X=X,Y=Y,n.trees=500, train.fraction=.5, bag.fraction=.5,s=1:500, compress=FALSE, cv.folds=3, save.cv=T, mc.cores=3)
 
 test_that("keep.data", {
   for(f in c(mvtb)){
