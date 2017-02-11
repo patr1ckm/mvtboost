@@ -14,7 +14,7 @@
 
 \item{response.no}{index of the response variable}
 
-\item{n.trees}{desired number of trees. Defaults to the minimum number of trees by CV, test, or training error}
+\item{n.trees}{desired number of trees. Defaults to the minimum number of trees by CV, test, or training error for a given outcome}
 
 \item{X}{optional vector, matrix, or data.frame of predictors. If included, a 'rug' (a small vertical line for each observation) is plotted on the x-axis showing the density of \code{predictor.no}.}
 
@@ -38,6 +38,6 @@ controlling for the other predictors. In addition to the model-implied effect, t
 of the predictor is included in the x-axis label. If this is not desired, a custom label can be provided via \code{xlab}.
 }
 \seealso{
-\code{plot.gbm}, \code{mvtb.perspec}, for other plots, \code{mvtb.heat} to plot the covariance explained by predictors in a heatmap
+\code{plot.GBMFit}, \code{mvtb.perspec}, for other plots, \code{mvtb.heat} to plot the covariance explained by predictors in a heatmap
 }
 

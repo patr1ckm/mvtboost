@@ -81,23 +81,5 @@ test_that("two continuous", {
   }
 })
 
-test_that("test error", {
-  # Tests include error
-  E2 <-  MASS::mvrnorm(n,mu=rep(0,k),Sigma=vare)
-  Y2 <- X %*% B + E2
-  dt <- data.frame(y=Y2[,1],Xf)
-  
-  pe.wt <- function(mod,dt,bi=NULL,method=1){
-      yhat <- predict(mod,newdata=Xf,n.trees=50)
-      mse <- mean((dt$y-yhat)^2)
-      return(mse)
-  }
-  pe.gbm <- function(mod,dt){
-      yhat <- predict(mod,newdata=Xf,n.trees=50)
-      mse <- mean((dt$y-yhat)^2)
-      return(mse)
-  }
-  expect_equal(pe.wt(m,dt=dt,method=3),pe.gbm(m1,dt=dt))
-})
 
 

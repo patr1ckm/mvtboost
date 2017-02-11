@@ -13,7 +13,7 @@ mvtb.covex(object, Y, X, n.trees = NULL, iter.details = FALSE)
 
 \item{X}{vector, matrix, or data.frame of predictors. For best performance, continuous predictors should be scaled to have unit variance. Categorical variables should converted to factors.}
 
-\item{n.trees}{number of trees to use. Defaults to the minimum number of trees by CV, test, or training error}
+\item{n.trees}{number of trees to use. Defaults to the minimum number of trees by CV, test, or training error, and the maximum of this for all outcomes.}
 
 \item{iter.details}{\code{TRUE/FALSE}. Return the loss, relative loss, and selected predictors at each iteration as a list}
 }

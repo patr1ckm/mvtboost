@@ -7,3 +7,4 @@ cran-comments.md
 .gitignore
 tests/testthat/.DS_Store
 .git
+^\.travis\.yml$

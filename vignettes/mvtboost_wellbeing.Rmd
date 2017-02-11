@@ -1,5 +1,5 @@
 ---
-title: "mvtboost example 2: Well-being"
+title: "mvtboost example: Well-being"
 author: "Patrick Miller"
 date: "`r Sys.Date()`"
 output: 
@@ -11,7 +11,7 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-This document describes the analysis of psychological well-being by multivariate tree boosting from the paper (Miller, Lubke, McArtor, & Bergeman, 2015).
+This document describes the analysis of psychological well-being by multivariate tree boosting from the paper (Miller, Lubke, McArtor, & Bergeman, 2016).
 
 ## Introduction
 In our exploratory analysis, we investigated the factors that influence six aspects of well-being: autonomy, environmental mastery, personal growth, positive relationships with others, purpose in life, and self-acceptance (Ryff & Keyes, 1995).
@@ -43,14 +43,6 @@ res <- mvtb(Y=Ys,X=Xs)
 
 In gradient boosting, the number of trees, the shrinkage, and the tree depth are meta-parameters that are important to tune to improve the fit of the model. Typically, the shrinkage is fixed to a small value, and the optimal number of trees is chosen by cross-validation. This is illustrated below:
 
-```{r,echo=FALSE, eval=FALSE}
-# tuning the model
-
-res5 <- mvtb(Y=Ys,X=Xs,n.trees=1000,shrinkage=.05,cv.folds=5,compress=FALSE)
-res5train <- mvtb(Y=Ys,X=Xs,n.trees=1000,shrinkage=.05,cv.folds=5,compress=FALSE,s=trainset)
-save(res5,file="vignettes/wb_cv5.Rdata")
-save(res5train,file="vignettes/wb_cv5test.Rdata")
-```
 
 ```{r,eval=FALSE}
 res5 <- mvtb(Y=Ys,X=Xs,n.trees=1000,shrinkage=.05,cv.folds=5,compress=FALSE)
@@ -65,6 +57,15 @@ trainset <- sample(1:nrow(Ys),size = 784,replace=FALSE)
 
 ```{r,eval=FALSE}
 res5train <- mvtb(Y=Ys,X=Xs,n.trees=1000,shrinkage=.05,cv.folds=5,compress=FALSE,s=trainset)
+```
+
+```{r,echo=FALSE, eval=FALSE}
+# tuning the model
+
+res5 <- mvtb(Y=Ys,X=Xs,n.trees=1000,shrinkage=.05,cv.folds=5,compress=FALSE)
+res5train <- mvtb(Y=Ys,X=Xs,n.trees=1000,shrinkage=.05,cv.folds=5,compress=FALSE,s=trainset)
+save(res5,file="vignettes/wb_cv5.Rdata")
+save(res5train,file="vignettes/wb_cv5test.Rdata")
 ```
 
 ## Computing the best number of trees 
@@ -90,7 +91,7 @@ Most procedures in the `mvtboost` package will by default automatically select t
 Below we show the importance of choosing the model complexity to minimize the CV rather than training error.
 
 ```{r,echo=FALSE,fig.height=7,fig.width=7}
-plot(x=1:1000,y=res5$trainerr,type="l",ylab="Error",xlab="Number of trees")
+plot(x=1:1000,y=res5$train.err,type="l",ylab="Error",xlab="Number of trees")
 abline(v=res5$best.trees$best.cv)
 lines(x=1:1000,y=res5$cv.err,type="l",col="red")
 legend("topright",legend=c("Training Error","Cross-Validation Error"),lty=c(1,1),col=c("black","red"),bty="n")
@@ -115,14 +116,14 @@ Below, we compute the relative influences for the well-being data, and plot the 
 
 ```{r,eval=FALSE}
 summary(res5)
-round(mvtb.ri(res5,relative = "tot"),2) 
+round(mvtb.ri(res5, relative = "tot"),2) 
 ```
 
 ```{r,fig.height=5,fig.width=10}
 numformat <- function(val){sub("^(-?)0.", "\\1.", sprintf("%.1f", val))}
   
 par(mar=c(8,10,1,1))
-mvtb.heat(t(mvtb.ri(res5)),clust.method = NULL,cexRow=1,cexCol=1,numformat=numformat)
+mvtb.heat(t(mvtb.ri(res5)),clust.method = NULL, cexRow=1, cexCol=1, numformat=numformat)
 ```
 
 For example, control of internal states affects all aspects of psychological well being except positive relationships with others. Like control of internal states, perceived stress-problems affects three aspects of well-being: self acceptance, purpose in life, and environmental mastery. Other patterns in the influences can be interpreted similarly.
@@ -133,7 +134,7 @@ As a check of the overall fit of the model, the $R^2$ in the test set can be com
 
 ```{r}
 testset <- (1:nrow(Ys))[!(1:nrow(Ys) %in% trainset)]
-yhat <- predict(res5train,newdata=Xs[testset,])
+yhat <- predict(res5train, newdata=Xs[testset,])
 diag(var(yhat)/var(Ys[testset,]))
 ```
 
@@ -151,7 +152,7 @@ For the well-being data, the covariance explained matrix is obtained directly fr
 par(mar=c(8,15,1,1),mfrow=c(1,1))
 numformat <- function(val){sub("^(-?)0.", "\\1.", sprintf("%.2f", val))}
 covex <- mvtb.covex(res5, Y=Ys, X=Xs)
-mvtb.heat(covex[,-c(1:7)],cexRow=.9,numformat=numformat,clust.method = NULL)
+mvtb.heat(covex[,-c(1:7)], cexRow=.9, numformat=numformat, clust.method = NULL)
 
 ```
 
@@ -168,8 +169,8 @@ mvtb.cluster(covex)
 ```
 
 ```{r,fig.height=5,fig.width=10}
-par(mar=c(8,12,1,1),mfrow=c(1,1))
-mvtb.heat(covex[,-c(1:7)],cexRow=.9)
+par(mar=c(8,12,1,1), mfrow=c(1,1))
+mvtb.heat(covex[,-c(1:7)], cexRow=.9)
 ```
 
 
@@ -180,43 +181,43 @@ Partial dependence plots complement interpretations of relative influence by sho
 Here we show the univariate and multivariate perspective plots. The first plot shows that above-average control of internal states is associated with larger personal growth. The second shows the non-additive effect of control of internal states and perceived stress problems on self-acceptance.
 
 ```{r,fig.height=5,fig.width=12}
-par(mfcol=c(1,2),mar=c(5,5,4,1))
-plot(res5,predictor.no=11,response.no=3,ylim=c(-1,1.5)) # persgrwth on cis
-text(-4,1.825,labels="A",xpd=TRUE)
-mvtb.perspec(res5,predictor.no=c(11,18),response.no=6)
-text(-.5,.5,labels="B",xpd=TRUE)
+par(mfcol=c(1,2), mar=c(5,5,4,1))
+plot(res5, predictor.no=11, response.no=3, ylim=c(-1,1.5)) # persgrwth on cis
+text(-4,1.825, labels="A", xpd=TRUE)
+mvtb.perspec(res5, predictor.no=c(11,18), response.no=6)
+text(-.5,.5, labels="B", xpd=TRUE)
 ```
 
 
 
-### 5. Departures from additivity
+<!-- ### 5. Departures from additivity -->
 
-Though decision trees are models of interactions, it is difficult to detect and interpret interaction effects from a decision tree ensemble. To address this issue, we can analyze the fitted values of the model. Following Elith et al. (2008), possible 2-way interactions can be detected by checking whether the fitted values of the model as a function of any pair of predictors deviates from a linear combination of the two predictors. Such departures indicate that the joint effect of the predictors is not additive, and indicate a non-linear effect or a possible interaction.
+<!-- Though decision trees are models of interactions, it is difficult to detect and interpret interaction effects from a decision tree ensemble. To address this issue, we can analyze the fitted values of the model. Following Elith et al. (2008), possible 2-way interactions can be detected by checking whether the fitted values of the model as a function of any pair of predictors deviates from a linear combination of the two predictors. Such departures indicate that the joint effect of the predictors is not additive, and indicate a non-linear effect or a possible interaction. -->
 
-In greater detail: the fitted values of the model are computed for any pair of predictors, over a grid of all possible levels for the two variables. For continuous predictors, 100 sample values are taken. The fitted values are then regressed onto the grid. Large residuals from this model indicate the fitted values are not a linear combination of the predictors, demonstrating non-linearity or a possible interaction. For computational simplicity with many predictors, this might be done only for pairs of important variables.
+<!-- In greater detail: the fitted values of the model are computed for any pair of predictors, over a grid of all possible levels for the two variables. For continuous predictors, 100 sample values are taken. The fitted values are then regressed onto the grid. Large residuals from this model indicate the fitted values are not a linear combination of the predictors, demonstrating non-linearity or a possible interaction. For computational simplicity with many predictors, this might be done only for pairs of important variables. -->
 
-We note that this approach is primarily a heuristic for interpreting the model. A variable with a non-additive effect (e.g. a non-linear effect like control of internal states) can produce bivariate departures from additivity which are not necessarily interactions. 
+<!-- We note that this approach is primarily a heuristic for interpreting the model. A variable with a non-additive effect (e.g. a non-linear effect like control of internal states) can produce bivariate departures from additivity which are not necessarily interactions.  -->
 
-There are several other methods for detecting departures, including 'grid', 'influence', and 'lm', following different suggestions. Generally these are still heuristics that give somewhat different results.
+<!-- There are several other methods for detecting departures, including 'grid', 'influence', and 'lm', following different suggestions. Generally these are still heuristics that give somewhat different results. -->
 
-```{r,echo=FALSE,eval=FALSE}
-res.nl <- mvtb.nonlin(res5,Y=Ys,X=Xs)
-save(res.nl,file="wb_nonlin.Rdata")
-```
+<!-- ```{r,echo=FALSE,eval=FALSE} -->
+<!-- res.nl <- mvtb.nonlin(res5,Y=Ys,X=Xs) -->
+<!-- save(res.nl,file="wb_nonlin.Rdata") -->
+<!-- ``` -->
 
-```{r,eval=FALSE}
-res.nl <- mvtb.nonlin(res5,Y=Ys,X=Xs)
-```
+<!-- ```{r,eval=FALSE} -->
+<!-- res.nl <- mvtb.nonlin(res5,Y=Ys,X=Xs) -->
+<!-- ``` -->
 
-```{r,echo=FALSE}
-load(file="wb_nonlin.Rdata")
-```
+<!-- ```{r,echo=FALSE} -->
+<!-- load(file="wb_nonlin.Rdata") -->
+<!-- ``` -->
 
-Below, we compute the top 5 departures for each DV. 
+<!-- Below, we compute the top 5 departures for each DV.  -->
 
-```{r}
-lapply(res.nl,function(r){head(r[[1]])})
-```
+<!-- ```{r} -->
+<!-- lapply(res.nl,function(r){head(r[[1]])}) -->
+<!-- ``` -->
 
 ## References
 
@@ -225,7 +226,7 @@ Elith, J., Leathwick, J. R., & Hastie, T. (2008). A working guide to boosted reg
 
 Friedman, J. H. (2001). Greedy function approximation: a gradient boosting machine. Annals of statistics, 1189-1232.
 
-Miller P.J., Lubke G.H, McArtor D.B., Bergeman C.S. (Submitted) Finding structure in data with multivariate tree boosting.
+Miller, P. J., Lubke, G. H., McArtor, D. B., & Bergeman, C. S. (2016). Finding structure in data using multivariate tree boosting. Psychological Methods, 21(4), 583.
 
 Ridgeway, G., Southworth, M. H., & RUnit, S. (2013). Package 'gbm'. Viitattu, 10, 2013.
 

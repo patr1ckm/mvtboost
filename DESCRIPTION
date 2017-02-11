@@ -1,8 +1,8 @@
 Package: mvtboost
 Type: Package
 Title: Tree Boosting for Multivariate Outcomes
-Version: 0.5.1
-Date: 2016-11-25
+Version: 0.6.0
+Date: 2017-01-25
 Author: Patrick Miller [aut, cre]
 Maintainer: Patrick Miller <patrick.mil10@gmail.com>
 Description: Fits a multivariate model of decision trees for multiple, continuous outcome variables. A model for each outcome variable is fit separately, selecting predictors that explain covariance in the outcomes.  Built on top of 'gbm', which fits an ensemble of decision trees to univariate outcomes.
@@ -10,22 +10,23 @@ License: GPL (>= 2) | file LICENSE
 URL: https://github.com/patr1ckm/mvtboost
 BugReports: https://github.com/patr1ckm/mvtboost/issues
 Depends:
-    R (>= 3.0.0)
+    R (>= 3.0.0),
+    gbm (>= 2.2)
 Suggests:
     testthat,
-    plyr,
-    MASS,
     parallel,
-    lars,
-    ggplot2,
     knitr,
-    rmarkdown
+    rmarkdown,
+    ggplot2
 Imports:
-    gbm,
-    RColorBrewer,
     stats,
     graphics,
     grDevices,
     utils,
+    lme4,
+    methods,
+    pbmcapply
+Remotes: 
+  patr1ckm/gbm
 VignetteBuilder: knitr
 RoxygenNote: 5.0.1
