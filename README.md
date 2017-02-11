@@ -4,7 +4,7 @@
 
 # mvtboost
 
-Provides functions extending boosted decision trees for multivariate, longitudinal, and hierarchically 
+Extends boosted decision trees to multivariate, longitudinal, and hierarchically 
 clustered data. Additionally, functions are provided for easy tuning by cross-validated grid search over `n.trees, shrinkage,interaction.depth`, and `n.minobsinnode`.
 
 The package depends on the most recent version of `gbm`, which includes multi-threaded tree-fitting. It can be installed here (eventually deprecated):
@@ -15,7 +15,8 @@ The package can be installed as follows:
 
     devtools::install_github("patr1ckm/mvtboost")
 
-Both packages will eventually be pushed to CRAN.
+Both packages will eventually be pushed to CRAN. This package is largely experimental, and subject to significant changes
+until 1.0.
 
 
 # mvtb
