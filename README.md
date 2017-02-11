@@ -15,9 +15,7 @@ The package can be installed as follows:
 
     devtools::install_github("patr1ckm/mvtboost")
 
-Both packages will eventually be pushed to CRAN. This package is largely experimental, and subject to significant changes
-until 1.0.
-
+Both packages will eventually be pushed to CRAN. 
 
 # mvtb
 Tree boosting for multivariate outcomes. Estimates a multivariate additive model of decision trees by iteratively selecting predictors that explain covariance in the outcomes. 
