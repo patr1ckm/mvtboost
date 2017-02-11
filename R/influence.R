@@ -34,7 +34,7 @@ mvtb.ri <- function(model, n.trees=NULL, relative="col", sort = FALSE, ...){
 }
 
 #' Compute variable influence (influence) scores from \code{mvtboost} models.
-#' @param model object from \code{mvtb, lmerboost, pcb, twostage}
+#' @param model object from \code{mvtb, metb, pcb, twostage}
 #' @param n.trees number of trees to use. Defaults to the minimum number of trees by CV, test, or training error for each outcome.
 #' @param relative How to scale the multivariate influences. If \code{"col"}, each column sums to 100. If \code{"tot"}, the whole matrix sums to 100 (a percent). Otherwise, the raw reductions in SSE are returned.
 #' @param sort whether or not results should be (reverse) sorted. Defaults to FALSE.
@@ -64,8 +64,8 @@ influence.twostage <- function(model, n.trees = NULL, relative = TRUE, sort = FA
 
 #' @inheritParams mvtb.ri
 #' @export
-#' @describeIn influence lmerboost
-influence.lmerboost <- function(model, n.trees = NULL, relative = TRUE, sort = FALSE, ...){
+#' @describeIn influence metb
+influence.metb <- function(model, n.trees = NULL, relative = TRUE, sort = FALSE, ...){
   if(is.null(n.trees)){ 
     n.trees <- min(model$best.trees, na.rm = TRUE)
   }

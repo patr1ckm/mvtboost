@@ -11,7 +11,7 @@
 #' \code{mclapply}. Tuning is only done within the training set.
 #' 
 #' Prediction is most easily carried out by passing the entire \code{X} matrix to
-#' \code{lmerboost}, and specifying the training set using \code{subset}. Otherwise, 
+#' \code{metb}, and specifying the training set using \code{subset}. Otherwise, 
 #' set \code{save.mods=TRUE} and use \code{predict}.
 #' 
 #' @param y outcome vector (continuous)
@@ -40,7 +40,7 @@
 #' @param num_threads number of threads
 #' @param verbose In the final model fit, will print every `10` trees/iterations.
 #' @param ... arguments passed to gbm.fit
-#' @return An \code{lmerboost} object consisting of the following list elements:
+#' @return An \code{metb} object consisting of the following list elements:
 #' \describe{
 #'   \item{\code{yhat}}{Vector of predictions at the best iteration (\code{fixed} + \code{ranef})}
 #'   \item{\code{ranef}}{Vector of random effects at the best iteration}
@@ -66,7 +66,7 @@
 #' @export
 #' @importFrom utils txtProgressBar setTxtProgressBar
 #' @importFrom pbmcapply pbmclapply
-lmerboost <- function(y, X, id, 
+metb <- function(y, X, id, 
                       n.trees=5,
                       interaction.depth=3,
                       n.minobsinnode=20,
@@ -122,13 +122,13 @@ lmerboost <- function(y, X, id,
     
     if(verbose){
       cv.mods <- pbmcapply::pbmclapply(conds.ls, function(args, ...){ 
-        try(do.call(lmerboost_cv, append(args, list(...))))
+        try(do.call(metb_cv, append(args, list(...))))
       }, y=y, x=X, id=id, train=train, folds=folds, 
         bag.fraction=bag.fraction,  
         verbose=FALSE, save.mods=save.mods, mc.cores = mc.cores)
     } else {
       cv.mods <- parallel::mclapply(conds.ls, function(args, ...){ 
-        try(do.call(lmerboost_cv, append(args, list(...))))
+        try(do.call(metb_cv, append(args, list(...))))
       }, y=y, x=X, id=id, train=train, folds=folds, 
       bag.fraction=bag.fraction,  
       verbose=FALSE, save.mods=save.mods, mc.cores = mc.cores)
@@ -152,7 +152,7 @@ lmerboost <- function(y, X, id,
     cv.err <- cv.err[[best.cond]]
     best_cv_err <- which.min(cv.err)
     
-    o <- lmerboost.fit(y = y, X = X, id = id, 
+    o <- metb.fit(y = y, X = X, id = id, 
           train.fraction = train.fraction, subset = subset, 
           bag.fraction = bag.fraction,  
           verbose = verbose, save.mods=save.mods,
@@ -170,7 +170,7 @@ lmerboost <- function(y, X, id,
 
     if(length(n.trees) > 1 | length(shrinkage) > 1 | length(interaction.depth) > 1 | length(indep) > 1){ stop("can't specify vector params without cv.folds > 1")}
     
-    o <- lmerboost.fit(y = y, X = X, id = id, 
+    o <- metb.fit(y = y, X = X, id = id, 
                        train.fraction = train.fraction,
                        subset = subset,
                        bag.fraction = bag.fraction,
@@ -204,22 +204,22 @@ lmerboost <- function(y, X, id,
               sigma=o$sigma, xnames = colnames(X)[-id], mods=o$mods, id=id,
               trees = o$trees, init=o$init, var.type=o$var.type, c.split=o$c.split,
               train.err=o$train.err, oob.err=o$oob.err, test.err=o$test.err, cv.err=cv.err)
-  class(out) <- "lmerboost"
+  class(out) <- "metb"
   return(out)
 }
 
-lmerboost_cv <- function(k, folds, y, x, id, train, ...){
+metb_cv <- function(k, folds, y, x, id, train, ...){
   cv_train <- train[folds != k]
-  o <- lmerboost.fit(y = y, X = x, id = id, subset = cv_train, ...)
+  o <- metb.fit(y = y, X = x, id = id, subset = cv_train, ...)
 }
 
 
 
-#' @describeIn lmerboost Fitting function for \code{lmerboost}
+#' @describeIn metb Fitting function for \code{metb}
 #' @export
 #' @importFrom stats predict
 #' @importFrom gbm gbmt_fit_ gbmt_data gbmParallel training_params gbm_dist
-lmerboost.fit <- function(y, X, id, 
+metb.fit <- function(y, X, id, 
                           n.trees=5,
                           interaction.depth=3,
                           n.minobsinnode=20,
@@ -395,20 +395,20 @@ lmerboost.fit <- function(y, X, id,
               trees = trees, init=init, var.type=var.type, c.split=c.split,
               mods=mods, sigma=sigma, 
               train.err=train.err, oob.err=oob.err, test.err=test.err)
-  class(out) <- "lmerboost"
+  class(out) <- "metb"
   return(out)  
 }
 
 
-#' Prediction for lmerboost objects
-#' @param object lmerboost object
+#' Prediction for metb objects
+#' @param object metb object
 #' @param newdata data frame of new data
 #' @param id column name or index referring to id variable
 #' @param n.trees number of trees
 #' @param ... unused
 #' @export 
 #' @importFrom stats model.matrix
-predict.lmerboost <- function(object, newdata, id, n.trees=NULL, ...){
+predict.metb <- function(object, newdata, id, n.trees=NULL, ...){
   # save trees, lmer objects at each iteration (damn)
   if(is.null(object$mods)) stop("need to set save.models=TRUE for predictions in newdata")
   
@@ -484,13 +484,13 @@ predict.lmerboost <- function(object, newdata, id, n.trees=NULL, ...){
   return(list(yhat=yhat[,n.trees], ranef=ranef[,n.trees], fixed=fixed[,n.trees]))
 }
 
-#' Reports the relative influence of each predictor in an lmerboost models
+#' Reports the relative influence of each predictor in an metb models
 #' 
-#' @param object lmerboost object
+#' @param object metb object
 #' @param ... arguments passed to \code{influence}, e.g. \code{n.trees},
 #'  \code{relative}
 #' @export
-summary.lmerboost <- function(object, ...){
+summary.metb <- function(object, ...){
   influence(object, ...)
 }
 

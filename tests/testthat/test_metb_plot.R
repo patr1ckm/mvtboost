@@ -1,4 +1,4 @@
-
+# stub
 set.seed(104)
 
 ngroups <- 10

@@ -1,10 +1,10 @@
 
-#' #' Marginal plots for lmerboost objects
+#' #' Marginal plots for metboost objects
 #' #' 
 #' #' The fitted values are plotted against one or two predictors. Note that
 #' #' that this is not a partial dependence plot.
 #' #' 
-#' #' @param x lmerboost object
+#' #' @param x metboost object
 #' #' @param X matrix of predictors
 #' #' @param id name or index of grouping variable
 #' #' @param i.var index or names of variables to plot over (can include id index)
@@ -12,7 +12,7 @@
 #' #' @param ... unused
 #' #' @export
 #' #' @importFrom ggplot2 ggplot geom_line geom_point aes_string xlab ylab geom_tile facet_wrap
-#' plot.lmerboost <- function(x, X, id, i.var, n.trees=min(x$best.trees), ...){
+#' plot.metboost <- function(x, X, id, i.var, n.trees=min(x$best.trees), ...){
 #'   
 #'   if(all(is.character(i.var))){
 #'     i.var <- match(i.var, colnames(X))
@@ -58,7 +58,7 @@
 #' }
 
 
-# grid.lmerboost <- function(x, X, id, i.var=1,
+# grid.metboost <- function(x, X, id, i.var=1,
 #                            n.trees=min(x$best.trees, na.rm=T), 
 #                            continuous.resolution=20,
 #                            return.grid=FALSE, ...){
@@ -82,7 +82,7 @@
 #     
 #     # average over other predictors
 #     
-#     # This is very slow. The inner loop here is slow (predict.lmerboost) and it
+#     # This is very slow. The inner loop here is slow (predict.metboost) and it
 #     # gets bad if newX is very large
 #     #for(i in 1:nrow(newX)){
 #     #  d <- data.frame(newX[rep(i, nrow(X)), ], X[,-i.var])
@@ -154,14 +154,14 @@
 #   return(g)
 # }
 
-#' plot lmerboost performance
-#' @param x lmerboost object
+#' plot metboost performance
+#' @param x metboost object
 #' @param threshold absolute differences in error less than this threshold is optimal
 #' @param lag lag of the differences in error across iterations
 #' @param ... arguments passed to plot
 #' @export
 #' @importFrom graphics abline legend lines title
-perf.lmerboost <- function(x, threshold = 0, lag = 1, ...){
+perf.metboost <- function(x, threshold = 0, lag = 1, ...){
   M <- length(x$train.err)
   ymax <- c(max(x$test.err, x$train.err, x$oob.err, na.rm = T))
   ymin <- c(min(x$test.err, x$train.err, x$oob.err, na.rm = T))

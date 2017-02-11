@@ -23,20 +23,20 @@ X <- data.frame(x, xc, id)
 
 tol = 1E-6
 
-context("lmerboost.fit")
+context("metb.fit")
 
-test_that("lmerboost runs", {
-  o1 <- lmerboost(y = y, X = X, id="id", n.trees=2, cv.folds=1, shrinkage=.1,
+test_that("metb runs", {
+  o1 <- metb(y = y, X = X, id="id", n.trees=2, cv.folds=1, shrinkage=.1,
                   verbose=F)
-  o2 <- lmerboost(y = y, X = X, id="id", n.trees=2, cv.folds=1, shrinkage=.1,
+  o2 <- metb(y = y, X = X, id="id", n.trees=2, cv.folds=1, shrinkage=.1,
                  subset = train, verbose=F)
   Xmis <- X
   Xmis[sample(1:n, size = n/2, replace = FALSE),] <- NA
-  o3 <- lmerboost(y = y, X = Xmis, id="id", n.trees = 2, cv.folds = 3, verbose=F)
-  expect_is(o3, "lmerboost")
+  o3 <- metb(y = y, X = Xmis, id="id", n.trees = 2, cv.folds = 3, verbose=F)
+  expect_is(o3, "metb")
 })
 
-test_that("lmerboost.fit bag.fraction, shrinkage, subset, train/oob/test err", {
+test_that("metb.fit bag.fraction, shrinkage, subset, train/oob/test err", {
   bag.fraction = 1
   shrinkage <- .5
   n <- length(y)
@@ -44,7 +44,7 @@ test_that("lmerboost.fit bag.fraction, shrinkage, subset, train/oob/test err", {
   interaction.depth <- 5
   
   set.seed(104)
-  o <- lmerboost.fit(y = y, X = X, id="id", subset = train,
+  o <- metb.fit(y = y, X = X, id="id", subset = train,
                      bag.fraction = bag.fraction,  indep = TRUE, verbose = FALSE,
                      n.trees = n.trees, shrinkage = shrinkage, 
                      interaction.depth = interaction.depth,
@@ -133,7 +133,7 @@ test_that("lmerboost.fit bag.fraction, shrinkage, subset, train/oob/test err", {
   expect_equal(test_err, o$test.err)  
 })
 
-test_that("lmerboost.fit drops rank deficient cols", {
+test_that("metb.fit drops rank deficient cols", {
   # Rank deficiency in training can occur with missing data due to surrogate splitting.
   # gbm always defines a surrogate, and in the full data the surrogate
   #  might be used to make a prediction. 
@@ -165,7 +165,7 @@ test_that("lmerboost.fit drops rank deficient cols", {
   
   set.seed(104)
   X <- data.frame(x, x2, id)
-  lb <- lmerboost.fit(y=y, X=X, id="id", shrinkage=1, n.trees=1,
+  lb <- metb.fit(y=y, X=X, id="id", shrinkage=1, n.trees=1,
                       interaction.depth=1, bag.fraction=1,
                       n.minobsinnode=1, subset=train, verbose=F)
   
@@ -235,16 +235,16 @@ test_that("runs if tree doesn't split", {
   mm <- model.matrix(~id+sq:id-1)
   b <- rep(0, ncol(mm)) 
   y <- mm %*% b #+ rnorm(length(id), 0, .001)
-  om3 <- lmerboost(y=y, X=data.frame(age, id), id="id", interaction.depth=10, 
+  om3 <- metb(y=y, X=data.frame(age, id), id="id", interaction.depth=10, 
                   n.minobsinnode=1, n.trees=1, shrinkage=1, bag.fraction=.85, verbose=F)
-  expect_equal(class(om3), "lmerboost")
+  expect_equal(class(om3), "metb")
   
 })
-## TODO: lmerboost.fit logical subset
+## TODO: metb.fit logical subset
 
-## TODO: lmerboost.fit train.fraction, interaction.depth, indep
+## TODO: metb.fit train.fraction, interaction.depth, indep
 
-context("lmerboost")
+context("metb")
 
 set.seed(104)
 ngroups <- 50
@@ -261,27 +261,27 @@ b <- rnorm(ncol(xx), 0, 1)
 y <- xx %*% b + rnorm(n)
 X <- data.frame(x, xc, id)
 
-test_that("lmerboost_cv", {
-  # now we can use lmerboost.fit
+test_that("metb_cv", {
+  # now we can use metb.fit
   cv.folds <- 3
   folds <- sample(1:cv.folds, size=n, replace=TRUE)
   
   set.seed(104)
   ocv <- lapply(1:cv.folds, function(k, folds, train){
     ss <- train[folds != k]
-    lmerboost.fit(y = y, X = X, id="id", subset = ss, n.trees = 2, 
+    metb.fit(y = y, X = X, id="id", subset = ss, n.trees = 2, 
                   verbose = F, shrinkage = .5,  n.minobsinnode=1)
   }, folds = folds, train=1:n)
   
   set.seed(104)
-  o <- lapply(1:cv.folds, mvtboost:::lmerboost_cv, 
+  o <- lapply(1:cv.folds, mvtboost:::metb_cv, 
            folds = folds, train = 1:n, y = y, x = X, n.minobsinnode=1,
            id="id", n.trees = 2, shrinkage = .5, verbose=F)
   
   expect_equivalent(o, ocv)
 })
 
-test_that("lmerboost cv params", {
+test_that("metb cv params", {
   
   set.seed(104)
   cv.folds = 4
@@ -301,7 +301,7 @@ test_that("lmerboost cv params", {
   paramscv$id <- factor(rep(1:nrow(params), each = cv.folds))
   paramscv.ls <- split(paramscv, 1:nrow(paramscv))
   do_one <- function(args, folds, y, x, id, train, ...){ 
-    mvtboost:::lmerboost_cv(k = args$k, 
+    mvtboost:::metb_cv(k = args$k, 
                             interaction.depth=args$interaction.depth,
                             shrinkage = args$shrinkage,
                             n.minobsinnode=args$n.minobsinnode,
@@ -323,7 +323,7 @@ test_that("lmerboost cv params", {
   bc <- params[best.cond, ]
   
   set.seed(104)
-  o <- lmerboost(y=y, X=X, id="id", cv.folds=4,
+  o <- metb(y=y, X=X, id="id", cv.folds=4,
                  bag.fraction=1, subset = 1:n,
                 shrinkage=c(.2, .5), 
                 interaction.depth=c(1, 2), 
@@ -336,17 +336,17 @@ test_that("lmerboost cv params", {
 })
 
 
-test_that("lmerboost err", {
-  # error in lmerboost.fit
+test_that("metb err", {
+  # error in metb.fit
   y2 <- y
   y2[56] <- NA
   msg <- capture_output(
-    expect_error(o1 <- lmerboost(y = y2, X = X, id="id", n.trees=5,
+    expect_error(o1 <- metb(y = y2, X = X, id="id", n.trees=5,
                                  cv.folds = 1, shrinkage = .1, verbose=F))
   )
 
   #msg <- capture.output(
-  #  o1 <- lmerboost(y = y, X = X, id="id", n.trees = 5, cv.folds = 3,
+  #  o1 <- metb(y = y, X = X, id="id", n.trees = 5, cv.folds = 3,
   #                  shrinkage = .1, mc.cores=3, verbose=F)
   #, type="message")
   #expect_true(all(sapply(o1, function(o){class(o) == "try-error"})))
@@ -356,9 +356,9 @@ test_that("lmerboost err", {
 ## TODO: combinations of params
 
 
-test_that("lmerboost influence", {
+test_that("metb influence", {
   X <- data.frame(id,  X2 = rnorm(n), X1 = x)
-  ob <- lmerboost(y = y, X = X, id="id", n.trees = 3, cv.folds = 1,
+  ob <- metb(y = y, X = X, id="id", n.trees = 3, cv.folds = 1,
                   shrinkage = .5, verbose=F)
   inf <- influence(ob)
   expect_gt(inf["X1"], 0)
@@ -369,9 +369,9 @@ test_that("lmerboost influence", {
   expect_equal(infs, inf[order(inf, decreasing = T)])
 })
 
-test_that("lmerboost predict", {
+test_that("metb predict", {
   n.trees = 5
-  lb <- lmerboost(y = y, X = X, id="id", n.trees = n.trees, cv.folds = 3,
+  lb <- metb(y = y, X = X, id="id", n.trees = n.trees, cv.folds = 3,
                   shrinkage = c(.5, 1), verbose=F, n.minobsinnode = 1,
                  bag.fraction=1, subset=1:(n/2), save.mods=TRUE)
   yh <- predict(lb, newdata=X, id="id", n.trees=min(lb$best.trees, na.rm=T))
