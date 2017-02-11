@@ -23,7 +23,7 @@ X <- data.frame(x, xc, id)
 
 tol = 1E-6
 
-context("metb.fit")
+context("test_metb.fit")
 
 test_that("metb runs", {
   o1 <- metb(y = y, X = X, id="id", n.trees=2, cv.folds=1, shrinkage=.1,
@@ -244,7 +244,7 @@ test_that("runs if tree doesn't split", {
 
 ## TODO: metb.fit train.fraction, interaction.depth, indep
 
-context("metb")
+context("test_metb")
 
 set.seed(104)
 ngroups <- 50

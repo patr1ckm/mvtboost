@@ -1,4 +1,4 @@
-context("test_intx")
+context("test_mvtb_intx")
 set.seed(123)
 n <- 1000
 B <- matrix(0, nrow=5, ncol=4)

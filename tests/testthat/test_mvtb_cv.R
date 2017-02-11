@@ -1,4 +1,4 @@
-context("test_cv")
+context("test_mvtb_cv")
 #fp <- paste0(getwd(),"/test_cv.R")
 
 set.seed(123)

@@ -1,4 +1,4 @@
-context("test_predict")
+context("test_mvtb_predict")
 
 k <- 1
 B <- matrix(c(1,1,rep(0,(k-1)*2)),nrow=2,ncol=k)

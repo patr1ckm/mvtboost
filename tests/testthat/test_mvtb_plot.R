@@ -1,4 +1,4 @@
-context("test_plot")
+context("test_mvtb_plot")
 
 set.seed(123)
 n <- 1000

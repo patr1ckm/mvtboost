@@ -1,5 +1,5 @@
 
-context("test_covex")
+context("test_mvtb_covex")
 
 k <- 3
 q <- 3
