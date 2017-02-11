@@ -34,9 +34,9 @@ Tree boosting for multivariate outcomes. Estimates a multivariate additive model
             interaction.depth=3)   # tree or interaction depth
     
     
-# lmerboost
+# metb 
 
-Tree boosting with random effects, useful for longitudinal or hierarchically clustered data. At
+Mixed effects tree boosting, useful for longitudinal or hierarchically clustered data. At
 each iteration, the terminal node means of each tree are forced to vary by group and shrunk
 proportional to group size using `lme4::lmer`. Tuning is done by passing vectors
 of meta-parameters as arguments.
@@ -49,7 +49,7 @@ of meta-parameters as arguments.
     X <- mpg %>% select(-cty, -hwy) %>% 
            mutate_if(is.character, as.factor)
     
-    out <- lmerboost(y=y, X=X, id="manufacturer", 
+    out <- metb(y=y, X=X, id="manufacturer", 
                      n.trees=100,
                      shrinkage=.01, 
                      interaction.depth=3,
@@ -82,7 +82,6 @@ The package is experimental, and the interface is subject to change until versio
                   
 ### Vignettes
 
-    vignette("mvtboost_vignette")
     vignette("mvtboost_wellbeing")
     
     
