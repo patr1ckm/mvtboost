@@ -104,10 +104,24 @@
 #'
 #' @examples
 #'data(wellbeing)
-#'y <- wellbeing[,21]
+#'y <- wellbeing[,25]
 #'x <- wellbeing[,1:20]
 #'
-#'mm <- gbm.cverr(x = x, y = y, distribution = 'gaussian', cv.folds = 5, interaction.depth = c(1, 5), shrinkage = c(0.005, 0.02), verbose = T)
+#'mm <- gbm.cverr(x = x, y = y, 
+#'                distribution = 'gaussian', 
+#'                cv.folds = 2, 
+#'                
+#'                nt.start = 100, 
+#'                nt.inc = 100, 
+#'                max.mins = 1/60, 
+#'                
+#'                seed = 12345,
+#'                interaction.depth = c(1, 5), 
+#'                shrinkage = 0.01,
+#'                n.minobsinnode = c(5, 50), 
+#'                verbose = TRUE)
+#'
+#'summary(mm)
 #'
 #' @export
 gbm.cverr <- function(
@@ -134,8 +148,6 @@ gbm.cverr <- function(
   ##############################################################################
   ## Set up input and source required packages
   ##############################################################################
-  library(gbm)
-  library(parallel)
   
   # ----------------------------------------------------------------------------
   # Set up grid of metaparameters to evaluate
@@ -176,9 +188,9 @@ gbm.cverr <- function(
   if(n != nrow(x)){stop('Differing number of observations in x and y')}
   
   # Get seeds for each set of metaparameters
-  if(is.null(seed)){seed <- round(runif(1, 0, 1) * .Machine$integer.max)}
+  if(is.null(seed)){seed <- round(stats::runif(1, 0, 1) * .Machine$integer.max)}
   set.seed(seed)
-  seeds <- round(runif(nmeta, 0, 1) * .Machine$integer.max)
+  seeds <- round(stats::runif(nmeta, 0, 1) * .Machine$integer.max)
   
   # Needs weights to evaluate loss function, so use equality if w = NULL
   return.w <- T
@@ -266,42 +278,43 @@ gbm.cverr <- function(
     }
     
     # Begin cross-validation
-    cv.err <- mclapply(1:cv.folds, mc.cores = n.cores, FUN = function(fld){
-      
-      # Training and test indices for this fold
-      test <- cv.inds[seq(fld, n, by = cv.folds)]
-      train <- cv.inds[-seq(fld, n, by = cv.folds)]
-      
-      # Fit the model to the training data using the initial number of folds
-      set.seed(fld)
-      mm.cv <- gbm.fit(x = x[train,], 
-                       y = y[train], 
-                       distribution = distribution,
-                       
-                       n.trees = nt,
-                       
-                       w = w.hold,
-                       var.monotone = var.hold,
-                       interaction.depth = int.hold,
-                       n.minobsinnode = nmin.hold,
-                       shrinkage = shink.hold,
-                       bag.fraction = bag.hold,
-                       
-                       nTrain = length(train),
-                       keep.data = T,
-                       verbose = F)
-      
-      # Get test error
-      ytest.cv <- y[test]
-      wtest.cv <- w.hold[test]
-      fx.cv <-
-        predict(mm.cv, newdata = x[test,], n.trees = 1:nt.start) 
-      err <- apply(fx.cv, 2, loss, 
-                   yobs = ytest.cv, wt = wtest.cv, distrb = distribution)
-      
-      return(list(err = err, mm.cv = mm.cv))
-      
-    })
+    cv.err <- 
+      parallel::mclapply(1:cv.folds, mc.cores = n.cores, FUN = function(fld){
+        
+        # Training and test indices for this fold
+        test <- cv.inds[seq(fld, n, by = cv.folds)]
+        train <- cv.inds[-seq(fld, n, by = cv.folds)]
+        
+        # Fit the model to the training data using the initial number of folds
+        set.seed(fld)
+        mm.cv <- gbm::gbm.fit(x = x[train,], 
+                              y = y[train], 
+                              distribution = distribution,
+                              
+                              n.trees = nt,
+                              
+                              w = w.hold,
+                              var.monotone = var.hold,
+                              interaction.depth = int.hold,
+                              n.minobsinnode = nmin.hold,
+                              shrinkage = shink.hold,
+                              bag.fraction = bag.hold,
+                              
+                              nTrain = length(train),
+                              keep.data = T,
+                              verbose = F)
+        
+        # Get test error
+        ytest.cv <- y[test]
+        wtest.cv <- w.hold[test]
+        fx.cv <-
+          predict(mm.cv, newdata = x[test,], n.trees = 1:nt.start) 
+        err <- apply(fx.cv, 2, loss, 
+                     yobs = ytest.cv, wt = wtest.cv, distrb = distribution)
+        
+        return(list(err = err, mm.cv = mm.cv))
+        
+      })
     
     # Compute CV error across folds
     err <- Reduce('+', lapply(cv.err, FUN = function(err){err[[1]]})) / 
@@ -326,35 +339,36 @@ gbm.cverr <- function(
       
       # Update models
       cv.err <- 
-        mclapply(1:length(cv.err), mc.cores = n.cores, FUN = function(fld){
-          
-          test <- cv.inds[seq(fld, n, by = cv.folds)]
-          train <- cv.inds[-seq(fld, n, by = cv.folds)]
-          
-          # Get the current state of the model
-          mm.cv <- cv.err[[fld]]$mm.cv
-          
-          # Add trees
-          set.seed(fld + nt)
-          mm.cv <- 
-            gbm_more(gbm_fit_obj = mm.cv,
-                     num_new_trees = nt.inc, is_verbose = F)
-          
-          # Get test error for new trees
-          ytest.cv <- y[test]
-          wtest.cv <- w.hold[test]
-          fx.cv <-
-            predict(mm.cv, 
-                    newdata = x[test,], 
-                    n.trees = (length(mm.cv$train.error) - nt.inc + 1):length(
-                      mm.cv$train.error), 
-                    type = 'link')
-          err <- apply(fx.cv, 2, loss, 
-                       yobs = ytest.cv, wt = wtest.cv, distrb = distribution)
-          
-          return(list(err = err, mm.cv = mm.cv))
-          
-        })
+        parallel::mclapply(
+          1:length(cv.err), mc.cores = n.cores, FUN = function(fld){
+            
+            test <- cv.inds[seq(fld, n, by = cv.folds)]
+            train <- cv.inds[-seq(fld, n, by = cv.folds)]
+            
+            # Get the current state of the model
+            mm.cv <- cv.err[[fld]]$mm.cv
+            
+            # Add trees
+            set.seed(fld + nt)
+            mm.cv <- 
+              gbm::gbm_more(gbm_fit_obj = mm.cv,
+                            num_new_trees = nt.inc, is_verbose = F)
+            
+            # Get test error for new trees
+            ytest.cv <- y[test]
+            wtest.cv <- w.hold[test]
+            fx.cv <-
+              predict(mm.cv, 
+                      newdata = x[test,], 
+                      n.trees = (length(mm.cv$train.error) - nt.inc + 1):length(
+                        mm.cv$train.error), 
+                      type = 'link')
+            err <- apply(fx.cv, 2, loss, 
+                         yobs = ytest.cv, wt = wtest.cv, distrb = distribution)
+            
+            return(list(err = err, mm.cv = mm.cv))
+            
+          })
       
       # Update CV error
       err <- c(err,
@@ -450,12 +464,13 @@ print.gbm.cverr <- function(x, ...){
     cat('   var.monotone: input set', out[1, nn.out == 'var.monotone.index'], 
         'of',length(x$var.monotone), fill = T)
   }
-  cat('   interaction.depth =', out[1, nn.out == 'interaction.depth'], fill = T)
+  cat('   interaction.depth =', out[1, nn.out == 'interaction.depth'], 
+      fill = T)
   cat('   n.minobsinnode =', out[1, nn.out == 'n.minobsinnode'], fill = T)
   cat('   shrinkage =', out[1, nn.out == 'shrinkage'], fill = T)
   cat('   bag.fraction =', out[1, nn.out == 'bag.fraction'], fill = T)
   cat('   n.trees =', out[1, nn.out == 'n.trees'], fill = T)
-  cat('RESULTING CROSS-VALIDATION ERROR =', out[1, nn.out == 'min.cv.error'])
+  cat('RESULTING CROSS-VALIDATION ERROR:', out[1, nn.out == 'min.cv.error'])
   
 }
 
@@ -504,18 +519,46 @@ print.gbm.cverr <- function(x, ...){
 summary.gbm.cverr <- function(object, ...){
   print.res <- object$res[,-1]
   nn <- colnames(print.res)
-  print.res <- print.res[,c(which(nn == 'min.cv.error'), which(nn != 'min.cv.error'))]
+  print.res <- print.res[,c(which(nn == 'min.cv.error'), 
+                            which(nn != 'min.cv.error'))]
   print.res <- out.res <- print.res[order(print.res[,1]),]
   print.res <- print.res[,-ncol(print.res)]
   print.res$n.trees <- paste(print.res$n.trees)
+
+  rownames(print.res) <- rownames(out.res) <- NULL
+  # print(print.res, row.names = F)
+  # if(any(out.res$timer.end)){
+  #   cat('---', fill = T)
+  #   cat(
+  #     "entries in n.trees starting with '>=' indicate that the maximum allotted",
+  #     fill = T)
+  #   cat("time expired for that given set of metaparameters, so the true optimum",
+  #       fill = T)
+  #   cat("number of trees is at least as large as the number provided")
+  # }
+  class(out.res) <- 'summary.gbmcverr'
+  return(out.res)
+}
+
+#' @export
+print.summary.gbmcverr <- function(x, ...){
+  
+  nn <- names(x)
+  print.res <- data.frame(matrix(unlist(x), ncol = length(x)))
+  colnames(print.res) <- nn
+  print.res$n.trees <- paste(print.res$n.trees)
+  
   for(k in 1:nrow(print.res)){
-    if(out.res$timer.end[k]){
+    if(print.res$timer.end[k] == 1){
       print.res$n.trees[k] <- paste0('>= ', print.res$n.trees[k])
     }
   }
-  rownames(print.res) <- rownames(out.res) <- NULL
+  
+  timer <- print.res[,ncol(print.res)]
+  print.res <- print.res[,-ncol(print.res)]
+
   print(print.res, row.names = F)
-  if(any(out.res$timer.end)){
+  if(any(timer == 1)){
     cat('---', fill = T)
     cat(
       "entries in n.trees starting with '>=' indicate that the maximum allotted",
@@ -525,5 +568,4 @@ summary.gbm.cverr <- function(object, ...){
     cat("number of trees is at least as large as the number provided")
   }
   
-  invisible(out.res)
 }

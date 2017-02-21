@@ -130,10 +130,24 @@ Note that the metaparamter values passed to \code{w}, \code{var.monotone},
 }
 \examples{
 data(wellbeing)
-y <- wellbeing[,21]
+y <- wellbeing[,25]
 x <- wellbeing[,1:20]
 
-mm <- gbm.cverr(x = x, y = y, distribution = 'gaussian', cv.folds = 5, interaction.depth = c(1, 5), shrinkage = c(0.005, 0.02), verbose = T)
+mm <- gbm.cverr(x = x, y = y, 
+               distribution = 'gaussian', 
+               cv.folds = 2, 
+               
+               nt.start = 100, 
+               nt.inc = 100, 
+               max.mins = 1/60, 
+               
+               seed = 12345,
+               interaction.depth = c(1, 5), 
+               shrinkage = 0.01,
+               n.minobsinnode = c(5, 50), 
+               verbose = TRUE)
+
+summary(mm)
 
 }
 \author{
