@@ -7,7 +7,7 @@
 gbm.cverr(x, y, distribution = "gaussian", cv.folds = 5, nt.start = 1000,
   nt.inc = 1000, verbose = T, w = NULL, var.monotone = NULL,
   interaction.depth = 1, n.minobsinnode = 10, shrinkage = 0.001,
-  bag.fraction = 0.5, n.cores = 1, max.mins = NULL, seed = NULL)
+  bag.fraction = 0.5, n.cores = 1, max.time = NULL, seed = NULL)
 }
 \arguments{
 \item{x}{A \eqn{n x p} matrix or data frame of predictors.}
@@ -69,7 +69,7 @@ error using multiple bag fractions.}
 \item{n.cores}{Number of cores that will be used to estimate cross-validation
 folds in parallel. Only available on linux-based machines.}
 
-\item{max.mins}{Maximum number of minutes that the model will continue adding
+\item{max.time}{Maximum number of seconds that the model will continue adding
 trees for a given set of metaparameters. This optional argument allows users 
 to find the best possible solution in scenarios characterized by limited 
 computational resources.}
@@ -139,7 +139,7 @@ mm <- gbm.cverr(x = x, y = y,
                
                nt.start = 100, 
                nt.inc = 100, 
-               max.mins = 1/60, 
+               max.time = 1, 
                
                seed = 12345,
                interaction.depth = c(1, 5), 

@@ -72,7 +72,7 @@
 #' error using multiple bag fractions.
 #' @param n.cores Number of cores that will be used to estimate cross-validation
 #' folds in parallel. Only available on linux-based machines.
-#' @param max.mins Maximum number of minutes that the model will continue adding
+#' @param max.time Maximum number of seconds that the model will continue adding
 #' trees for a given set of metaparameters. This optional argument allows users 
 #' to find the best possible solution in scenarios characterized by limited 
 #' computational resources.
@@ -113,7 +113,7 @@
 #'                
 #'                nt.start = 100, 
 #'                nt.inc = 100, 
-#'                max.mins = 1/60, 
+#'                max.time = 1, 
 #'                
 #'                seed = 12345,
 #'                interaction.depth = c(1, 5), 
@@ -140,7 +140,7 @@ gbm.cverr <- function(
   bag.fraction = 0.5, # number or vector
   
   # Time management
-  n.cores = 1, max.mins = NULL,
+  n.cores = 1, max.time = NULL,
   
   # Reproducible results
   seed = NULL){
@@ -180,9 +180,6 @@ gbm.cverr <- function(
   # Misc data management
   # ----------------------------------------------------------------------------
   
-  if(is.null(max.mins)){max.mins <- Inf}
-  max.secs <- max.mins * 60
-  
   x <- as.data.frame(x)
   n <- length(y)
   if(n != nrow(x)){stop('Differing number of observations in x and y')}
@@ -205,6 +202,8 @@ gbm.cverr <- function(
     stop(paste0('Specified distribution unavailable. Please select from:\n',
                 'gaussian, adaboost, bernoulli, laplace, poisson'))
   }
+  
+  if(is.null(max.time)){max.time <- Inf}
   
   ##############################################################################
   ## Program loss functions for each GBM distribution
@@ -324,7 +323,7 @@ gbm.cverr <- function(
     # Step 3b: Add trees as necessary and as time allows
     # --------------------------------------------------------------------------
     tt <- as.numeric(Sys.time() - time.start)
-    keep.going <- tt <= max.secs
+    keep.going <- tt <= max.time
     while(all((which.min(err) >= (0.90 * length(err))), keep.going)){
       
       # Update status
@@ -377,7 +376,7 @@ gbm.cverr <- function(
       
       # Update timer
       tt <- as.numeric(Sys.time() - time.start)
-      keep.going <- tt <= max.secs
+      keep.going <- tt <= max.time
     }
     
     if(all(verbose, !keep.going)){
@@ -508,7 +507,7 @@ print.gbm.cverr <- function(x, ...){
 #' metaprameters denoted in the row. Note that entries in this column will be
 #' marked with '>=' if the boosting procedure was terminated due to time running
 #' out for this set of metaparameters, determined by the user-specified 
-#' \code{max.mins} passed to \code{gbm.cverr}}
+#' \code{max.time} passed to \code{gbm.cverr}}
 #'
 #' Sets of metaparameters (rows) are ordered from best (top row) to worst (last 
 #' row) in terms of the resulting cross-validation error.
