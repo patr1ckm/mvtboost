@@ -38,7 +38,7 @@ the given set of metaparameters.}
 metaprameters denoted in the row. Note that entries in this column will be
 marked with '>=' if the boosting procedure was terminated due to time running
 out for this set of metaparameters, determined by the user-specified 
-\code{max.mins} passed to \code{gbm.cverr}}
+\code{max.time} passed to \code{gbm.cverr}}
 
 Sets of metaparameters (rows) are ordered from best (top row) to worst (last 
 row) in terms of the resulting cross-validation error.

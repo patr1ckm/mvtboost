@@ -127,7 +127,7 @@ test_that(desc = 'using time limitations works', code = {
   
   mm.time <- gbm.cverr(x = x, y = y, 
                        distribution = 'gaussian', 
-                       n.cores = 1, cv.folds = 2, max.mins = .0001, 
+                       n.cores = 1, cv.folds = 2, max.time = 1, 
                        nt.start = 100, nt.inc = 100,
                        verbose = F, 
                        w = list(rep(1, n), runif(n, 0, 1)), 
