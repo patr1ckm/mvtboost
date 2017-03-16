@@ -376,7 +376,7 @@ gbm.cverr <- function(
     # --------------------------------------------------------------------------
     # Step 3b: Add trees as necessary and as time allows
     # --------------------------------------------------------------------------
-    tt <- as.numeric(Sys.time() - time.start)
+    tt <- as.numeric(difftime(Sys.time(), time.start, units = 'secs'))
     keep.going <- tt <= max.time
     while(all((which.min(err) >= (0.90 * length(err))), keep.going)){
       
@@ -429,7 +429,7 @@ gbm.cverr <- function(
                  length(cv.err))
       
       # Update timer
-      tt <- as.numeric(Sys.time() - time.start)
+      tt <- as.numeric(difftime(Sys.time(), time.start, units = 'secs'))
       keep.going <- tt <= max.time
     }
     
