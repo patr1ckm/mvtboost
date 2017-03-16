@@ -326,7 +326,7 @@ gbm.cverr <- function(
     # Initialize number of trees
     nt <- nt.start
     if(verbose){
-      cat('Fitting trees 1 -', nt, 'to metaparameter set', i,
+      cat('Fitting trees 1 -', nt, 'using metaparameter set', i,
           'of', nmeta, fill = T)
     }
     
@@ -384,7 +384,7 @@ gbm.cverr <- function(
       if(verbose){
         # cat('Current best tree:', which.min(err), '   ', fill = F)
         cat('Fitting trees', nt + 1, '-', nt + nt.inc, 
-            'to metaparameter set', i, 'of', nmeta, fill = T)
+            'using metaparameter set', i, 'of', nmeta, fill = T)
       }
       
       # Update number of trees
