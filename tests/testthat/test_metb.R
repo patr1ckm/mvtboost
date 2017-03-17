@@ -134,13 +134,20 @@ test_that("metb.fit bag.fraction, shrinkage, subset, train/oob/test err", {
 })
 
 test_that("metb.fit drops rank deficient cols", {
-  # Rank deficiency in training can occur with missing data due to surrogate splitting.
-  # gbm always defines a surrogate, and in the full data the surrogate
-  #  might be used to make a prediction. 
+  # This bugfix has to do with building predictions for training and test
+  # at each iteration using the 'subset' argument. This is a detail,
+  # but it occurs frequently in data with missing values.
   
-  # Since the design matrix is created for unique predictions, the full
-  # data (training + test) might have more unique predictions than the training.
-  # The training data might have a column where no observations fall (all 0s)
+  # At each iteration, a design matrix for training+test is created from the
+  # tree fit only to training set. If obs are missing on a predictor in test,
+  # a surrogate is used to make a prediction. The observation falls into
+  # a unique node. 
+  
+  # A new column in the design matrix for the full data is created,
+  # just for this observation.
+
+  # However, the _training_ data would have a column where no observations fall
+  # (all 0s).
    
   # Since lmer is fit to training data, the design matrix is rank deficient.
   # lmer drops the column with a warning.
@@ -148,7 +155,8 @@ test_that("metb.fit drops rank deficient cols", {
   # However, this means that the model matrix of the full data and of training
   # don't have the same dimensions; which breaks predictions.
 
-  # Test case that demonstrates missing nodes
+  # In this test case, observations 10 and 20 are missing on x, and are 
+  # in the test set. a split on x2 is usd as a surrogate.
   
   set.seed(104)
   x <- rep(0:1, each = 10)
@@ -157,77 +165,22 @@ test_that("metb.fit drops rank deficient cols", {
   x[c(10, 20)] <- NA   # will use x2 for a surrogate for these obs
   train <- c(1:9, 11:19)   # training set does not have missing values
   id <- factor(rep(1:5, each=4))
-  shrinkage = 1
-  bag.fraction=1
-  i <- 1
-  idx <- 3
-  
+  X <- data.frame(x, x2, id)
   
   set.seed(104)
-  X <- data.frame(x, x2, id)
   lb <- metb.fit(y=y, X=X, id="id", shrinkage=1, n.trees=1,
                       interaction.depth=1, bag.fraction=1,
                       n.minobsinnode=1, subset=train, verbose=F)
   
-  set.seed(104)
-  s <- sample(train, size = ceiling(length(train)*bag.fraction), replace = FALSE)
-  s.oob <- setdiff(train, s)
-  
-  init <- mean(y)  
-  r <- y - init
-  tp <- training_params(num_trees=1, interaction_depth=1, min_num_obs_in_node = 1,
-                        shrinkage=1, bag_fraction=1, num_train=length(train))
-  gbmPrep <- gbmt_data(y=r[train], x=data.frame(X[train,-idx, drop=F]), train_params=tp,
-                       par_details=gbmParallel(num_threads = 1))
-  og <- gbm::gbmt_fit_(gbmPrep)
-  gbm_pred <- predict(og, n.trees=1, newdata=X[,-idx, drop=F])
-  
-  # this forces node factor order to have a terminal node as reference, not surrogate
-  pt <- gbm::pretty_gbm_tree(og, 1)
-  pt <- pt[order(pt$SplitVar), ]
-  
-  # prediction determines into which node observations fall
-  # factor labels correspond to terminal node id (rows of pt)
-  nodes <- droplevels(factor(gbm_pred, 
-                             levels=as.character(pt$Prediction+og$initF), 
-                             labels=rownames(pt)))
-  
-  
-  mm <- model.matrix(~nodes)[,-1,drop=F]
-  
-  keep_cols <- colSums(mm[s,,drop=FALSE ]) > 0
-  dropped_obs <- rowSums(mm[,!keep_cols,drop=FALSE]) > 0
-  mm <- mm[,keep_cols, drop = FALSE]
-  colnames(mm) <- paste0("X", 1:ncol(mm))
-  addx <- paste0(colnames(mm), collapse = "+")
-  form <- as.formula(paste0("r ~ 1 + ", addx, "+ (1 + ", addx, " | id)"))
-  
-  # lmer on training
-  d <- data.frame(r, mm, id)
-  o <- lme4::lmer(form, data=d, REML=T, subset = s, 
-                  control = lme4::lmerControl(calc.derivs = FALSE))
-  
-  # 2016-10-19: Timed to show that this was fastest with large n and large ngrps
-  yhatm <- predict(o, newdata=d, allow.new.levels = TRUE)
-  fixedm <- cbind(1, mm) %*% o@beta
-  zuhat <- yhatm - fixedm
-  fixedm[dropped_obs, ] <- gbm_pred[dropped_obs]
-  yhatm[dropped_obs] <- gbm_pred[dropped_obs]
-  yhatm <- yhatm + init
-  fixedm <- fixedm + init
-   
-  expect_equal(lb$yhat[train], unname(yhatm[train]))
-  expect_equal(lb$ranef[train], unname(zuhat[train]))
-  expect_equal(lb$fixed[train], unname(fixedm[train]))
-  expect_equal(lb$trees, og$trees)
-  expect_equal(lb$yhat[-train], unname(yhatm[-train]))
-  expect_equal(lb$ranef[-train], unname(zuhat[-train]))
-  expect_equal(lb$fixed[-train], unname(fixedm[-train]))
-  
+  # 2017-03-17
+  # More limited tests that the predictions equal the values of a 
+  # previous implementation. 
+  expect_equal(as.vector(lb$yhat), c(rep(-0.00112391, 9), .4970703,
+                          rep(0.99526453, 9), .4970703))
 })
 
 test_that("runs if tree doesn't split", {
-  ## WTF
+
   nsub <- 3
   age <- rep(c(15, 25, 50, 73), times=nsub)
   sq <- (age-mean(age))^2
