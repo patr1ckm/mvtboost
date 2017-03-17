@@ -11,7 +11,7 @@ n <- 100
 p <- 5
 r2 <- 0.50
 
-# Three of ten predictors have an effect: X1^2, X2, and X2*X3
+# Three of five predictors have an effect: X1^2, X2, and X2*X3
 x <- sapply(1:p, FUN = function(k){rnorm(n, 0, 1)})
 x.efx <- x[,1:3]
 x.efx[,1] <- x.efx[,1]^2
@@ -44,7 +44,7 @@ test_that(desc = 'all loss functions yield results', code = {
                        distribution = 'gaussian', 
                        interaction.depth = 5,
                        shrinkage = 0.02)
-  expect_equal(names(mm.gaus), c('cv.err', 'res'))
+  expect_equal(names(mm.gaus), c('gbm.fit', 'cv.err', 'res'))
   expect_equal(length(mm.gaus$res), 8)
   
   mm.lap <- gbm.cverr(x = x, y = y.cont, 
@@ -54,7 +54,7 @@ test_that(desc = 'all loss functions yield results', code = {
                       distribution = 'laplace', 
                       interaction.depth = 5,
                       shrinkage = 0.02)
-  expect_equal(names(mm.lap), c('cv.err', 'res'))
+  expect_equal(names(mm.lap), c('gbm.fit', 'cv.err', 'res'))
   expect_equal(length(mm.lap$res), 8)
   
   # Distributions using a dichotomous outcome
@@ -65,7 +65,7 @@ test_that(desc = 'all loss functions yield results', code = {
                        distribution = 'bernoulli', 
                        interaction.depth = 5,
                        shrinkage = 0.02)
-  expect_equal(names(mm.bern), c('cv.err', 'res'))
+  expect_equal(names(mm.bern), c('gbm.fit', 'cv.err', 'res'))
   expect_equal(length(mm.bern$res), 8)
   
   mm.ada <- gbm.cverr(x = x, y = y.cat, 
@@ -75,7 +75,7 @@ test_that(desc = 'all loss functions yield results', code = {
                       distribution = 'adaboost', 
                       interaction.depth = 5,
                       shrinkage = 0.02)
-  expect_equal(names(mm.ada), c('cv.err', 'res'))
+  expect_equal(names(mm.ada), c('gbm.fit', 'cv.err', 'res'))
   expect_equal(length(mm.ada$res), 8)
   
   # Distributions using count outcome
@@ -86,7 +86,7 @@ test_that(desc = 'all loss functions yield results', code = {
                        distribution = 'gaussian', 
                        interaction.depth = 5,
                        shrinkage = 0.02)
-  expect_equal(names(mm.pois), c('cv.err', 'res'))
+  expect_equal(names(mm.pois), c('gbm.fit', 'cv.err', 'res'))
   expect_equal(length(mm.pois$res), 8)
   
 })
@@ -102,6 +102,7 @@ test_that(desc = 'using grids of metaparameters yield results', code = {
                        distribution = 'gaussian', 
                        n.cores = 1, cv.folds = 2, 
                        verbose = F, 
+                       fit.best = F,
                        w = list(rep(1, n), runif(n, 0, 1)), 
                        var.monotone = list(rep(0, p), c(0, 1, rep(0, p-2))), 
                        interaction.depth = c(1, 10), 
@@ -128,9 +129,10 @@ test_that(desc = 'using time limitations works', code = {
   
   mm.time <- gbm.cverr(x = x, y = y, 
                        distribution = 'gaussian', 
-                       n.cores = 1, cv.folds = 2, max.mins = .0001, 
+                       n.cores = 1, cv.folds = 2, max.time = 1, 
                        nt.start = 100, nt.inc = 100,
                        verbose = F, 
+                       fit.best = F,
                        w = list(rep(1, n), runif(n, 0, 1)), 
                        var.monotone = list(rep(0, p), c(0, 1, rep(0, p-2))), 
                        interaction.depth = c(1, 10), 

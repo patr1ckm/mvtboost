@@ -4,10 +4,11 @@
 \alias{gbm.cverr}
 \title{Tune gbm via cross-validation to find the best set of metaparameters}
 \usage{
-gbm.cverr(x, y, distribution = "gaussian", cv.folds = 5, nt.start = 1000,
-  nt.inc = 1000, verbose = T, w = NULL, var.monotone = NULL,
-  interaction.depth = 1, n.minobsinnode = 10, shrinkage = 0.001,
-  bag.fraction = 0.5, n.cores = 1, max.mins = NULL, seed = NULL)
+gbm.cverr(x, y, distribution = "gaussian", cv.folds = 5, fit.best = T,
+  nt.start = 1000, nt.inc = 1000, verbose = T, w = NULL,
+  var.monotone = NULL, interaction.depth = 1, n.minobsinnode = 10,
+  shrinkage = 0.001, bag.fraction = 0.5, n.cores = 1, max.time = NULL,
+  seed = NULL)
 }
 \arguments{
 \item{x}{A \eqn{n x p} matrix or data frame of predictors.}
@@ -24,10 +25,15 @@ Finally, the "poisson" distribution is available for count outcomes.}
 
 \item{cv.folds}{Number of cross-validation folds to perform.}
 
+\item{fit.best}{Logical variable indicating whether or not the best set of 
+metaparameters (estimated according to cross-validation error) will be 
+utilized to fit and return a \code{\link{gbm.fit}} object to the complete 
+data.}
+
 \item{nt.start}{Initial number of trees used to model y.}
 
 \item{nt.inc}{Number of trees incrementally added until the cross-validation
-error is minimized.}
+error is minimized or until \code{max.time} is reached (see below).}
 
 \item{verbose}{If TRUE, then \code{gbm.cverr} will print status information
 to the console.}
@@ -69,7 +75,7 @@ error using multiple bag fractions.}
 \item{n.cores}{Number of cores that will be used to estimate cross-validation
 folds in parallel. Only available on linux-based machines.}
 
-\item{max.mins}{Maximum number of minutes that the model will continue adding
+\item{max.time}{Maximum number of seconds that the model will continue adding
 trees for a given set of metaparameters. This optional argument allows users 
 to find the best possible solution in scenarios characterized by limited 
 computational resources.}
@@ -79,25 +85,68 @@ results across multiple runs. Utilizing \code{set.seed} prior to calling
 \code{gbm.cverr} does NOT ensure equal results if \code{bag.fraction < 1}}
 }
 \value{
-An object with XXXXX elements and a summary function. Calling
-\code{summary(gbm.cverr.res)} produces a data frame comprised of:
-\item{X}{fill this in}
-\item{XX}{fill this in}
-\item{XXX}{fill this in}
-In addition to the information in the three columns comprising
-\code{summary(gbm.cverr.res)}, the \code{gbm.cverr.res} object also contains:
+An object with 2-5 elements and a summary function. The elements
+of \code{gbm.cverr.res} are,
+\item{gbm.fit}{If \code{fit.best} was \code{TRUE}, then this element is the
+\code{\link{gbm.fit}} object fit to \code{x} and \code{y} using the best set
+of metaparameters identified by \code{gbm.cverr}.}
+\item{w}{List of the optional weight vectors provided by the user. Will not
+be returned if \code{w} was left \code{NULL} when calling \code{gbm.cverr}.}
+\item{var.montone}{List of the optional monotonoicity parameters proivided
+by the user. Will not be returned if \code{var.monotone} was left \code{NULL}
+when calling \code{gbm.cverr}.}
+\item{cv.err}{A list with length corresponding to the number of metaparameter
+combinations that were evaluated by \code{gbm.cverr}. Each element is a
+vector quantifying the cross-validation error across all trees corresponding
+to the given set of metaparameters.}
+\item{res}{A data frame with ten columns and as many rows as there were 
+unique combinations of metaparameters. This data frame is the basis of the
+summary function for \code{gbm.cverr.res} objects (see below), but it differs
+from the summary object in two ways: (1) it is not sorted in terms of the
+minimum cross-validaiton error, but rather according to the order in which
+the metaparameters were passed to \code{gbm.cverr}, and (2) it contains two
+additional columns. The column \code{best.meta} is a dummy variable that
+simply indexes the best set of metaparameters, and \code{timer.end} is a
+dummy variable indicating whether or not the optimal number of trees was
+found for a given set of metaparameters (FALSE) or whether the user-specified
+maximum search time was reached prior to minimizing the cross-validation
+error (TRUE). If the timer ran out, then the estimated optimal number of 
+trees is likely underestimated. If this occurred for metaparameter set
+\code{k}, then in order to evaluate the extent to which the error
+was still decresaing when the timer ended, we recommend investigating a
+plot of \code{gbm.cverr.res$cv.err[k]}. The rest of the elements of 
+\code{res} are discussed below.}
 
-\item{w}{A list of the weights passed to \code{gbm.cverr} corresponding to 
-each set of metaparameters listed in the table of results. This will only be 
-included if a list was passed to \code{w} when calling \code{gbm.cverr}.}
-\item{var.monotone}{A list of the monotonicity constraints passed to 
-\code{gbm.cverr} corresponding to each set of metaparameters listed in the 
-table of results. This will only be included if a list was passed to 
-\code{var.monotone} when calling \code{gbm.cverr}.}
-\item{cv.err}{A list of the cross-validation error across all trees 
-corresponding to each set of metaparameters listed in the table of results.}
-\item{res}{The raw data frame upon which \code{summary(gbm.cverr.res)} is 
-based.}
+Calling \code{summary(gbm.cverr.res)} produces a data frame with rows 
+corresponding to sets of metaparameters and columns that denote for each row,
+\item{min.cv.error}{Minimum cross-validation error resulting from the given
+set of metaparameters.}
+\item{w.index}{The index of the (optional) list of weight vectors
+corresponding to the given set of metaparameters. This will be omitted if
+a list of weights was not provided to \code{gbm.cverr} through the input
+parameter \code{w}.}
+\item{var.monotone.index}{The index of the (optional) list of monotonicity
+vectors corresponding to the given set of metaparameters. This will be
+omitted if a list of weights was not provided to \code{gbm.cverr} through
+the input parameter \code{var.monotone}.}
+\item{interaction.depth}{The interaction depth corresponding to the
+given set of metaparameters.}
+\item{n.minobsinnode}{Minimum number of observations in the terminal
+nodes of the trees for the given set of metaparameters.}
+\item{shrinkage}{The shrinkage parameter corresponding to the
+given set of metaparameters.}
+\item{bag.fraction}{The fraction of independent training observations 
+randomly selected to propose the next tree corresponding to
+the given set of metaparameters.}
+\item{n.trees}{The optimum number of trees to utilize given the set of
+metaprameters denoted in the row. Note that entries in this column will be
+marked with '>=' if the boosting procedure was terminated due to time running
+out for this set of metaparameters, determined by the user-specified 
+\code{max.time} passed to \code{gbm.cverr}}
+
+In the summary object and output, sets of metaparameters (rows) are ordered 
+from best (top row) to worst (last row) in terms of the resulting 
+cross-validation error.
 }
 \description{
 This function serves two purposes. First, it computes the cross-validation
@@ -139,7 +188,7 @@ mm <- gbm.cverr(x = x, y = y,
                
                nt.start = 100, 
                nt.inc = 100, 
-               max.mins = 1/60, 
+               max.time = 1, 
                
                seed = 12345,
                interaction.depth = c(1, 5), 
@@ -148,6 +197,10 @@ mm <- gbm.cverr(x = x, y = y,
                verbose = TRUE)
 
 summary(mm)
+
+# Investigate gbm results based on the best set of metaparameters
+mm$gbm.fit
+summary(mm$gbm.fit)
 
 }
 \author{
