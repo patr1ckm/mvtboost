@@ -60,4 +60,3 @@ mvtb.heat(t(mvtb.ri(res)),cexRow=.8,cexCol=1,dec=0)
 \seealso{
 \code{plot.mvtb}, \code{mvtb.perspec}
 }
-

@@ -29,4 +29,3 @@ The final model is returned with the best fitting parameters.
 \details{
 Non-grid arguments (such as \code{distribution}, \code{weights}, etc) can be passed as normal.
 }
-

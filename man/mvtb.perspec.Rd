@@ -47,4 +47,3 @@ using \code{?plot.GBMFit}.
 \seealso{
 \code{plot.GBMFit}, \code{plot.mvtb}, \code{mvtb.heat}
 }
-

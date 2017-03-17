@@ -2,10 +2,10 @@
 % Please edit documentation in R/influence.R
 \name{influence}
 \alias{influence}
-\alias{influence.metb}
 \alias{influence.mvtb}
-\alias{influence.pcb}
 \alias{influence.twostage}
+\alias{influence.metb}
+\alias{influence.pcb}
 \title{Compute variable influence (influence) scores from \code{mvtboost} models.}
 \usage{
 influence(model, n.trees = NULL, relative = TRUE, sort = TRUE, ...)

@@ -158,4 +158,3 @@ Friedman, J. H. (2001). Greedy function approximation: a gradient boosting machi
 
 \code{mvtb.uncomp} to uncompress a compressed output object
 }
-

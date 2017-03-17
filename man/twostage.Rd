@@ -37,4 +37,3 @@ for computing predictions and influence of predictors.
 \seealso{
 \link{gbm_grid}
 }
-

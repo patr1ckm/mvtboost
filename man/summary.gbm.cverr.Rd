@@ -49,4 +49,3 @@ row) in terms of the resulting cross-validation error.
 \author{
 Daniel B. McArtor (dmcartor@nd.edu)
 }
-

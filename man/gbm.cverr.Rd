@@ -206,4 +206,3 @@ summary(mm$gbm.fit)
 \author{
 Daniel B. McArtor (dmcartor@nd.edu)
 }
-

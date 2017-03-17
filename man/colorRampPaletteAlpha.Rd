@@ -16,4 +16,3 @@ colorRampPaletteAlpha(colors, n = 32, interpolate = "linear")
 \description{
 Internal to mvtb.heat, but exported for easy modification
 }
-

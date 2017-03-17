@@ -49,4 +49,3 @@ due to sampling fluctuation. These can be truncated or ignored.
 \seealso{
 \code{mvtb.heat}
 }
-

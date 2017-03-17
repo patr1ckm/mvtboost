@@ -21,4 +21,3 @@ Returns a matrix or vector of predictions for all outcomes.
 \description{
 Predicted values
 }
-

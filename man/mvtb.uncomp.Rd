@@ -12,4 +12,3 @@ mvtb.uncomp(object)
 \description{
 This function uncompresses a compressed mvtb output object. All elements are uncompressed.
 }
-

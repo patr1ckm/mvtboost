@@ -15,4 +15,3 @@
 \description{
 Reports the relative influence of each predictor in an metb models
 }
-

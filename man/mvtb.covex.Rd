@@ -23,4 +23,3 @@ Covariance explained matrix, or a list if \code{iter.details} is \code{TRUE}.
 \description{
 Estimate the covariance explained matrix
 }
-

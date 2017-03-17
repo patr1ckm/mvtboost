@@ -18,4 +18,3 @@
 \description{
 Predicted values from principal components boosting
 }
-

@@ -132,4 +132,3 @@ plot.metboost <- function(x, X, id, i.var, n.trees=min(x$best.trees), ...){
 }
 plot metboost performance
 }
-

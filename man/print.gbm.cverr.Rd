@@ -17,4 +17,3 @@
 \author{
 Daniel B. McArtor (dmcartor@nd.edu)
 }
-

@@ -24,4 +24,3 @@ Matrix of (relative) influences.
 The relative influence of a predictor is the reduction in sums of squares attributable to splits on individual predictors.
 It is often expressed as a percent (sums to 100).
 }
-

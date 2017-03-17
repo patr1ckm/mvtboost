@@ -27,4 +27,3 @@ Computes a summary of the multivariate tree boosting model
 \seealso{
 \code{mvtb.ri}, \code{gbm.ri}, \code{mvtb.cluster}
 }
-

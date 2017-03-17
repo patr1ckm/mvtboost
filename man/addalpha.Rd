@@ -14,4 +14,3 @@ addalpha(colors, alpha = 1)
 \description{
 Internal to colorRampPaletteALpha but exported in case a user wants to modify
 }
-

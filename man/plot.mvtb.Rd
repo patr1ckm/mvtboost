@@ -40,4 +40,3 @@ of the predictor is included in the x-axis label. If this is not desired, a cust
 \seealso{
 \code{plot.GBMFit}, \code{mvtb.perspec}, for other plots, \code{mvtb.heat} to plot the covariance explained by predictors in a heatmap
 }
-

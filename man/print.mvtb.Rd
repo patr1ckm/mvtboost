@@ -14,4 +14,3 @@
 \description{
 Simple default printing of the mvtb output object
 }
-

@@ -48,4 +48,3 @@ pcb(Y, X, n.trees = 100, shrinkage = 0.01, interaction.depth = 1,
 \description{
 boost principal components of outcomes
 }
-

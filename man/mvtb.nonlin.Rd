@@ -51,4 +51,3 @@ Friedman, J. H., & Meulman, J. J. (2003). Multiple additive regression trees wit
 \seealso{
 \code{interact.gbm}, \code{mvtb.perspec}, \code{plot.GBMFit}
 }
-
