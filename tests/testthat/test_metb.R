@@ -174,7 +174,8 @@ test_that("metb.fit drops rank deficient cols", {
   
   # 2017-03-17
   # More limited tests that the predictions equal the values of a 
-  # previous implementation. 
+  # previous implementation. If you have to change these values after the above date,
+  # consider a different testing strategy.
   expect_equal(as.vector(lb$yhat), c(rep(-0.00112391, 9), .4970703,
                           rep(0.99526453, 9), .4970703))
 })
