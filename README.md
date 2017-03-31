@@ -87,7 +87,7 @@ The package is experimental, and the interface is subject to change until versio
     
 ### References
 
-Miller P.J., Lubke G.H, McArtor D.B., Bergeman C.S. (2015) Finding structure in data: A data mining alternative to multivariate multiple regression. Psychological Methods.
+Miller P.J., Lubke G.H, McArtor D.B., Bergeman C.S. (2015) Finding structure in data: A data mining alternative to multivariate multiple regression. Psychological Methods. [arXiv](https://arxiv.org/abs/1511.02025)
 
 Miller P.J., McArtor D.B., Lubke G.H (2017). Abstract: A Gradient Boosting Machine for Hierarchically 
-Clustered Data. Multivariate Behavior Research.
+Clustered Data. Multivariate Behavior Research. [arXiv](https://arxiv.org/abs/1702.03994)
