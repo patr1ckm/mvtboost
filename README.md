@@ -78,8 +78,8 @@ With `gbm.cverr`, tuning the number of trees can be carried out by including tre
                n.minobsinnode = c(5, 50), 
                verbose = TRUE)
                
-    mm$gbm.fit
-    summary(mm$gbm.fit)
+    out$gbm.fit
+    summary(out$gbm.fit)
         
     
 ### Limitations
