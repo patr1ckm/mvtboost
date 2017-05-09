@@ -62,7 +62,7 @@ candidate meta-parameter values passed to `n.trees`, `shrinkage`, `interaction.d
 
 ### Example usage
     
-    out <- gbm.cverr(x = X, y = Y, 
+    out <- gbm.cverr(x = X, y = y, 
                distribution = 'gaussian', 
                cv.folds = 2, 
                
