@@ -80,27 +80,7 @@ With `gbm.cverr`, tuning the number of trees can be carried out by including tre
                
     mm$gbm.fit
     summary(mm$gbm.fit)
-    
-
-### Example usage
-    
-    out <- gbm.cverr(x = X, y = y, 
-               distribution = 'gaussian', 
-               cv.folds = 2, 
-               
-               nt.start = 100, 
-               nt.inc = 100, 
-               max.time = 1, 
-               
-               seed = 12345,
-               interaction.depth = c(1, 5), 
-               shrinkage = 0.01,
-               n.minobsinnode = c(5, 50), 
-               verbose = TRUE)
-               
-    mm$gbm.fit
-    summary(mm$gbm.fit)
-    
+        
     
 ### Limitations
 
