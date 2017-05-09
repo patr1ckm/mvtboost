@@ -60,6 +60,28 @@ of meta-parameters as arguments.
 New functions are provided that allow easy grid tuning by cross validation: `gbm.cverr, mvtb_grid`, and `lmerboost`. The grid is defined as `expand.grid(1:cv.folds, ...)` where `...` contains vectors of 
 candidate meta-parameter values passed to `n.trees`, `shrinkage`, `interaction.depth`, and `n.minobsinnode`.
 
+With `gbm.cverr`, tuning the number of trees can be carried out by including trees until 1) the cross validation error is minimized or 2) a maximum amount of computation time is reached. This avoids the problem of not including enough trees, or for including more trees than is necessary. 
+
+### Example usage
+    
+    out <- gbm.cverr(x = X, y = y, 
+               distribution = 'gaussian', 
+               cv.folds = 2, 
+               
+               nt.start = 100, 
+               nt.inc = 100, 
+               max.time = 1, 
+               
+               seed = 12345,
+               interaction.depth = c(1, 5), 
+               shrinkage = 0.01,
+               n.minobsinnode = c(5, 50), 
+               verbose = TRUE)
+               
+    mm$gbm.fit
+    summary(mm$gbm.fit)
+    
+
 ### Example usage
     
     out <- gbm.cverr(x = X, y = y, 
