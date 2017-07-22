@@ -15,7 +15,19 @@ The package can be installed as follows:
 
     devtools::install_github("patr1ckm/mvtboost")
 
-Both packages will eventually be pushed to CRAN. 
+2017-07-22
+For Mac OSX, `clang++` (from `clang4`) is required to compile `gbm` to use `openmp` multithreading. For R 3.4.0, the instructions are taken from http://thecoatlessprofessor.com/programming/openmp-in-r-on-os-x/#after-3-4-0. 
+
+- Make sure `Xtools` is installed
+- Download and install `clang4`: https://uofi.app.box.com/v/r-macos-clang-pkg
+- Verify that a file `~/.R/Makevars` has been created and contains the following:
+
+```
+CC=/usr/local/clang4/bin/clang
+CXX=/usr/local/clang4/bin/clang++
+LDFLAGS=-L/usr/local/clang4/lib
+```
+If it hasn't been, create it.
 
 # mvtb
 Tree boosting for multivariate outcomes. Estimates a multivariate additive model of decision trees by iteratively selecting predictors that explain covariance in the outcomes. 
