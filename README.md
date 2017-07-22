@@ -15,7 +15,8 @@ The package can be installed as follows:
 
     devtools::install_github("patr1ckm/mvtboost")
 
-2017-07-22
+*2017-07-22*
+
 For Mac OSX, `clang++` (from `clang4`) is required to compile `gbm` to use `openmp` multithreading. For R 3.4.0, the instructions are taken from http://thecoatlessprofessor.com/programming/openmp-in-r-on-os-x/#after-3-4-0. 
 
 - Make sure `Xtools` is installed
